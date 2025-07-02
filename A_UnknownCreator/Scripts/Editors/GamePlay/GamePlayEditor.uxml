@@ -1,0 +1,33 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:Template name="PopupEditor" src="project://database/Assets/A_UnknownCreator/Scripts/Editors/GamePlay/PopupEditor.uxml?fileID=9197481963319205126&amp;guid=ad785b3c0ccfd4341a49476ab8d0b86b&amp;type=3#PopupEditor" />
+    <Style src="project://database/Assets/A_UnknownCreator/Scripts/Editors/GamePlay/GamePlayEditor.uss?fileID=7433441132597879392&amp;guid=00f546fcc3d5e964a9eea45440d38576&amp;type=3#GamePlayEditor" />
+    <ui:VisualElement style="flex-grow: 1; justify-content: space-evenly; align-self: stretch;">
+        <ui:Label name="ContentName" text="配置名称" class="BaseText Title" style="align-self: stretch; justify-content: flex-start;" />
+        <ui:VisualElement style="flex-grow: 0; flex-direction: column; background-color: rgba(0, 0, 0, 0); border-bottom-width: 0; border-left-color: rgba(255, 255, 255, 0); border-right-color: rgba(255, 255, 255, 0); border-top-color: rgba(255, 255, 255, 0); border-bottom-color: rgba(255, 255, 255, 0); justify-content: flex-start; align-self: stretch; flex-wrap: wrap;">
+            <ui:DropdownField label="配置" index="0" name="ConfigSelection" class="Selection BaseText" style="flex-grow: 0; flex-shrink: 1; align-content: auto; align-self: stretch; justify-content: flex-start; align-items: stretch; flex-direction: row; flex-wrap: nowrap; width: auto; -unity-text-align: middle-center; min-width: auto;" />
+            <ui:VisualElement style="flex-grow: 1; flex-direction: row; flex-wrap: wrap; justify-content: center;">
+                <ui:Button text="添加" name="AddAsset" emoji-fallback-support="false" class="BaseText" />
+                <ui:Button text="删除" name="RemoveAsset" class="BaseText" />
+                <ui:Button text="ToJson" name="Export" class="BaseText" />
+                <ui:Button text="CfgToJson" name="AllExport" class="BaseText" />
+                <ui:Button text="JsonToSO" name="Import" class="BaseText" />
+                <ui:Button text="跳转指定文件" name="FocusAsset" class="BaseText" />
+                <ui:Button text="复制名称" name="CopyName" class="BaseText" />
+                <ui:Button text="重命名" name="Rename" class="BaseText" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement style="flex-grow: 0; flex-direction: row; align-self: stretch; justify-content: space-evenly;">
+            <ui:TextField label="保存JSON路径" placeholder-text="输入文件夹路径" name="JsonPath" auto-correction="false" class="BaseText" style="flex-shrink: 1; align-self: center; flex-grow: 1;" />
+            <ui:Button text="选择路径" name="FindPath" class="OptionButton" style="flex-shrink: 1; flex-grow: 0; align-self: center;" />
+        </ui:VisualElement>
+        <ui:ScrollView mode="VerticalAndHorizontal" style="flex-grow: 1; flex-direction: column;">
+            <ui:VisualElement style="flex-grow: 1; flex-direction: row; margin-top: 10px; margin-right: 5px; margin-bottom: 10px; margin-left: 5px;">
+                <ui:ListView name="ItemList" reorder-mode="Animated" item-template="project://database/Assets/A_UnknownCreator/Scripts/Editors/GamePlay/ItemRow.uxml?fileID=9197481963319205126&amp;guid=726ce830184ebb3468e8d6126c26e90e&amp;type=3#ItemRow" binding-source-selection-mode="AutoAssign" show-alternating-row-backgrounds="All" horizontal-scrolling="false" show-foldout-header="true" show-add-remove-footer="false" reorderable="true" fixed-item-height="40" show-border="false" show-bound-collection-size="false" selection-type="Single" focusable="true" class="BaseText" style="flex-grow: 1; width: 40%; align-self: stretch; border-left-color: rgba(0, 0, 0, 0.2); border-left-width: 1px; border-right-width: 0.1px; border-right-color: rgba(0, 0, 0, 0.2); border-top-width: 1px; border-bottom-width: 1px; display: flex; border-top-color: rgba(0, 0, 0, 0.2); border-bottom-color: rgba(0, 0, 0, 0.2); margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; max-height: none; min-height: auto; max-width: 40%; min-width: 40%; justify-content: space-evenly; align-content: center;" />
+                <ui:VisualElement focusable="true" name="VisualElement" style="flex-grow: 1; align-self: stretch; justify-content: space-evenly; align-items: stretch; border-left-color: rgba(0, 0, 0, 0.2); border-right-color: rgba(0, 0, 0, 0.2); border-top-color: rgba(0, 0, 0, 0.2); border-bottom-color: rgba(0, 0, 0, 0.2); border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 0.1px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; width: 60%; max-width: 60%; min-width: 60%;">
+                    <ui:ScrollView name="Content" style="flex-grow: 1; padding-top: 5px; padding-right: 5px; padding-bottom: 5px; padding-left: 5px; -unity-font-definition: url(&quot;project://database/Assets/A_UnknownCreator/Fonts/MiSans/otf/MiSans-Normal%20SDF.asset?fileID=11400000&amp;guid=4827b424dbef6224d81e67b97210d6b7&amp;type=2#MiSans-Normal SDF&quot;);" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:ScrollView>
+    </ui:VisualElement>
+    <ui:Instance template="PopupEditor" name="Popup" tabindex="0" focusable="true" usage-hints="None" style="position: absolute; align-self: stretch; align-content: auto; width: 100%; flex-grow: 1; flex-direction: column; flex-wrap: nowrap; bottom: auto; right: auto; left: auto; top: auto; display: none; height: 100%; align-items: stretch; justify-content: center; flex-shrink: 1; flex-basis: auto; overflow: visible; visibility: visible; max-width: none; background-color: rgba(0, 0, 0, 0); opacity: 1;" />
+</ui:UXML>

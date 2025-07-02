@@ -1,0 +1,41 @@
+.GeneralText {
+    -unity-font-definition: url("project://database/Assets/A_UnknownCreator/Fonts/MiSans/otf/MiSans-Normal%20SDF.asset?fileID=11400000&guid=4827b424dbef6224d81e67b97210d6b7&type=2#MiSans-Normal SDF");
+    font-size: 15px;
+    -unity-text-align: middle-left;
+    white-space: normal;
+    flex-grow: 1;
+    align-self: stretch;
+    flex-shrink: 1;
+}
+
+.GeneralButton {
+    flex-grow: 1;
+    align-self: stretch;
+    -unity-text-align: middle-center;
+    font-size: 16px;
+    -unity-font-definition: url("project://database/Assets/A_UnknownCreator/Fonts/MiSans/otf/MiSans-Normal%20SDF.asset?fileID=11400000&guid=4827b424dbef6224d81e67b97210d6b7&type=2#MiSans-Normal SDF");
+    flex-shrink: 1;
+    padding-top: 0;
+    padding-right: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    margin-top: 3px;
+    margin-right: 3px;
+    margin-bottom: 3px;
+    margin-left: 3px;
+}
+
+.Container {
+    background-color: rgba(0, 0, 0, 0.39);
+    border-left-color: rgb(16, 16, 16);
+    border-right-color: rgb(16, 16, 16);
+    border-top-color: rgb(16, 16, 16);
+    border-bottom-color: rgb(16, 16, 16);
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+}
+
+.Container {
+}

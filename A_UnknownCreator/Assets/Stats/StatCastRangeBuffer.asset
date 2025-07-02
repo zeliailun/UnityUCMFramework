@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f11400d899bffc42b4cfc51292db29f, type: 3}
+  m_Name: StatCastRangeBuffer
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes:
+    - Name: cfg
+      Entry: 7
+      Data: 0|UnknownCreator.Modules.StatsCfg, Assembly-CSharp
+    - Name: idName
+      Entry: 1
+      Data: StatsCastRangeBuffer
+    - Name: canCalcValue
+      Entry: 5
+      Data: true
+    - Name: canChangeValue
+      Entry: 5
+      Data: true
+    - Name: minStatsName
+      Entry: 6
+      Data: 
+    - Name: minValue
+      Entry: 4
+      Data: 0
+    - Name: maxStatsName
+      Entry: 6
+      Data: 
+    - Name: maxValue
+      Entry: 4
+      Data: Infinity
+    - Name: 
+      Entry: 8
+      Data: 
+  guid: 9d37cf98f47207f4eb9d17f4b963e59d
+  isPInf: 1
+  isNInf: 0

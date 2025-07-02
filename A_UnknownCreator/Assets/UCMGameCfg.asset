@@ -1,0 +1,163 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6113058f5daf2ea42aa6b397ef63480a, type: 3}
+  m_Name: UCMGameCfg
+  m_EditorClassIdentifier: 
+  <cfgName>k__BackingField: UCMGameCfg
+  <cfg>k__BackingField:
+    rid: 8808395623323926606
+  references:
+    version: 2
+    RefIds:
+    - rid: 651636916264894709
+      type: {class: UnlockMgr, ns: , asm: Assembly-CSharp}
+      data: 
+    - rid: 1112662357912322139
+      type: {class: VariableMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
+      data: 
+    - rid: 1544981600954220614
+      type: {class: TreasureMgr, ns: , asm: Assembly-CSharp}
+      data: 
+    - rid: 2785225075925975863
+      type: {class: CurvedLevelUp, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
+      data:
+        baseExperience: 100
+        curveFactor: 10
+        experienceIncrement: 80
+    - rid: 8808395623323926606
+      type: {class: GameCfg, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
+      data:
+        enableDebug: 0
+        customMgr:
+        - mgr:
+            rid: 651636916264894709
+          notRemove: 1
+        - mgr:
+            rid: 1544981600954220614
+          notRemove: 1
+        refPoolMgr:
+          rid: 8808395623323926607
+        gameObjPoolMgr:
+          rid: 8808395623323926625
+        variableBox:
+          rid: 1112662357912322139
+        eventsMgr:
+          rid: 8808395623323926627
+        updateMgr:
+          rid: 8808395623323926628
+        timerMgr:
+          rid: 8808395623323926629
+        sceneMgr:
+          rid: 8808395623323926630
+        soundMgr:
+          rid: 8808395623323926631
+        vfxMgr:
+          rid: 8808395623323926632
+        cameraMgr:
+          rid: 8808395623323926633
+        inputMgr:
+          rid: 8808395623323926634
+        hfsmMgr:
+          rid: 8808395623323926635
+        entityMgr:
+          rid: 8808395623323926655
+        unitMgr:
+          rid: 8808395623323926656
+        dmgMgr:
+          rid: 8808395623323926636
+        projMgr:
+          rid: 8808395623323926637
+        jsonMgr:
+          rid: 8808396122163249224
+    - rid: 8808395623323926607
+      type: {class: ReferencePoolMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
+      data: 
+    - rid: 8808395623323926625
+      type: {class: GameObjPoolMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
+      data: 
+    - rid: 8808395623323926627
+      type: {class: EventsMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
+      data: 
+    - rid: 8808395623323926628
+      type: {class: GameUpdateMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
+      data: 
+    - rid: 8808395623323926629
+      type: {class: TimerMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
+      data: 
+    - rid: 8808395623323926630
+      type: {class: LoadSceneMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
+      data: 
+    - rid: 8808395623323926631
+      type: {class: SoundMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
+      data:
+        <mixer>k__BackingField: {fileID: 24100000, guid: da7fe73b5e3d09746818a7699dafcc38, type: 2}
+    - rid: 8808395623323926632
+      type: {class: VfxMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
+      data: 
+    - rid: 8808395623323926633
+      type: {class: CameraMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
+      data: 
+    - rid: 8808395623323926634
+      type: {class: ControllerMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
+      data:
+        defaultInputClass: CustomControls
+        defaultInputAsset: CustomControls
+    - rid: 8808395623323926635
+      type: {class: HBSMController, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
+      data: 
+    - rid: 8808395623323926636
+      type: {class: DamageMGR, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
+      data: 
+    - rid: 8808395623323926637
+      type: {class: ProjectileMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
+      data: 
+    - rid: 8808395623323926655
+      type: {class: EntityMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
+      data: 
+    - rid: 8808395623323926656
+      type: {class: UnitMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
+      data:
+        <hitBoxLayer>k__BackingField: 6
+        <unitLayer>k__BackingField: 7
+        <unitStateCount>k__BackingField: 300
+        <unitTeamCount>k__BackingField: 3
+        <unitTypeCount>k__BackingField: 5
+        <unitMaxLevel>k__BackingField: 40
+        <isUseGlobalLevelExp>k__BackingField: 1
+        <expBuilder>k__BackingField:
+          rid: 2785225075925975863
+    - rid: 8808396122163249224
+      type: {class: JsonDataMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
+      data:
+        _jsonData:
+        - name: 
+          asset: {fileID: 4900000, guid: f87ee44fb92841642bfe20f2b39dab5d, type: 3}
+        - name: 
+          asset: {fileID: 4900000, guid: 73931d26784a33e498f6a5acbf871281, type: 3}
+        - name: 
+          asset: {fileID: 4900000, guid: 6b89e3261156f434b96d6d2e378665ce, type: 3}
+        - name: 
+          asset: {fileID: 4900000, guid: 8276ceed095bec941a83a38add90f44e, type: 3}
+        - name: 
+          asset: {fileID: 4900000, guid: 811b6da59dfc04c4082979435faf65b6, type: 3}
+        - name: 
+          asset: {fileID: 4900000, guid: 332e81273bd418a46aa74a333c3a0fcd, type: 3}
+        - name: 
+          asset: {fileID: 4900000, guid: 5e440eb91adca444fb06a4cd3e78a53c, type: 3}
+        - name: 
+          asset: {fileID: 4900000, guid: 1da194c749118d0459097c1c7672d8ff, type: 3}
+        - name: 
+          asset: {fileID: 4900000, guid: 925a6f9feff59864ba246638878bacc3, type: 3}
+        - name: 
+          asset: {fileID: 4900000, guid: 5cb807af19d07e0458c51c5602524619, type: 3}
+        - name: 
+          asset: {fileID: 4900000, guid: 51ecbe8ca365ba640a3a7712c4b99505, type: 3}

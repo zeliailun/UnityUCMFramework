@@ -1,0 +1,42 @@
+.Selection {
+    min-width: auto;
+    max-width: none;
+}
+
+.OptionButton {
+    -unity-font-definition: url("project://database/Assets/A_UnknownCreator/Fonts/MiSans/otf/MiSans-Normal%20SDF.asset?fileID=11400000&guid=4827b424dbef6224d81e67b97210d6b7&type=2#MiSans-Normal SDF");
+    font-size: 15px;
+    -unity-text-align: middle-center;
+    white-space: pre;
+    -unity-font-style: bold;
+}
+
+.BaseText {
+    -unity-font-definition: url("project://database/Assets/A_UnknownCreator/Fonts/MiSans/otf/MiSans-Normal%20SDF.asset?fileID=11400000&guid=4827b424dbef6224d81e67b97210d6b7&type=2#MiSans-Normal SDF");
+    -unity-font-style: bold;
+    font-size: 15px;
+    -unity-text-align: middle-center;
+    white-space: nowrap;
+    text-shadow: 3px 3px 0 rgb(0, 0, 0);
+    -unity-text-outline-width: 0;
+    -unity-text-outline-color: rgba(0, 0, 0, 0);
+    color: rgb(255, 255, 255);
+}
+
+.Title {
+    font-size: 18px;
+    border-left-color: rgba(0, 0, 0, 0.2);
+    border-right-color: rgba(0, 0, 0, 0.2);
+    border-top-color: rgba(0, 0, 0, 0.2);
+    border-bottom-color: rgba(0, 0, 0, 0.2);
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    background-color: rgba(0, 0, 0, 0.08);
+    margin-top: 10px;
+    margin-right: 5px;
+    margin-bottom: 10px;
+    margin-left: 5px;
+    -unity-font-definition: url("project://database/Assets/A_UnknownCreator/Fonts/MiSans/otf/MiSans-Normal%20SDF.asset?fileID=11400000&guid=4827b424dbef6224d81e67b97210d6b7&type=2#MiSans-Normal SDF");
+}
