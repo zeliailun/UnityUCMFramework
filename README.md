@@ -29,6 +29,16 @@
 *UITK模块<br>
 
 *Json模块<br>
+
+*分层行为状态树模块<br>
+
+*运行时更新模块<br>
+
+*运行时变量储存模块<br>
+
+*对象池模块（分为引用池和Unity对象池）<br>
+
+*修改版LitJson<br>
 [<br>
 *加入特性JsonIgnoreAttritube，对变量与属性跳过序列化和反序列化块<br>
 *加入特性JsonMarkAttritube，强制序列化和反序列化非公开变量与属性块<br>
@@ -41,16 +51,6 @@
 *支持Unity内建类型(Vector2、Vector3、Rect、AnimationCure、Bounds、Color、Color32、Quaternion、RectOffset等）块<br>
 *AudioClip，Texture2D，AvatarMask等unity对象序列化时会储存其名称字符串，编辑器内通过AssetDatabase加载，运行时通过Addressables加载块<br>
 ]<br>
-
-*分层行为状态树模块<br>
-
-*运行时更新模块<br>
-
-*运行时变量储存模块<br>
-
-*对象池模块（分为引用池和Unity对象池）<br>
-
-*修改版LitJson<br>
 
 *修改版序列化字典<br>
 
