@@ -17,11 +17,17 @@
 
 ## 模块列表<br>
 *Debug模块<br>
+
 *管理器模块<br>
+
 *事件模块<br>
+
 *计时器模块<br>
+
 *场景模块<br>
+
 *UITK模块<br>
+
 *Json模块<br>
 [
 *加入特性JsonIgnoreAttritube，对变量与属性跳过序列化和反序列化
@@ -35,17 +41,31 @@
 *支持Unity内建类型(Vector2、Vector3、Rect、AnimationCure、Bounds、Color、Color32、Quaternion、RectOffset等）
 *AudioClip，Texture2D，AvatarMask等unity对象序列化时会储存其名称字符串，编辑器内通过AssetDatabase加载，运行时通过Addressables加载
 ]<br>
+
 *分层行为状态树模块<br>
+
 *运行时更新模块<br>
+
 *运行时变量储存模块<br>
+
 *对象池模块（分为引用池和Unity对象池）<br>
+
 *修改版LitJson<br>
+
 *修改版序列化字典<br>
+
 *修改版序列化引用<br>
+
 *相机模块<br>
+
 *单位控制器模块<br>
+
 *实体模块<br>
+
 *声音模块<br>
+
 *特效模块<br>
+
 *时间模块<br>
+
 *战斗模块（分为 单位，能力，buff，伤害，等级经验，统计，状态，天赋，投射物）<br>
