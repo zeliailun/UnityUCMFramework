@@ -1,8 +1,6 @@
 ![图片描述](UCMLogo.png)<br>
 
-<font size="100">UCM全称UnknownCreatorModules 自用框架</font>  
-
-<span style="font-weight: bold; color: red; font-size: 20px">测试文字</span>
+#UCM全称UnknownCreatorModules 自用框架
 
 *拥有战斗模块编辑器和管理模块编辑器<br>
 *各种工具方法扩展<br>
