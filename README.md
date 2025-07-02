@@ -2,7 +2,7 @@
 
 <font size="100">UCM全称UnknownCreatorModules 自用框架</font>  
 
-<span style="font-size: 24px; color: purple; font-weight: bold">紫色加粗大号文字</span>
+<span style="font-weight: bold; color: red; font-size: 20px">测试文字</span>
 
 *拥有战斗模块编辑器和管理模块编辑器<br>
 *各种工具方法扩展<br>
