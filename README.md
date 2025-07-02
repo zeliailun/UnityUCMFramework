@@ -1,10 +1,10 @@
 ![图片描述](https://github.com/zeliailun/UnityUCMFramework/blob/main/A_UnknownCreator/Textures/UCLogo.png)
 
-《UCM >> 全称UnknownCreatorModule 自用框架》\n
+《UCM >> 全称UnknownCreatorModule 自用框架》
 
-*拥有战斗模块编辑器和管理模块编辑器\n
-*各种工具方法扩展\n
-*默认使用了小米字体\n
+*拥有战斗模块编辑器和管理模块编辑器 
+*各种工具方法扩展  
+*默认使用了小米字体  
 
 ---------------------------------------------------
 
