@@ -6,8 +6,6 @@ namespace UnknownCreator.Modules
         Action OnPause { set; get; }
         Action OnResume { set; get; }
 
-        float DeltaTimeScale { get; set; }
-
         float LocalTimeScale { set; get; }
 
         bool IsPause { get; }
@@ -17,5 +15,6 @@ namespace UnknownCreator.Modules
         void PauseGame();
 
         void ResumeGame(bool isClear);
+        void SetTimeScale(float value);
     }
 }
