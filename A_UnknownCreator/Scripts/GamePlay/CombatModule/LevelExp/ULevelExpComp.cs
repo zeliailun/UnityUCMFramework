@@ -71,10 +71,7 @@ namespace UnknownCreator.Modules
             }
 
             // 如果达到最大等级，清除多余经验
-            if (currentLevel >= maxLevel)
-            {
-                currentExp = 0;
-            }
+            if (currentLevel >= maxLevel) currentExp = 0;
         }
 
         public void Upgrade(int targetLevel)

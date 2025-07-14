@@ -64,12 +64,6 @@ namespace UnknownCreator.Modules
             wnd.Show(true);
         }
 
-        private void OnInspectorUpdate()
-        {
-            /* if (itemList?.selectedItem != null)
-                 itemList.RefreshItem(itemList.selectedIndex);*/
-        }
-
 
         public void CreateGUI()
         {
@@ -142,14 +136,14 @@ namespace UnknownCreator.Modules
             allExport.clicked += ExportCurrentCfgAllJson;
 
             var copyName = root.Q<Button>("CopyName");
-            copyName.clicked += () => { CopyName(itemList.selectedItem as CustomScriptableObject); };
+            copyName.clicked += () => CopyName(itemList.selectedItem as CustomScriptableObject);
 
             var rename = root.Q<Button>("Rename");
-            rename.clicked += () => { Rename(itemList.selectedItem as CustomScriptableObject, itemList.selectedIndex); };
+            rename.clicked += () => Rename(itemList.selectedItem as CustomScriptableObject, itemList.selectedIndex);
 
 
             var focusAsset = root.Q<Button>("FocusAsset");
-            focusAsset.clicked += () => { FocusAsset(itemList.selectedItem as CustomScriptableObject); };
+            focusAsset.clicked += () => FocusAsset(itemList.selectedItem as CustomScriptableObject);
 
 
             var ok = root.Q<Button>("OK");
@@ -216,10 +210,12 @@ namespace UnknownCreator.Modules
                 if (nameLabel.text != currentSO.name)
                     nameLabel.text = currentSO.name;
 
-                if(currentSO.name=="AbilityNull")
+                if (currentSO.name == "AbilityNull")
                 {
                     e.Q<VisualElement>("Hide").style.display = DisplayStyle.Flex;
-                }else{
+                }
+                else
+                {
                     e.Q<VisualElement>("Hide").style.display = DisplayStyle.None;
                 }
 
@@ -275,6 +271,8 @@ namespace UnknownCreator.Modules
                 soDict.Add(configSelection.text, activeItem);
             else
                 soDict[configSelection.text] = activeItem;
+
+            //itemList.RefreshItems();
         }
 
         private void LoadAllAssets(string name)
@@ -303,7 +301,7 @@ namespace UnknownCreator.Modules
 
         private void Rename(CustomScriptableObject so, int index)
         {
-            RenameWindow.Show(so.name, newName =>
+            RenameWindow.ShowPanel(so.name, newName =>
             {
                 if (string.IsNullOrEmpty(newName)) return;
 
@@ -497,10 +495,9 @@ namespace UnknownCreator.Modules
 
     public class RenameWindow : EditorWindow
     {
-        private TextField nameField;
-        private System.Action<string> onRenameConfirmed;
+        private TextField renameField;
 
-        public static void Show(string currentName, System.Action<string> renameCallback)
+        public static void ShowPanel(string currentName, System.Action<string> renameCallback)
         {
             var window = GetWindow<RenameWindow>("ÐÞ¸ÄÃû³Æ");
             window.CreateUI(currentName, renameCallback);
@@ -517,7 +514,7 @@ namespace UnknownCreator.Modules
 
             rootVisualElement.Add(new Button(() =>
             {
-                renameCallback?.Invoke(nameField.value);
+                renameCallback?.Invoke(renameField.value);
                 Close();
             })
             {

@@ -4,13 +4,13 @@ namespace UnknownCreator.Modules
 {
     public abstract partial class BuffBase
     {
-        public void StartTimer(double t)
+        public void StartThink(double t)
         {
             delay = t;
             isEnableTimer = true;
         }
 
-        public void StopTimer()
+        public void StopThink()
         {
             isEnableTimer = false;
             timer = 0;

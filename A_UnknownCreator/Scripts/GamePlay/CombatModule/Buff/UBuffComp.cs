@@ -69,9 +69,8 @@ namespace UnknownCreator.Modules
                     return newBuff;
                 }
 
+                newBuff.RefreshBuff(kv, isKVRecyclePool, duration);
 
-                newBuff.UpdateDuration(duration);
-                newBuff.OnRefresh();
             }
             return newBuff;
         }

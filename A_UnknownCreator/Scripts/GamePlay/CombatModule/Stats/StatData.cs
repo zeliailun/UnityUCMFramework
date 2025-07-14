@@ -230,6 +230,7 @@ namespace UnknownCreator.Modules
             double linearAdd = 0;
             double percLinearSum = 0;
             double percNonlinearSum = 0;
+            double constantValue = double.NaN;
 
             StatsCalc calc;
             for (int i = 0; i < calcList.Count; i++)
@@ -237,6 +238,10 @@ namespace UnknownCreator.Modules
                 calc = calcList[i];
                 switch (calc.calcType)
                 {
+                    case CalcType.Constant:
+                        constantValue = calc.value;
+                        break;
+
                     case CalcType.LinearAdd:
                         linearAdd += calc.value;
                         break;
@@ -251,14 +256,21 @@ namespace UnknownCreator.Modules
                 }
             }
 
-            // 先加上所有常量加成
-            value += linearAdd;
+            if (!double.IsNaN(constantValue))
+            {
+                value = constantValue;
+            }
+            else
+            {
+                // 先加线性加成
+                value += linearAdd;
 
-            // 再乘上线性百分比
-            value *= (100 + percLinearSum) / 100;
+                // 再乘线性百分比
+                value *= (100 + percLinearSum) / 100;
 
-            // 再加上非线性百分比（注意：基于未完成增长部分）
-            value += (100 - value) * percNonlinearSum / 100;
+                // 再加非线性百分比
+                value += (100 - value) * percNonlinearSum / 100;
+            }
 
             // 保留2位小数，限制范围
             finalValue = Math.Round(Math.Clamp(value, minValue, maxValue), 2, MidpointRounding.AwayFromZero);

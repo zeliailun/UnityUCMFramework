@@ -98,6 +98,15 @@ namespace UnknownCreator.Modules
             OnInitialized();
         }
 
+        internal void RefreshBuff(IVariableMgr kv, bool isKVRecyclePool, double duration)
+        {
+            if (this.isKVRecyclePool) Mgr.RPool.Release(this.kv);
+            this.kv = kv;
+            this.isKVRecyclePool = isKVRecyclePool;
+            UpdateDuration(duration);
+            OnRefresh();
+        }
+
         internal void UpdateBuff()
         {
             if (isRelease) return;
@@ -129,7 +138,7 @@ namespace UnknownCreator.Modules
 
             if (shouldRemoveBuff)
             {
-                StopTimer();
+                StopThink();
                 duration = 0;
                 owner.buffC.RemoveBuff(this);
             }
@@ -204,7 +213,7 @@ namespace UnknownCreator.Modules
             isRelease = true;
             isInterruptMotion = true;
             OnRelease();
-            StopTimer();
+            StopThink();
             RemoveEvnets();
             RemoveMotionController();
             ClearStats();
