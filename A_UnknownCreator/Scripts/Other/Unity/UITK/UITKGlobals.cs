@@ -78,10 +78,14 @@ namespace UnknownCreator.Modules
             {
                 float elapsed = Time.realtimeSinceStartup - startTime;
                 float progress = Mathf.Clamp01(elapsed / duration);
-                float currentScale = Mathf.Lerp(from, to, progress);
+
+                // 使用缓动函数让动画丝滑（EaseInOut）
+                float easedProgress = Mathf.SmoothStep(0f, 1f, progress);
+                float currentScale = Mathf.Lerp(from, to, easedProgress);
+
                 element.style.scale = UnityGlobals.NewV3(currentScale);
 
-            }).Every(16).ForDuration((long)(duration * 1000));
+            }).Every(1); // 每帧执行更顺滑
         }
 
 

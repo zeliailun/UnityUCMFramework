@@ -130,6 +130,7 @@ namespace UnknownCreator.Modules
         public string uidName;
         public string uiSM;
         public bool isNull;
+        public bool isAddSeq;
     }
 }
 

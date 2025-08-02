@@ -13,7 +13,7 @@ namespace UnknownCreator.Modules
         private static readonly object _fileLock = new();
 
         public string path { get; private set; }
-        public string folderName { get; set; } = "GameData";
+        public string folderName { get; set; } = "JsonData";
 
         [SerializeField]
         private List<CustomJsonDataInfo> _jsonData = new();
@@ -64,10 +64,11 @@ namespace UnknownCreator.Modules
                     // 使用 LitJson 序列化
                     string json = JsonMapper.ToJson(data);
                     File.WriteAllText(filePath, json);
+                    UCMDebug.Log("保存数据成功");
                 }
                 catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
                 {
-                    Debug.LogError($"Save failed: {ex.Message}");
+                    Debug.LogError($"保存失败: {ex.Message}");
                     throw;
                 }
             }
@@ -98,7 +99,7 @@ namespace UnknownCreator.Modules
             }
             catch (JsonException ex)
             {
-                Debug.LogError($"JSON parse error: {ex.Message}");
+                Debug.LogError($"json语法错误: {ex.Message}");
                 return default;
             }
         }
@@ -127,7 +128,7 @@ namespace UnknownCreator.Modules
             }
             catch (JsonException ex)
             {
-                Debug.LogError($"Deserialization failed: {ex.Message}");
+                Debug.LogError($"序列化失败: {ex.Message}");
                 return default;
             }
         }
@@ -223,13 +224,13 @@ namespace UnknownCreator.Modules
                     }
                     catch (Exception ex)
                     {
-                        Debug.LogWarning($"Failed to delete {file}: {ex.Message}");
+                        Debug.LogWarning($"删除失败 {file}: {ex.Message}");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogError($"DeleteAllData failed: {ex.Message}");
+                Debug.LogError($"删除所有数据失败: {ex.Message}");
             }
         }
 

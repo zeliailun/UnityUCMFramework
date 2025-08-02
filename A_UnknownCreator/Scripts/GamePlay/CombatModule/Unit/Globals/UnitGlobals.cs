@@ -7,10 +7,9 @@ namespace UnknownCreator.Modules
     {
         private static Type type = typeof(Unit);
 
+
         //实体单位的显示对象,初始化时会根据该名称查找其子类对象
         public const string Model = nameof(Model);
-
-        public const string HealthSM = nameof(HealthSM);
 
 
         public static Unit GetUnit(this int id)

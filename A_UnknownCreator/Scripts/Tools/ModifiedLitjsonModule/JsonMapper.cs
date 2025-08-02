@@ -744,14 +744,16 @@ namespace UnknownCreator.Modules
                     {
 
                         var typeName = ReadValue(typeof(string), reader) as string;
+                    
                         type = Type.GetType(typeName);
-                        if (type != null && !value_type.Equals(type))
+                        if (type != null)
                         {
                             object_metadata.Remove(value_type);
                             AddObjectMetadata(type);
                             t_data = object_metadata[type];
                             instance = OnObjectCreate == null ? Activator.CreateInstance(type) : OnObjectCreate(type);
                         }
+
                         continue;
                     }
 

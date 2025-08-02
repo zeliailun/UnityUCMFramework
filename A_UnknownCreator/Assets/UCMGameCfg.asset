@@ -36,7 +36,7 @@ MonoBehaviour:
     - rid: 8808395623323926606
       type: {class: GameCfg, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
       data:
-        enableDebug: 0
+        enableDebug: 1
         customMgr:
         - mgr:
             rid: 651636916264894709
