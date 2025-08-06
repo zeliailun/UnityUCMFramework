@@ -152,9 +152,9 @@
         public const string OnTalentAdded = nameof(OnTalentAdded);
 
         /// <summary>
-        /// 移除天赋后
+        /// 移除天赋时
         /// </summary>
-        public const string OnTalentRemoved = nameof(OnTalentRemoved);
+        public const string OnTalentRemove = nameof(OnTalentRemove);
 
         #endregion
 

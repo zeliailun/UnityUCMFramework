@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace UnknownCreator.Modules
 {
-    public sealed class DamageMGR : IDamageMgr
+    public sealed class DamageMgr : IDamageMgr
     {
         private Dictionary<int, IHealth> hurtDict = new();
 

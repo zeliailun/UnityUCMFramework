@@ -3,12 +3,12 @@ namespace UnknownCreator.Modules
     public readonly struct EvtTalentChanged
     {
         public readonly Unit owner;
-        public readonly string talentName;
+        public readonly AbilityBase talent;
 
-        public EvtTalentChanged(Unit owner, string talentName)
+        public EvtTalentChanged(Unit owner, AbilityBase talent)
         {
             this.owner = owner;
-            this.talentName = talentName;
+            this.talent = talent;
         }
     }
 }

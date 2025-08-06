@@ -70,6 +70,9 @@ namespace UnknownCreator.Modules
         [field: SerializeField]
         public bool isForceCastDir { internal set; get; } = false;
 
+        [field: SerializeField]
+        public bool isTalent { internal set; get; } = false;
+
 
         [field: SerializeField]
         public int startLevel { internal set; get; } = 1;

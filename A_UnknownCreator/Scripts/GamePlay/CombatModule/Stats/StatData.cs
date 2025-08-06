@@ -153,7 +153,7 @@ namespace UnknownCreator.Modules
         public void AddByName(string name, CalcType calcType, double value)
         {
             var key = new StatsKeyByName(name, calcType);
-            if (!nameKeys.TryGetValue(key, out _))
+            if (!nameKeys.TryGetValue(key, out var ressult))
             {
                 var sd = Mgr.RPool.Load<StatsCalc>();
                 sd.buff = null;
@@ -162,6 +162,12 @@ namespace UnknownCreator.Modules
                 sd.value = value;
                 calcList.Add(sd);
                 nameKeys.Add(key, sd);
+                CalcStatsValue();
+            }
+            else
+            {
+                ressult.value = value;
+                ressult.calcType = calcType;
                 CalcStatsValue();
             }
         }

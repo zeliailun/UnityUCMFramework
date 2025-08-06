@@ -38,11 +38,8 @@ namespace UnknownCreator.Modules
 
         private void CreateGUI()
         {
-            if (m_VisualTreeAsset == null)
-                m_VisualTreeAsset = EditorUtils.GetAsset<VisualTreeAsset>(visualTreeName);
-
-            if (gameCfgSO == null)
-                gameCfgSO = EditorUtils.GetAsset<GameCfgSO>(gameCfgName);
+            m_VisualTreeAsset = EditorUtils.GetAsset<VisualTreeAsset>(visualTreeName);
+            gameCfgSO = EditorUtils.GetAsset<GameCfgSO>(gameCfgName);
 
 
             root.Add(m_VisualTreeAsset.CloneTree());
@@ -81,6 +78,11 @@ namespace UnknownCreator.Modules
             var inspector = new InspectorElement(gameCfgSO);
             if (inspector != null)
                 root.Q<VisualElement>("Mgr").Add(inspector);
+        }
+
+        private void OnDisable()
+        {
+            gameCfgSO = null;
         }
 
         private void OnInspectorUpdate()

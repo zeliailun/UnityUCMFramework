@@ -62,7 +62,7 @@ namespace UnknownCreator.Modules
         // public IItemMgr itemMgr = null;
 
         [SerializeReference, ShowSerializeReference]
-        public IDamageMgr dmgMgr = new DamageMGR();
+        public IDamageMgr dmgMgr = new DamageMgr();
 
         [SerializeReference, ShowSerializeReference]
         public IProjectileMgr projMgr = new ProjectileMgr();

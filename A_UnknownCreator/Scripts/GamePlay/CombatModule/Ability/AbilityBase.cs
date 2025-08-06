@@ -136,8 +136,6 @@ namespace UnknownCreator.Modules
             currentCd = frozenCooldown = 0;
             isDie = owner.isAlive;
             isRelease = isFirstChargeCooldown = false;
-
-            OnInitialized();
         }
 
         internal void UpdateAbility()
@@ -147,7 +145,6 @@ namespace UnknownCreator.Modules
             //能力点和CD计算
             if (canCalcCooldown)
             {
-                if (abName == nameof(AbilityJetpack)) UCMDebug.Log(isCooldownReady);
                 currentCd = Math.Max(0, currentCd - CustomTime.DeltaTime());
                 Mgr.Event.Send<AbilityBase>(this, CombatEvtGlobals.OnAbilityCooldownCalc);
                 var count = GetCharge(level);

@@ -8,7 +8,14 @@ namespace UnknownCreator.Modules
     public struct AbilityKV
     {
         public List<double> value;
-        public TalentKV talentKV;
+        public TalentCalcType calcType;
+
+        public bool isOverrideValue;
+        public List<double> talentValues;
+
+        public string talentName;
+        public bool isBaseOrStat;
+        public string talentkey;
     }
 
     [Serializable]
@@ -18,17 +25,15 @@ namespace UnknownCreator.Modules
     }
 
     [Serializable]
-    public struct TalentKV
-    {
-        public string talentName;
-        public float talentValue;
-    }
-
-
-    [Serializable]
     public struct AbilityObjectKV
     {
         [SerializeReference, ShowSerializeReference]
         public object data;
+    }
+
+    public enum TalentCalcType
+    {
+        LinearAdd,    // 直接加
+        PercentAdd    // 按百分比加
     }
 }

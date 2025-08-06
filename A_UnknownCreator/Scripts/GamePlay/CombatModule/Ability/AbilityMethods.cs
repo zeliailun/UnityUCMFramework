@@ -21,21 +21,41 @@ namespace UnknownCreator.Modules
 
         public double GetValue(string name, int lv)
         {
-            if (!abilityCfg.baseKV.TryGetValue(name, out var akv) ||
-                lv <= 0 ||
-                akv.value is null ||
+            if (lv <= 0 ||
+                !abilityCfg.baseKV.TryGetValue(name, out var akv) ||
+                akv.value == null ||
                 lv > akv.value.Count)
-            {
-                UCMDebug.Log("获取不到:" + name + "的值");
-                return 0F;
-            }
+                return 0;
 
             double baseValue = akv.value[lv - 1];
 
-            if (owner.talentC.HasTalent(akv.talentKV.talentName))
-                baseValue += akv.talentKV.talentValue;
+            if (string.IsNullOrWhiteSpace(akv.talentName))
+                return baseValue;
 
-            return baseValue;
+            var talent = owner.talentC.GetTalent(akv.talentName);
+            if (talent == null || talent.isRelease)
+                return baseValue;
+
+            double addValue = 0;
+
+            if (akv.isOverrideValue)
+            {
+                if (akv.talentValues != null && lv <= akv.talentValues.Count)
+                    addValue = akv.talentValues[lv - 1];
+            }
+            else
+            {
+                addValue = akv.isBaseOrStat
+                    ? talent.GetStatValue(akv.talentName)
+                    : talent.GetValue(akv.talentName);
+            }
+
+            return akv.calcType switch
+            {
+                TalentCalcType.PercentAdd => baseValue * (1 + addValue),
+                TalentCalcType.LinearAdd => baseValue + addValue,
+                _ => baseValue
+            };
         }
 
         public double GetStatValue(string valueName)
@@ -43,19 +63,40 @@ namespace UnknownCreator.Modules
 
         public double GetStatValue(string valueName, int lv)
         {
-            if (lv <= 0 || !statsKV.TryGetValue(valueName, out var akv) || lv > akv.Count) return 0F;
+            if (lv <= 0 ||
+                !statsKV.TryGetValue(valueName, out var stats) ||
+                lv > stats.Count) return 0F;
+
             var askv = abilityCfg.statsKV[valueName];
-            if (owner.talentC.HasTalent(askv.abilityKV.talentKV.talentName))
+            var baseValue = stats[lv - 1].finalValue;
+
+            if (string.IsNullOrWhiteSpace(askv.abilityKV.talentName))
+                return baseValue;
+
+            var talent = owner.talentC.GetTalent(askv.abilityKV.talentName);
+            if (talent == null || talent.isRelease)
+                return baseValue;
+
+            double addValue = 0;
+
+            if (askv.abilityKV.isOverrideValue)
             {
-                foreach (var sd in akv)
-                    sd.AddByName(askv.abilityKV.talentKV.talentName, CalcType.LinearAdd, askv.abilityKV.talentKV.talentValue);
+                if (askv.abilityKV.talentValues != null && lv <= askv.abilityKV.talentValues.Count)
+                    addValue = askv.abilityKV.talentValues[lv - 1];
             }
             else
             {
-                foreach (var sd in akv)
-                    sd.Remove(askv.abilityKV.talentKV.talentName, CalcType.LinearAdd);
+                addValue = askv.abilityKV.isBaseOrStat
+                    ? talent.GetStatValue(askv.abilityKV.talentName)
+                    : talent.GetValue(askv.abilityKV.talentName);
             }
-            return akv[lv - 1].finalValue;
+
+            return askv.abilityKV.calcType switch
+            {
+                TalentCalcType.PercentAdd => baseValue * (1 + addValue),
+                TalentCalcType.LinearAdd => baseValue + addValue,
+                _ => baseValue
+            };
         }
 
         public void ChangeStatValue(string statsName, double value, bool isReplace)

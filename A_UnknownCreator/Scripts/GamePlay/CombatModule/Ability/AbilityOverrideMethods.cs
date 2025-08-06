@@ -15,11 +15,6 @@ namespace UnknownCreator.Modules
         public virtual int GetCustomCastFilterID() => -1;
 
         /// <summary>
-        /// 初始化完成时调用,还未添加到列表中,用来做一些变量初始化【不建议添加逻辑内容】
-        /// </summary>
-        public virtual void OnInitialized() { }
-
-        /// <summary>
         /// 创建完成时调用
         /// </summary>
         public virtual void OnCreated() { }
