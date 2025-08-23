@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NUnit;
 using UnityEngine;
 namespace UnknownCreator.Modules
 {
@@ -19,6 +20,7 @@ namespace UnknownCreator.Modules
 
         public string groupName { set; get; }
 
+        public bool isPlayEndUnload { set; get; }
 
         public bool isRelease { private set; get; }
 
@@ -211,11 +213,14 @@ namespace UnknownCreator.Modules
             soundEvt.name = soundName;
             soundEvt.position = soundT.position;
             Mgr.Event.Send(soundEvt, SoundGlobals.OnSoundPlayEnd);
+
+            if (isPlayEndUnload)
+                Mgr.Sound.UnloadSound(this);
         }
 
         private void SoundCompleted(TimerCountCycle countCycle)
         {
-            if(ids.Remove(countCycle.id))
+            if (ids.Remove(countCycle.id))
             {
                 Mgr.Timer.RemoveTimer(countCycle.id);
             }
@@ -226,6 +231,7 @@ namespace UnknownCreator.Modules
             if (isRelease) return;
 
             isRelease = true;
+            isPlayEndUnload = false;
 
             soundEndTimer.DestroySelf();
             soundEndTimer = null;

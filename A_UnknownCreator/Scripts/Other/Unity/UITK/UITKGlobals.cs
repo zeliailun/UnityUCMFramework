@@ -31,7 +31,7 @@ namespace UnknownCreator.Modules
             float startTime = Time.realtimeSinceStartup;
             float frequency = 15f;
 
-            IVisualElementScheduledItem scheduler = element.schedule.Execute(() =>
+            element.schedule.Execute(() =>
             {
                 float elapsed = Time.realtimeSinceStartup - startTime;
                 float progress = elapsed / duration;
@@ -57,7 +57,7 @@ namespace UnknownCreator.Modules
                     originalPosition.y + offset.y,
                     0
                 ));
-            }).Every(16).ForDuration((long)(duration * 1000));
+            }).Every(1).ForDuration((long)(duration * 1000));
         }
 
 
@@ -70,22 +70,27 @@ namespace UnknownCreator.Modules
         /// <param name="to"></param>
         public static void Scale(this VisualElement element, float duration = 0.3f, float from = 0f, float to = 1f)
         {
-            float startTime = Time.realtimeSinceStartup;
+            float lastTime = Time.realtimeSinceStartup;
+            float elapsed = 0f;
 
             element.style.scale = UnityGlobals.NewV3(from);
 
             element.schedule.Execute(() =>
             {
-                float elapsed = Time.realtimeSinceStartup - startTime;
-                float progress = Mathf.Clamp01(elapsed / duration);
+                // 计算帧间隔
+                float now = Time.realtimeSinceStartup;
+                float delta = now - lastTime;
+                lastTime = now;
 
-                // 使用缓动函数让动画丝滑（EaseInOut）
+                elapsed += delta;
+
+                float progress = Mathf.Clamp01(elapsed / duration);
                 float easedProgress = Mathf.SmoothStep(0f, 1f, progress);
                 float currentScale = Mathf.Lerp(from, to, easedProgress);
 
                 element.style.scale = UnityGlobals.NewV3(currentScale);
 
-            }).Every(1); // 每帧执行更顺滑
+            }).Every(1).ForDuration((long)(duration * 1000));
         }
 
 
@@ -108,8 +113,7 @@ namespace UnknownCreator.Modules
                 float progress = Mathf.Clamp01(elapsed / duration);
                 float currentOpacity = Mathf.Lerp(from, to, progress);
                 element.style.opacity = currentOpacity;
-
-            }).Every(16).ForDuration((long)(duration * 1000));
+            }).Every(1).ForDuration((long)(duration * 1000));
         }
 
 
@@ -120,18 +124,39 @@ namespace UnknownCreator.Modules
         public static void Slide(this VisualElement element, float duration, Vector2 from, Vector2 to)
         {
             float startTime = Time.realtimeSinceStartup;
+
             element.style.translate = new Translate(from.x, from.y, 0);
 
             element.schedule.Execute(() =>
             {
                 float elapsed = Time.realtimeSinceStartup - startTime;
-                float progress = Mathf.Clamp01(elapsed / duration);
-                float x = Mathf.Lerp(from.x, to.x, progress);
-                float y = Mathf.Lerp(from.y, to.y, progress);
+                float t = Mathf.Clamp01(elapsed / duration);
+                float smoothT = Mathf.SmoothStep(0f, 1f, t); // 平滑插值
+
+                float x = Mathf.Lerp(from.x, to.x, smoothT);
+                float y = Mathf.Lerp(from.y, to.y, smoothT);
+
                 element.style.translate = new Translate(x, y, 0);
 
-            }).Every(16).ForDuration((long)(duration * 1000));
+            }).Every(1).ForDuration((long)(duration * 1000));
         }
+
+
+
+        public static void ToggleClass(this VisualElement ve, string add, string remove)
+        {
+            ve.RemoveFromClassList(remove);
+            ve.AddToClassList(add);
+        }
+
+
+
+
+
+
+
+
+
 
     }
 }

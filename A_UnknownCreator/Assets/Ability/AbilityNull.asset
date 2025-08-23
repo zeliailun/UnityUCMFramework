@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: AbilityNull
   m_EditorClassIdentifier: 
   <cfgName>k__BackingField: AbilityNull
+  desc: 
   <cfg>k__BackingField:
     <icon>k__BackingField: 
     <abilityType>k__BackingField: 0
@@ -31,11 +32,13 @@ MonoBehaviour:
     <isForceAnimSp>k__BackingField: 0
     <animSp>k__BackingField: 1
     <defaultPassiveName>k__BackingField: 
-    <isRefreshable>k__BackingField: 1
-    <isForceCastDir>k__BackingField: 0
     <startLevel>k__BackingField: 1
     <maxLevel>k__BackingField: 1
+    <isRefreshable>k__BackingField: 1
+    <isForceCastDir>k__BackingField: 0
     <isEnableCharge>k__BackingField: 0
+    <isGamePauseCast>k__BackingField: 0
+    <isTalent>k__BackingField: 0
     <baseKV>k__BackingField:
       dictionaryList: []
     <statsKV>k__BackingField:
@@ -44,45 +47,60 @@ MonoBehaviour:
         Value:
           abilityKV:
             value: []
-            talentKV:
-              talentName: 
-              talentValue: 0
+            talentName: 
+            calcType: 0
+            isOverrideValue: 0
+            talentValues: []
+            isBaseOrStat: 0
+            talentValueName: 
         index: 0
         isKeyDuplicated: 0
       - Key: StatCastRange
         Value:
           abilityKV:
             value: []
-            talentKV:
-              talentName: 
-              talentValue: 0
+            talentName: 
+            calcType: 0
+            isOverrideValue: 0
+            talentValues: []
+            isBaseOrStat: 0
+            talentValueName: 
         index: 1
         isKeyDuplicated: 0
       - Key: StatCastRangeBuffer
         Value:
           abilityKV:
             value: []
-            talentKV:
-              talentName: 
-              talentValue: 0
+            talentName: 
+            calcType: 0
+            isOverrideValue: 0
+            talentValues: []
+            isBaseOrStat: 0
+            talentValueName: 
         index: 2
         isKeyDuplicated: 0
       - Key: StatCastPoint
         Value:
           abilityKV:
             value: []
-            talentKV:
-              talentName: 
-              talentValue: 0
+            talentName: 
+            calcType: 0
+            isOverrideValue: 0
+            talentValues: []
+            isBaseOrStat: 0
+            talentValueName: 
         index: 3
         isKeyDuplicated: 0
       - Key: StatCharge
         Value:
           abilityKV:
             value: []
-            talentKV:
-              talentName: 
-              talentValue: 0
+            talentName: 
+            calcType: 0
+            isOverrideValue: 0
+            talentValues: []
+            isBaseOrStat: 0
+            talentValueName: 
         index: 4
         isKeyDuplicated: 0
     <dataKV>k__BackingField:

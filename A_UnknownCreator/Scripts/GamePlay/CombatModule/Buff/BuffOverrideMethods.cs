@@ -20,11 +20,6 @@ namespace UnknownCreator.Modules
         /// <returns></returns>
         public virtual int GetMotionPriority() => 0;
 
-        /// <summary>
-        /// 是内部BUFF吗
-        /// </summary>
-        /// <returns></returns>
-       public virtual bool IsInternal() => false;
 
         /// <summary>
         /// 是否隐藏UI

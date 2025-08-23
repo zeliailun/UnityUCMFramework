@@ -46,8 +46,8 @@ namespace UnknownCreator.Modules
             else
             {
                 addValue = akv.isBaseOrStat
-                    ? talent.GetStatValue(akv.talentName)
-                    : talent.GetValue(akv.talentName);
+                    ? talent.GetStatValue(akv.talentValueName)
+                    : talent.GetValue(akv.talentValueName);
             }
 
             return akv.calcType switch
@@ -64,7 +64,7 @@ namespace UnknownCreator.Modules
         public double GetStatValue(string valueName, int lv)
         {
             if (lv <= 0 ||
-                !statsKV.TryGetValue(valueName, out var stats) ||
+                !statsKVDict.TryGetValue(valueName, out var stats) ||
                 lv > stats.Count) return 0F;
 
             var askv = abilityCfg.statsKV[valueName];
@@ -87,8 +87,8 @@ namespace UnknownCreator.Modules
             else
             {
                 addValue = askv.abilityKV.isBaseOrStat
-                    ? talent.GetStatValue(askv.abilityKV.talentName)
-                    : talent.GetValue(askv.abilityKV.talentName);
+                    ? talent.GetStatValue(askv.abilityKV.talentValueName)
+                    : talent.GetValue(askv.abilityKV.talentValueName);
             }
 
             return askv.abilityKV.calcType switch
@@ -101,7 +101,7 @@ namespace UnknownCreator.Modules
 
         public void ChangeStatValue(string statsName, double value, bool isReplace)
         {
-            if (statsKV.TryGetValue(statsName, out var akv))
+            if (statsKVDict.TryGetValue(statsName, out var akv))
             {
                 StatData result;
                 for (int i = 0; i < akv.Count; i++)

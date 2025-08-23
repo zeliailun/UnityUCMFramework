@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -261,11 +262,8 @@ namespace UnknownCreator.Modules
             content.Clear();
             contentName.text = activeItem.name;
 
-            var editor = UnityEditor.Editor.CreateEditor(activeItem);
-            content.Add(new IMGUIContainer()
-            {
-                onGUIHandler = editor.OnInspectorGUI
-            });
+            var inspector = new InspectorElement(activeItem);
+            content.Add(inspector);
 
             if (!soDict.TryGetValue(configSelection.text, out var value))
                 soDict.Add(configSelection.text, activeItem);

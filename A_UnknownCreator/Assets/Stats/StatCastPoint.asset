@@ -12,42 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f11400d899bffc42b4cfc51292db29f, type: 3}
   m_Name: StatCastPoint
   m_EditorClassIdentifier: 
-  serializationData:
-    SerializedFormat: 2
-    SerializedBytes: 
-    ReferencedUnityObjects: []
-    SerializedBytesString: 
-    Prefab: {fileID: 0}
-    PrefabModificationsReferencedUnityObjects: []
-    PrefabModifications: []
-    SerializationNodes:
-    - Name: cfg
-      Entry: 7
-      Data: 0|UnknownCreator.Modules.StatsCfg, Assembly-CSharp
-    - Name: idName
-      Entry: 1
-      Data: StatsCastPoint
-    - Name: canCalcValue
-      Entry: 5
-      Data: true
-    - Name: canChangeValue
-      Entry: 5
-      Data: true
-    - Name: minStatsName
-      Entry: 6
-      Data: 
-    - Name: minValue
-      Entry: 4
-      Data: 0
-    - Name: maxStatsName
-      Entry: 6
-      Data: 
-    - Name: maxValue
-      Entry: 4
-      Data: Infinity
-    - Name: 
-      Entry: 8
-      Data: 
-  guid: 53ec614649564b04284baf3627393bee
+  <cfgName>k__BackingField: StatCastPoint
+  cfg:
+    idName: StatCastPoint
+    canCalcValue: 1
+    canChangeValue: 1
+    minStatsName: 
+    minValue: 0
+    maxStatsName: 
+    maxValue: Infinity
   isPInf: 1
   isNInf: 0

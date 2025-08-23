@@ -162,7 +162,7 @@ namespace UnknownCreator.Modules
         }
 
         public void PurgableDebuff()
-        => RemoveBuffByCondition((buff) => buff.IsDebuff() && buff.IsPurgable() && !buff.IsInternal());
+        => RemoveBuffByCondition((buff) => buff.IsDebuff() && buff.IsPurgable());
 
         public void ClearBuff()
         {

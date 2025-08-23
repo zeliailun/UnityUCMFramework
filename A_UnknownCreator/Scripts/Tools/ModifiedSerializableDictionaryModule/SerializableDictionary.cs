@@ -1,5 +1,3 @@
-
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,6 +7,8 @@ namespace UnknownCreator.Modules
     public class SerializableDictionary<TKey, TValue> : Dictionary<TKey, TValue>, ISerializationCallbackReceiver
     {
         [SerializeField] private List<SerializedDictionaryKVPProps<TKey, TValue>> dictionaryList = new();
+
+        public IReadOnlyList<SerializedDictionaryKVPProps<TKey, TValue>> kv => dictionaryList;
 
 
         /*void ISerializationCallbackReceiver.OnBeforeSerialize()
@@ -65,22 +65,44 @@ namespace UnknownCreator.Modules
                 dictionaryList[i].index = i;
             }
         }
+        
 
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
             Clear();
 
-            dictionaryList.RemoveAll(r => r.Key == null);
-
-            foreach (var serializedKVP in dictionaryList)
+            HashSet<TKey> seenKeys = new();
+            SerializedDictionaryKVPProps<TKey, TValue> serializedKVP;
+            for (int i = 0; i < dictionaryList.Count; i++)
             {
-                if (!(serializedKVP.isKeyDuplicated = ContainsKey(serializedKVP.Key)))
+                serializedKVP = dictionaryList[i];
+
+                // 跳过已经是null的键
+                if (serializedKVP.Key == null || EqualityComparer<TKey>.Default.Equals(serializedKVP.Key, default))
                 {
+                    serializedKVP.isKeyDuplicated = true;
+                    continue;
+                }
+
+                if (seenKeys.Contains(serializedKVP.Key))
+                {
+                    serializedKVP.isKeyDuplicated = true;
+                    UCMDebug.LogWarning($"重复键 '{serializedKVP.Key}' 在索引 {i} 处发现。将键设置为null。");
+
+                    // 将重复键设为null
+                    serializedKVP.Key = default;
+                }
+                else
+                {
+                    serializedKVP.isKeyDuplicated = false;
                     Add(serializedKVP.Key, serializedKVP.Value);
+                    seenKeys.Add(serializedKVP.Key);
                 }
             }
-        }
 
+            // 最后清理null键的条目
+            dictionaryList.RemoveAll(r => r.Key == null || EqualityComparer<TKey>.Default.Equals(r.Key, default));
+        }
 
         public new TValue this[TKey key]
         {
@@ -151,6 +173,8 @@ namespace UnknownCreator.Modules
 #endif
             }
         }
+
+
 
         [System.Serializable]
         public class SerializedDictionaryKVPProps<TypeKey, TypeValue>

@@ -65,26 +65,25 @@ namespace UnknownCreator.Modules
         public string defaultPassiveName { internal set; get; }
 
         [field: SerializeField]
-        public bool isRefreshable { internal set; get; } = true;
-
-        [field: SerializeField]
-        public bool isForceCastDir { internal set; get; } = false;
-
-        [field: SerializeField]
-        public bool isTalent { internal set; get; } = false;
-
-
-        [field: SerializeField]
         public int startLevel { internal set; get; } = 1;
 
         [field: SerializeField]
         public int maxLevel { internal set; get; } = 1;
 
         [field: SerializeField]
+        public bool isRefreshable { internal set; get; } = true;
+
+        [field: SerializeField]
+        public bool isForceCastDir { internal set; get; } = false;
+
+        [field: SerializeField]
         public bool isEnableCharge { internal set; get; }
 
         [field: SerializeField]
         public bool isGamePauseCast { internal set; get; }
+
+        [field: SerializeField]
+        public bool isTalent { internal set; get; } = false;
 
         [JsonMark]
         [field: SerializeField]

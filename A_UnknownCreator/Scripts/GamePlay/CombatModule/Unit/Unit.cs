@@ -415,7 +415,6 @@ namespace UnknownCreator.Modules
 
         public bool HasAlive() => alive != null;
 
-
         public bool HasMaster()
         {
             return master != null;

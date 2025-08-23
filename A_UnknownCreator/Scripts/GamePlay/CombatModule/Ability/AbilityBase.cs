@@ -74,7 +74,8 @@ namespace UnknownCreator.Modules
 
         public bool isRelease { private set; get; }
 
-        private Dictionary<string, List<StatData>> statsKV = new();
+        private Dictionary<string, List<StatData>> statsKVDict = new();
+        private List<StatData> statsKVList = new();
         private Texture2D icon;
         private AnimPlayer ap;
         private AnimancerState castAnimState;
@@ -111,21 +112,35 @@ namespace UnknownCreator.Modules
             //添加统计到组件
             if (abilityCfg.statsKV.Count > 0)
             {
-                foreach (var kv in abilityCfg.statsKV)
+                for (int i = 0; i < abilityCfg.statsKV.kv.Count; i++)
                 {
+                    var kv = abilityCfg.statsKV.kv[i];
                     var stCfg = Mgr.JD.GetData<Dictionary<string, StatsCfg>>(JsonCfgNameGlobals.StatsJson)[kv.Key];
 
-                    if (!statsKV.TryGetValue(kv.Key, out var statsList))
+                    if (!statsKVDict.TryGetValue(kv.Key, out var statsList))
                     {
                         statsList = new List<StatData>();
-                        statsKV[kv.Key] = statsList;
+                        statsKVDict[kv.Key] = statsList;
                     }
 
                     if (kv.Value.abilityKV.value == null || kv.Value.abilityKV.value.Count < 1)
-                        statsList.Add(owner.statsC.AddStats(stCfg, 0, this));
+                    {
+                        var stat = owner.statsC.AddStats(stCfg, 0, this);
+                        statsList.Add(stat);
+                        statsKVList.Add(stat);
+                    }
                     else
-                        foreach (var value in kv.Value.abilityKV.value)
-                            statsList.Add(owner.statsC.AddStats(stCfg, value, this));
+                    {
+                        for (int x = 0; x < kv.Value.abilityKV.value.Count; x++)
+                        {
+                            double value = kv.Value.abilityKV.value[x];
+                            var stat = owner.statsC.AddStats(stCfg, value, this);
+                            statsList.Add(stat);
+                            statsKVList.Add(stat);
+                        }
+
+                    }
+
                 }
             }
 
@@ -209,10 +224,10 @@ namespace UnknownCreator.Modules
 
             RemovePassiveBuff();
 
-            foreach (var list in statsKV.Values)
-                foreach (var sd in list)
-                    owner.statsC.RemoveStats(sd);
-            statsKV.Clear();
+            for (int i = 0; i < statsKVList.Count; i++)
+                owner.statsC.RemoveStats(statsKVList[i]);
+            statsKVList.Clear();
+            statsKVDict.Clear();
 
             if (icon != null)
             {

@@ -7,11 +7,15 @@ namespace UnknownCreator.Modules
 
         int id { get; }
         string soundName { get; }
+        string groupName { set; get; }
+        bool isPlayEndUnload { set; get; }
+        bool isRelease { get; }
         GameObject soundObj { get; }
         Transform soundT { get; }
         AudioSource source { get; }
         SoundCfg soundCfg { get; }
-        string groupName { set; get; }
+       
+
         void Init(string soundName, GameObject soundObj);
         bool HasGroup();
         void PlaySound(bool isOneShot);
