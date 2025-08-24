@@ -1,9 +1,7 @@
 .OptionButton {
-    -unity-font-definition: url("project://database/Assets/A_UnknownCreator/Fonts/MiSans/otf/MiSans-Normal%20SDF.asset?fileID=11400000&guid=4827b424dbef6224d81e67b97210d6b7&type=2#MiSans-Normal SDF");
-    font-size: 15px;
-    -unity-text-align: middle-center;
-    white-space: pre;
-    -unity-font-style: bold;
+    min-height: auto;
+    height: 30px;
+    align-self: center;
 }
 
 .BaseText {
