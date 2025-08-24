@@ -110,35 +110,33 @@ namespace UnknownCreator.Modules
             }
 
             //添加统计到组件
-            if (abilityCfg.statsKV.Count > 0)
+            foreach (var kv in abilityCfg.statsKV)
             {
-                for (int i = 0; i < abilityCfg.statsKV.kv.Count; i++)
+                var stCfg = Mgr.JD.GetData<Dictionary<string, StatsCfg>>(JsonCfgNameGlobals.StatsJson)[kv.Key];
+
+                if (!statsKVDict.TryGetValue(kv.Key, out var statsList))
                 {
-                    var kv = abilityCfg.statsKV.kv[i];
-                    var stCfg = Mgr.JD.GetData<Dictionary<string, StatsCfg>>(JsonCfgNameGlobals.StatsJson)[kv.Key];
+                    statsList = new List<StatData>();
+                    statsKVDict[kv.Key] = statsList;
+                }
 
-                    if (!statsKVDict.TryGetValue(kv.Key, out var statsList))
-                    {
-                        statsList = new List<StatData>();
-                        statsKVDict[kv.Key] = statsList;
-                    }
 
-                    if (kv.Value.abilityKV.value == null || kv.Value.abilityKV.value.Count < 1)
+                if (kv.Value.abilityKV.value == null || kv.Value.abilityKV.value.Count < 1)
+                {
+                    var stat = owner.statsC.AddStats(stCfg, 0, this);
+
+
+                    statsList.Add(stat);
+                    statsKVList.Add(stat);
+                }
+                else
+                {
+                    for (int x = 0; x < kv.Value.abilityKV.value.Count; x++)
                     {
-                        var stat = owner.statsC.AddStats(stCfg, 0, this);
+                        double value = kv.Value.abilityKV.value[x];
+                        var stat = owner.statsC.AddStats(stCfg, value, this);
                         statsList.Add(stat);
                         statsKVList.Add(stat);
-                    }
-                    else
-                    {
-                        for (int x = 0; x < kv.Value.abilityKV.value.Count; x++)
-                        {
-                            double value = kv.Value.abilityKV.value[x];
-                            var stat = owner.statsC.AddStats(stCfg, value, this);
-                            statsList.Add(stat);
-                            statsKVList.Add(stat);
-                        }
-
                     }
 
                 }

@@ -8,32 +8,6 @@ namespace UnknownCreator.Modules
     {
         [SerializeField] private List<SerializedDictionaryKVPProps<TKey, TValue>> dictionaryList = new();
 
-        public IReadOnlyList<SerializedDictionaryKVPProps<TKey, TValue>> kv => dictionaryList;
-
-
-        /*void ISerializationCallbackReceiver.OnBeforeSerialize()
-        {
-            foreach (var kVP in this)
-            {
-                if (dictionaryList.FirstOrDefault(value => this.Comparer.Equals(value.Key, kVP.Key))
-                    is SerializedDictionaryKVPProps<TKey, TValue> serializedKVP)
-                {
-                    serializedKVP.Value = kVP.Value;
-                }
-                else
-                {
-                    dictionaryList.Add(kVP);
-                }
-            }
-
-            dictionaryList.RemoveAll(value => ContainsKey(value.Key) == false);
-
-            for (int i = 0; i < dictionaryList.Count; i++)
-            {
-                dictionaryList[i].index = i;
-            }
-        } */
-
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
@@ -97,7 +71,7 @@ namespace UnknownCreator.Modules
             get
             {
 
-                if (ContainsKey(key))
+                if (TryGetValue(key, out var result))
                 {
 #if UNITY_EDITOR
                     // 手动查找重复键
@@ -119,7 +93,7 @@ namespace UnknownCreator.Modules
                     if (hasDuplicate)
                         UCMDebug.LogError($"键 '{key}' 在字典中重复出现 {duplicateCount} 次！");
 #endif
-                    return base[key];
+                    return result;
                 }
                 else
                 {
@@ -129,12 +103,8 @@ namespace UnknownCreator.Modules
 
             set
             {
-
-                if (ContainsKey(key))
+                if (TryGetValue(key, out var result))
                 {
-                    // 更新值
-                    base[key] = value;
-
                     // 手动查找并更新序列化列表中的相应项
                     SerializedDictionaryKVPProps<TKey, TValue> kv;
                     for (int i = 0; i < dictionaryList.Count; i++)
@@ -149,10 +119,10 @@ namespace UnknownCreator.Modules
                 }
                 else
                 {
-                    // 添加新项
-                    Add(key, value);
                     dictionaryList.Add(new SerializedDictionaryKVPProps<TKey, TValue>(key, value));
                 }
+
+                base[key] = value;
             }
         }
 
