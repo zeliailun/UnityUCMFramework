@@ -30,7 +30,6 @@ namespace UnknownCreator.Modules
         [SerializeField,HideInInspector]
         internal SerializableDictionary<string, IUnitBuilder> builderDict = new();
 
-
         public UnitCfg()
         {
 

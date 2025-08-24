@@ -1,131 +1,155 @@
-#if UNITY_EDITOR
-using UnityEngine;
+﻿#if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditorInternal;
+using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
     [CustomPropertyDrawer(typeof(SerializableDictionary<,>), true)]
     public class SerializableDictionaryDrawer : PropertyDrawer
     {
+
+        private ReorderableList reorderableList;
+        private SerializedProperty property;
+        private SerializedProperty dictionaryList;
+        private SerializedProperty dividerPosProp;
+        private bool isDividerDragged;
+
         public override void OnGUI(Rect rect, SerializedProperty prop, GUIContent label)
         {
             var indentedRect = EditorGUI.IndentedRect(rect);
+            var headerRect = indentedRect;
+            headerRect.height = EditorGUIUtility.singleLineHeight;
 
-            void Head()
+            SetupProps(prop);
+
+            void Header()
             {
-                var headerRect = indentedRect;
-                headerRect.height = EditorGUIUtility.singleLineHeight;
+                var fullHeaderRect = new Rect(headerRect);
+                //fullHeaderRect.x -= 17;
+                //fullHeaderRect.width += 34;
 
-                void ExpandablePanel()
+                // 绘制背景高亮
+                if (Event.current != null && fullHeaderRect.Contains(Event.current.mousePosition))
                 {
-                    var fullHeaderRect = new Rect(headerRect);
-                    fullHeaderRect.x -= 17;
-                    fullHeaderRect.width += 34;
+                    Color transparentGrey = new Color(0.4f, 0.4f, 0.4f, 0.5f);
+                    EditorGUI.DrawRect(fullHeaderRect, transparentGrey);
+                }
 
-                    if (Event.current != null && fullHeaderRect.Contains(Event.current.mousePosition))
-                    {
-                        Color transparentGrey = new Color(0.4f, 0.4f, 0.4f, 0.4f);
-                        EditorGUI.DrawRect(fullHeaderRect, transparentGrey);
-                    }
-
-                    GUI.color = Color.clear;
-
-                    if (GUI.Button(new Rect(fullHeaderRect.x, fullHeaderRect.y, fullHeaderRect.width - 40,
-                                            fullHeaderRect.height), ""))
+                // 右键菜单
+                Event e = Event.current;
+                if (headerRect.Contains(e.mousePosition))
+                {
+                    if (e.type == EventType.MouseDown && e.button == 0)
                     {
                         prop.isExpanded = !prop.isExpanded;
+                        e.Use();
                     }
 
-                    GUI.color = Color.white;
-
-                    var triangleRect = rect;
-                    triangleRect.height = EditorGUIUtility.singleLineHeight;
-
-                    EditorGUI.Foldout(triangleRect, prop.isExpanded, "");
-                }
-
-                void DisplayName()
-                {
-                    GUI.color = Color.white;
-
-#if UNITY_2022_1_OR_NEWER
-                    var labelRect = headerRect;
-                    labelRect.x += 12;
-                    GUI.Label(labelRect, prop.displayName);
-#else
-                    GUI.Label(headerRect, prop.displayName);
-#endif
-
-                    GUI.color = Color.white;
-                    GUI.skin.label.fontSize = 12;
-                    GUI.skin.label.fontStyle = FontStyle.Normal;
-                    GUI.skin.label.alignment = TextAnchor.MiddleLeft;
-                }
-
-                void DuplicatedKeysWarning()
-                {
-                    if (Event.current != null && Event.current.type != EventType.Repaint)
+                    if (e.type == EventType.ContextClick)
                     {
-                        return;
-                    }
+                        GenericMenu menu = new();
 
-                    var hasRepeated = false;
-                    var repeatedKeys = new List<string>();
-
-                    for (int i = 0; i < dictionaryList.arraySize; i++)
-                    {
-                        SerializedProperty isKeyRepeatedProperty = dictionaryList.GetArrayElementAtIndex(i)
-                                                                           .FindPropertyRelative("isKeyDuplicated");
-
-                        if (isKeyRepeatedProperty.boolValue)
+                        if (CanPasteFromClipboard(out var dict))
                         {
-                            hasRepeated = true;
-                            SerializedProperty keyProperty = dictionaryList.GetArrayElementAtIndex(i).FindPropertyRelative("Key");
-                            string keyString = GetSerializedPropertyValueAsString(keyProperty);
-                            repeatedKeys.Add(keyString);
+                            menu.AddItem(new GUIContent("粘贴新项目"), false, () =>
+                            {
+                                int newIndex = dictionaryList.arraySize;
+                                dictionaryList.arraySize++;
+                                var kvpProp = dictionaryList.GetArrayElementAtIndex(newIndex);
+                                kvpProp.FindPropertyRelative("Key").SerializedPropertyToObject(dict["Key"]);
+                                kvpProp.FindPropertyRelative("Value").SerializedPropertyToObject(dict["Value"]);
+
+                                dictionaryList.serializedObject.ApplyModifiedProperties();
+                            });
                         }
-                    }
+                        else
+                        {
+                            menu.AddDisabledItem(new GUIContent("粘贴新项目"));
+                        }
 
-                    if (!hasRepeated)
-                    {
-                        return;
-                    }
+                        menu.AddItem(new GUIContent("清空字典"), false, () =>
+                        {
+                            dictionaryList.ClearArray();
+                            dictionaryList.serializedObject.ApplyModifiedProperties();
+                        });
 
-                    float with = GUI.skin.label.CalcSize(new GUIContent(prop.displayName)).x;
-                    headerRect.x += with + 24f;
-                    var warningRect = headerRect;
-                    Rect warningRectIcon = new Rect(headerRect.x - 18, headerRect.y, headerRect.width, headerRect.height);
-                    GUI.color = Color.white;
-                    GUI.Label(warningRectIcon, EditorGUIUtility.IconContent("console.erroricon"));
-                    GUI.color = new Color(1.0f, 0.443f, 0.443f);
-                    GUI.skin.label.fontStyle = FontStyle.Bold;
-                    GUI.Label(warningRect, "Duplicated keys: " + string.Join(", ", repeatedKeys));
-                    GUI.color = Color.white;
-                    GUI.skin.label.fontStyle = FontStyle.Normal;
+                        menu.ShowAsContext();
+                        e.Use();
+                    }
                 }
 
-                string GetSerializedPropertyValueAsString(SerializedProperty property)
+                // 绘制折叠三角
+                EditorGUI.Foldout(fullHeaderRect, property.isExpanded, "");
+
+                //名称
+                GUI.Label(headerRect, prop.displayName);
+                GUI.color = Color.white;
+                GUI.skin.label.fontSize = 12;
+                GUI.skin.label.fontStyle = FontStyle.Normal;
+                GUI.skin.label.alignment = TextAnchor.MiddleLeft;
+            }
+
+            void KeysWarning()
+            {
+                if (Event.current != null && Event.current.type != EventType.Repaint)
                 {
-                    switch (property.propertyType)
+                    return;
+                }
+
+                var hasRepeated = false;
+                var repeatedKeys = new List<string>();
+
+                for (int i = 0; i < dictionaryList.arraySize; i++)
+                {
+                    SerializedProperty isKeyRepeatedProperty = dictionaryList.GetArrayElementAtIndex(i)
+                                                                       .FindPropertyRelative("isKeyDuplicated");
+
+                    if (isKeyRepeatedProperty.boolValue)
                     {
-                        case SerializedPropertyType.Integer:
-                            return property.intValue.ToString();
-                        case SerializedPropertyType.Boolean:
-                            return property.boolValue.ToString();
-                        case SerializedPropertyType.Float:
-                            return property.floatValue.ToString();
-                        case SerializedPropertyType.String:
-                            return property.stringValue;
-                        default:
-                            return "(Unsupported Type)";
+                        hasRepeated = true;
+                        SerializedProperty keyProperty = dictionaryList.GetArrayElementAtIndex(i).FindPropertyRelative("Key");
+                        string keyString = keyProperty.propertyType switch
+                        {
+                            SerializedPropertyType.Integer => keyProperty.intValue.ToString(),
+                            SerializedPropertyType.Boolean => keyProperty.boolValue.ToString(),
+                            SerializedPropertyType.Float => keyProperty.floatValue.ToString(),
+                            SerializedPropertyType.String => keyProperty.stringValue,
+                            SerializedPropertyType.Enum => keyProperty.enumDisplayNames.Length > 0
+                                                                        ? keyProperty.enumDisplayNames[keyProperty.enumValueIndex]
+                                                                        : keyProperty.enumValueIndex.ToString(),
+                            SerializedPropertyType.ObjectReference => keyProperty.objectReferenceValue != null
+                                                                        ? keyProperty.objectReferenceValue.name
+                                                                        : "null",
+                            SerializedPropertyType.Color => keyProperty.colorValue.ToString(),
+                            SerializedPropertyType.Vector2 => keyProperty.vector2Value.ToString(),
+                            SerializedPropertyType.Vector3 => keyProperty.vector3Value.ToString(),
+                            SerializedPropertyType.Vector4 => keyProperty.vector4Value.ToString(),
+                            SerializedPropertyType.Rect => keyProperty.rectValue.ToString(),
+                            SerializedPropertyType.Quaternion => keyProperty.quaternionValue.eulerAngles.ToString(),
+                            SerializedPropertyType.Character => ((char)keyProperty.intValue).ToString(),
+                            SerializedPropertyType.Bounds => keyProperty.boundsValue.ToString(),
+                            SerializedPropertyType.ManagedReference => keyProperty.GetSerializedObjectType().Name,
+                            _ => "(其它类型)"
+                        };
+                        repeatedKeys.Add(keyString);
                     }
                 }
 
-                ExpandablePanel();
-                DisplayName();
-                DuplicatedKeysWarning();
+                if (!hasRepeated)
+                {
+                    return;
+                }
+
+                float with = GUI.skin.label.CalcSize(new GUIContent(prop.displayName)).x;
+                headerRect.x += with + 30f;
+                var warningRect = headerRect;
+                Rect warningRectIcon = new(headerRect.x - 18, headerRect.y, headerRect.width, headerRect.height);
+                GUI.color = new Color(1f, 0.4f, 0.4f);
+                GUI.skin.label.fontStyle = FontStyle.Bold;
+                GUI.Label(warningRect, "重复keys: " + string.Join(", ", repeatedKeys));
             }
 
             void List()
@@ -144,9 +168,8 @@ namespace UnknownCreator.Modules
                 reorderableList.DoList(indentedRect);
             }
 
-            SetupProps(prop);
-
-            Head();
+            Header();
+            KeysWarning();
             List();
         }
 
@@ -165,35 +188,36 @@ namespace UnknownCreator.Modules
             return height;
         }
 
-        private float GetListElementHeight(int index)
+        private void SetupList(SerializedProperty prop)
         {
-            var kvpProp = dictionaryList.GetArrayElementAtIndex(index);
-            var keyProp = kvpProp.FindPropertyRelative("Key");
-            var valueProp = kvpProp.FindPropertyRelative("Value");
-
-            float GetPropertyHeight(SerializedProperty prop)
+            if (reorderableList != null)
             {
-                if (IsSingleLine(prop))
-                {
-                    return EditorGUI.GetPropertyHeight(prop);
-                }
-
-                var height = 1f;
-
-                foreach (var childProp in GetChildren(prop, false))
-                {
-                    height += EditorGUI.GetPropertyHeight(childProp) + 1;
-                }
-
-                height += 10;
-
-                return height;
+                return;
             }
 
-            return Mathf.Max(GetPropertyHeight(keyProp), GetPropertyHeight(valueProp));
+            SetupProps(prop);
+
+            this.reorderableList = new ReorderableList(dictionaryList.serializedObject, dictionaryList, true, false, true, true)
+            {
+                drawElementCallback = DrawListElement,
+                elementHeightCallback = GetListElementHeight,
+                drawNoneElementCallback = ShowDictIsEmptyMessage
+            };
         }
 
-        void DrawListElement(Rect rect, int index, bool isActive, bool isFocused)
+        public void SetupProps(SerializedProperty prop)
+        {
+            if (this.property != null)
+            {
+                return;
+            }
+
+            this.property = prop;
+            this.dictionaryList = prop.FindPropertyRelative("dictionaryList");
+            this.dividerPosProp = prop.FindPropertyRelative("dividerPos");
+        }
+
+        private void DrawListElement(Rect rect, int index, bool isActive, bool isFocused)
         {
             Rect keyRect;
             Rect valueRect;
@@ -202,6 +226,70 @@ namespace UnknownCreator.Modules
             var kvpProp = dictionaryList.GetArrayElementAtIndex(index);
             var keyProp = kvpProp.FindPropertyRelative("Key");
             var valueProp = kvpProp.FindPropertyRelative("Value");
+
+
+            void ItemMenu()
+            {
+                Event e = Event.current;
+                if (e != null && e.type == EventType.ContextClick && rect.Contains(e.mousePosition))
+                {
+                    GenericMenu menu = new GenericMenu();
+
+                    menu.AddItem(new GUIContent("复制"), false, () =>
+                    {
+                        var kvpProp = dictionaryList.GetArrayElementAtIndex(index);
+                        var jsonDict = new Dictionary<string, object>
+                        {
+                            ["Key"] = keyProp.GetSerializedObject(),
+                            ["Value"] = valueProp.GetSerializedObject(),
+                        };
+                        string json = JsonMapper.ToJson(jsonDict);
+                        GUIUtility.systemCopyBuffer = json;
+                    });
+
+                    if (CanPasteFromClipboard(out var dict1))
+                    {
+                        menu.AddItem(new GUIContent("覆盖"), false, () =>
+                        {
+                            var kvpProp = dictionaryList.GetArrayElementAtIndex(index);
+                            kvpProp.FindPropertyRelative("Key").SerializedPropertyToObject(dict1["Key"]);
+                            kvpProp.FindPropertyRelative("Value").SerializedPropertyToObject(dict1["Value"]);
+                            property.serializedObject.ApplyModifiedProperties();
+                        });
+                    }
+                    else
+                    {
+                        menu.AddDisabledItem(new GUIContent("覆盖"));
+                    }
+
+
+                    if (CanPasteFromClipboard(out var dict2))
+                    {
+                        menu.AddItem(new GUIContent("粘贴新项目"), false, () =>
+                        {
+                            int newIndex = dictionaryList.arraySize;
+                            dictionaryList.arraySize++;
+                            var kvpProp = dictionaryList.GetArrayElementAtIndex(newIndex);
+                            kvpProp.FindPropertyRelative("Key").SerializedPropertyToObject(dict2["Key"]);
+                            kvpProp.FindPropertyRelative("Value").SerializedPropertyToObject(dict2["Value"]);
+                        });
+                    }
+                    else
+                    {
+                        menu.AddDisabledItem(new GUIContent("粘贴新项目"));
+                    }
+
+
+                    menu.AddItem(new GUIContent("删除"), false, () =>
+                    {
+                        dictionaryList.DeleteArrayElementAtIndex(index);
+                        property.serializedObject.ApplyModifiedProperties();
+                    });
+
+                    menu.ShowAsContext();
+                    e.Use();
+                }
+            }
 
             void Draw(Rect rect, SerializedProperty prop)
             {
@@ -212,12 +300,20 @@ namespace UnknownCreator.Modules
                 }
                 else
                 {
-                    foreach (var childProp in GetChildren(prop, false))
+                    Rect foldoutRect = new Rect(rect.x + 12, rect.y, rect.width - 12, EditorGUIUtility.singleLineHeight);
+                    prop.isExpanded = EditorGUI.Foldout(foldoutRect, prop.isExpanded, prop.GetSerializedObject().GetType().Name, false);
+
+                    rect.y += EditorGUIUtility.singleLineHeight + 2;
+                    if (prop.isExpanded)
                     {
-                        var childPropHeight = EditorGUI.GetPropertyHeight(childProp);
-                        rect.height = childPropHeight;
-                        EditorGUI.PropertyField(rect, childProp, true);
-                        rect.y += childPropHeight + 2;
+                        EditorGUI.indentLevel++;
+                        foreach (var childProp in GetChildren(prop, false))
+                        {
+                            float childHeight = EditorGUI.GetPropertyHeight(childProp, true);
+                            EditorGUI.PropertyField(new Rect(rect.x, rect.y, rect.width, childHeight), childProp, true);
+                            rect.y += childHeight + 2;
+                        }
+                        EditorGUI.indentLevel--;
                     }
                 }
             }
@@ -307,16 +403,45 @@ namespace UnknownCreator.Modules
                     }
                 }
 
-                if (isDividerDragged && Event.current != null && Event.current.type == EventType.MouseDrag)
+                if (isDividerDragged && dividerPosProp != null && Event.current != null && Event.current.type == EventType.MouseDrag)
                 {
                     dividerPosProp.floatValue = Mathf.Clamp(dividerPosProp.floatValue + Event.current.delta.x / rect.width, .2f, .8f);
                 }
             }
 
+
+            ItemMenu();
             DrawRects();
             Key();
             Value();
             Divider();
+        }
+
+        private float GetListElementHeight(int index)
+        {
+            var kvpProp = dictionaryList.GetArrayElementAtIndex(index);
+            var keyProp = kvpProp.FindPropertyRelative("Key");
+            var valueProp = kvpProp.FindPropertyRelative("Value");
+
+            float GetPropertyHeight(SerializedProperty prop)
+            {
+                if (IsSingleLine(prop))
+                    return EditorGUIUtility.singleLineHeight;
+
+                float height = EditorGUIUtility.singleLineHeight; // Foldout 本身高度
+
+                if (prop.isExpanded)
+                {
+                    foreach (var child in GetChildren(prop, false))
+                    {
+                        height += EditorGUI.GetPropertyHeight(child, true) + 2;
+                    }
+                }
+
+                return height;
+            }
+
+            return Mathf.Max(GetPropertyHeight(keyProp), GetPropertyHeight(valueProp));
         }
 
         private void ShowDictIsEmptyMessage(Rect rect)
@@ -346,39 +471,26 @@ namespace UnknownCreator.Modules
             return prop != null && (prop.propertyType != SerializedPropertyType.Generic || prop.hasVisibleChildren == false);
         }
 
-        private void SetupList(SerializedProperty prop)
+        private bool CanPasteFromClipboard(out Dictionary<string, object> dict)
         {
-            if (reorderableList != null)
+            string json = GUIUtility.systemCopyBuffer;
+            if (string.IsNullOrEmpty(json))
             {
-                return;
+                dict = null;
+                return false;
             }
 
-            SetupProps(prop);
-
-            this.reorderableList = new ReorderableList(dictionaryList.serializedObject, dictionaryList, true, false, true, true);
-            this.reorderableList.drawElementCallback = DrawListElement;
-            this.reorderableList.elementHeightCallback = GetListElementHeight;
-            this.reorderableList.drawNoneElementCallback = ShowDictIsEmptyMessage;
-        }
-
-        private ReorderableList reorderableList;
-        private bool isDividerDragged;
-
-        public void SetupProps(SerializedProperty prop)
-        {
-            if (this.property != null)
+            json = json.Trim();
+            if (!json.StartsWith("{") || !json.EndsWith("}"))
             {
-                return;
+                dict = null;
+                return false;
             }
 
-            this.property = prop;
-            this.dictionaryList = prop.FindPropertyRelative("dictionaryList");
-            this.dividerPosProp = prop.FindPropertyRelative("dividerPos");
+            dict = JsonMapper.ToObject<Dictionary<string, object>>(json);
+            return dict != null && dict.ContainsKey("Key") && dict.ContainsKey("Value");
         }
 
-        private SerializedProperty property;
-        private SerializedProperty dictionaryList;
-        private SerializedProperty dividerPosProp;
     }
 }
 #endif

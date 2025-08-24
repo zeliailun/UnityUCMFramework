@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
 
 namespace UnknownCreator.Modules
@@ -37,7 +37,7 @@ namespace UnknownCreator.Modules
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
-            // ¸üĞÂ»òÌí¼Ó¼üÖµ¶Ô
+            // æ›´æ–°æˆ–æ·»åŠ é”®å€¼å¯¹
             foreach (var kVP in this)
             {
                 bool found = false;
@@ -56,16 +56,15 @@ namespace UnknownCreator.Modules
                     dictionaryList.Add(kVP);
             }
 
-            // ÒÆ³ı²»ÔÙ´æÔÚµÄ¼ü
-            dictionaryList.RemoveAll(value => !ContainsKey(value.Key));
+            dictionaryList.RemoveAll(value => value == null || !ContainsKey(value.Key));
 
-            // ¸üĞÂË÷Òı
+            // æ›´æ–°ç´¢å¼•
             for (int i = 0; i < dictionaryList.Count; i++)
             {
                 dictionaryList[i].index = i;
             }
         }
-        
+
 
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
@@ -77,20 +76,10 @@ namespace UnknownCreator.Modules
             {
                 serializedKVP = dictionaryList[i];
 
-                // Ìø¹ıÒÑ¾­ÊÇnullµÄ¼ü
-                if (serializedKVP.Key == null || EqualityComparer<TKey>.Default.Equals(serializedKVP.Key, default))
-                {
-                    serializedKVP.isKeyDuplicated = true;
-                    continue;
-                }
-
                 if (seenKeys.Contains(serializedKVP.Key))
                 {
                     serializedKVP.isKeyDuplicated = true;
-                    UCMDebug.LogWarning($"ÖØ¸´¼ü '{serializedKVP.Key}' ÔÚË÷Òı {i} ´¦·¢ÏÖ¡£½«¼üÉèÖÃÎªnull¡£");
-
-                    // ½«ÖØ¸´¼üÉèÎªnull
-                    serializedKVP.Key = default;
+                    serializedKVP.Value = default;
                 }
                 else
                 {
@@ -100,18 +89,18 @@ namespace UnknownCreator.Modules
                 }
             }
 
-            // ×îºóÇåÀínull¼üµÄÌõÄ¿
-            dictionaryList.RemoveAll(r => r.Key == null || EqualityComparer<TKey>.Default.Equals(r.Key, default));
+            dictionaryList.RemoveAll(value => value == null || !ContainsKey(value.Key));
         }
 
         public new TValue this[TKey key]
         {
             get
             {
-#if UNITY_EDITOR
+
                 if (ContainsKey(key))
                 {
-                    // ÊÖ¶¯²éÕÒÖØ¸´¼ü
+#if UNITY_EDITOR
+                    // æ‰‹åŠ¨æŸ¥æ‰¾é‡å¤é”®
                     bool hasDuplicate = false;
                     int duplicateCount = 0;
                     for (int i = 0; i < dictionaryList.Count; i++)
@@ -128,49 +117,42 @@ namespace UnknownCreator.Modules
                     }
 
                     if (hasDuplicate)
-                    {
-                        Debug.LogError($"Key '{key}' is duplicated {duplicateCount} times in the dictionary.");
-                    }
-
+                        UCMDebug.LogError($"é”® '{key}' åœ¨å­—å…¸ä¸­é‡å¤å‡ºç° {duplicateCount} æ¬¡ï¼");
+#endif
                     return base[key];
                 }
                 else
                 {
-                    Debug.LogError($"Key '{key}' not found in dictionary.");
                     return default(TValue);
                 }
-#else
-        return base[key];
-#endif
             }
 
             set
             {
-#if UNITY_EDITOR
+
                 if (ContainsKey(key))
                 {
-                    // ¸üĞÂÖµ
+                    // æ›´æ–°å€¼
                     base[key] = value;
 
-                    // ÊÖ¶¯²éÕÒ²¢¸üĞÂĞòÁĞ»¯ÁĞ±íÖĞµÄÏàÓ¦Ïî
+                    // æ‰‹åŠ¨æŸ¥æ‰¾å¹¶æ›´æ–°åºåˆ—åŒ–åˆ—è¡¨ä¸­çš„ç›¸åº”é¡¹
+                    SerializedDictionaryKVPProps<TKey, TValue> kv;
                     for (int i = 0; i < dictionaryList.Count; i++)
                     {
-                        if (this.Comparer.Equals(dictionaryList[i].Key, key))
+                        kv = dictionaryList[i];
+                        if (this.Comparer.Equals(kv.Key, key))
                         {
-                            dictionaryList[i].Value = value;
+                            kv.Value = value;
                             break;
                         }
                     }
                 }
                 else
                 {
-                    // Ìí¼ÓĞÂÏî
+                    // æ·»åŠ æ–°é¡¹
                     Add(key, value);
                     dictionaryList.Add(new SerializedDictionaryKVPProps<TKey, TValue>(key, value));
                 }
-#else
-        base[key] = value;
-#endif
             }
         }
 
