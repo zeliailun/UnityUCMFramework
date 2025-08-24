@@ -52,6 +52,49 @@ namespace UnknownCreator.Modules
                     {
                         GenericMenu menu = new();
 
+                        menu.AddItem(new GUIContent("复制字典"), false, () =>
+                        {
+                            var jsonDictList = new List<Dictionary<string, object>>();
+                            for (int i = 0; i < dictionaryList.arraySize; i++)
+                            {
+                                var kvpProp = dictionaryList.GetArrayElementAtIndex(i);
+                                var key = kvpProp.FindPropertyRelative("Key").GetSerializedObject();
+                                var value = kvpProp.FindPropertyRelative("Value").GetSerializedObject();
+                                jsonDictList.Add(new Dictionary<string, object>
+                                {
+                                    ["Key"] = key,
+                                    ["Value"] = value
+                                });
+                            }
+
+                            string json = JsonMapper.ToJson(jsonDictList);
+                            GUIUtility.systemCopyBuffer = json;
+                        });
+
+
+                        if (CanPasteDictionaryFromClipboard(out var dictList))
+                        {
+                            menu.AddItem(new GUIContent("粘贴字典"), false, () =>
+                            {
+                                dictionaryList.ClearArray();
+                                foreach (var kvp in dictList)
+                                {
+                                    int newIndex = dictionaryList.arraySize;
+                                    dictionaryList.arraySize++;
+                                    var kvpProp = dictionaryList.GetArrayElementAtIndex(newIndex);
+
+                                    kvpProp.FindPropertyRelative("Key").SerializedPropertyToObject(kvp["Key"]);
+                                    kvpProp.FindPropertyRelative("Value").SerializedPropertyToObject(kvp["Value"]);
+                                }
+                                dictionaryList.serializedObject.ApplyModifiedProperties();
+                            });
+                        }
+                        else
+                        {
+                            menu.AddDisabledItem(new GUIContent("粘贴字典"));
+                        }
+
+
                         if (CanPasteFromClipboard(out var dict))
                         {
                             menu.AddItem(new GUIContent("粘贴新项目"), false, () =>
@@ -491,6 +534,27 @@ namespace UnknownCreator.Modules
             return dict != null && dict.ContainsKey("Key") && dict.ContainsKey("Value");
         }
 
+        private bool CanPasteDictionaryFromClipboard(out List<Dictionary<string, object>> dictList)
+        {
+            dictList = null;
+            string json = GUIUtility.systemCopyBuffer;
+            if (string.IsNullOrEmpty(json)) return false;
+
+            json = json.Trim();
+            if (!json.StartsWith("[") || !json.EndsWith("]")) return false; // 整个字典列表应该是 JSON 数组
+
+            dictList = JsonMapper.ToObject<List<Dictionary<string, object>>>(json);
+            if (dictList == null) return false;
+
+            // 检查每个元素是否有 Key 和 Value
+            foreach (var kvp in dictList)
+            {
+                if (!kvp.ContainsKey("Key") || !kvp.ContainsKey("Value"))
+                    return false;
+            }
+
+            return true;
+        }
     }
 }
 #endif
