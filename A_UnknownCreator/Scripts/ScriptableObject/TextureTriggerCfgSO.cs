@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
-
+    [HideScriptField]
     public class TextureTriggerCfgSO : CustomScriptableObject
     {
         /*

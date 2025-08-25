@@ -23,11 +23,11 @@ namespace UnknownCreator.Modules
         {
             if (lv <= 0 ||
                 !abilityCfg.baseKV.TryGetValue(name, out var akv) ||
-                akv.value == null ||
-                lv > akv.value.Count)
+                akv.baseValue == null ||
+                lv > akv.baseValue.Count)
                 return 0;
 
-            double baseValue = akv.value[lv - 1];
+            double baseValue = akv.baseValue[lv - 1];
 
             if (string.IsNullOrWhiteSpace(akv.talentName))
                 return baseValue;

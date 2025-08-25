@@ -38,8 +38,8 @@ namespace UnknownCreator.Modules
 
         private void CreateGUI()
         {
-            m_VisualTreeAsset = EditorUtils.GetAsset<VisualTreeAsset>(visualTreeName);
-            gameCfgSO = EditorUtils.GetAsset<GameCfgSO>(gameCfgName);
+            m_VisualTreeAsset = UnityEditorGlobals.GetAsset<VisualTreeAsset>(visualTreeName);
+            gameCfgSO = UnityEditorGlobals.GetAsset<GameCfgSO>(gameCfgName);
 
 
             root.Add(m_VisualTreeAsset.CloneTree());

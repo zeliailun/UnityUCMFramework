@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using NUnit;
 using UnityEngine;
@@ -103,7 +103,7 @@ namespace UnknownCreator.Modules
 
             if (soundCfg.isRandomPlay)
             {
-                index = RVUtils.RandomInt(0, clips.Length, false);
+                index = RVGlobals.RandomInt(0, clips.Length, false);
             }
             else
             {

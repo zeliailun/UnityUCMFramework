@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using UnityEngine;
 using UnityEngine.UIElements;
 namespace UnknownCreator.Modules
@@ -6,7 +6,7 @@ namespace UnknownCreator.Modules
     public static class UITKGlobals
     {
         /// <summary>
-        /// Èç¹ûµ±Ç°°´Å¥¿Éµã»÷£¬ÔòÉèÖÃÀäÈ´²¢·µ»Ø true£»·ñÔò·µ»Ø false¡£
+        /// å¦‚æœå½“å‰æŒ‰é’®å¯ç‚¹å‡»ï¼Œåˆ™è®¾ç½®å†·å´å¹¶è¿”å› trueï¼›å¦åˆ™è¿”å› falseã€‚
         /// </summary>
         public static bool TryClickCooldown(this Button btn, int cooldownMs = 200)
         {
@@ -20,11 +20,11 @@ namespace UnknownCreator.Modules
 
 
         /// <summary>
-        /// ¶¶¶¯Ğ§¹û
+        /// æŠ–åŠ¨æ•ˆæœ
         /// </summary>
-        /// <param name="element">Òª¶¶¶¯µÄUIÔªËØ</param>
-        /// <param name="duration">¶¶¶¯³ÖĞøÊ±¼ä(Ãë)</param>
-        /// <param name="intensity">¶¶¶¯Ç¿¶È(ÏñËØ)</param>
+        /// <param name="element">è¦æŠ–åŠ¨çš„UIå…ƒç´ </param>
+        /// <param name="duration">æŠ–åŠ¨æŒç»­æ—¶é—´(ç§’)</param>
+        /// <param name="intensity">æŠ–åŠ¨å¼ºåº¦(åƒç´ )</param>
         public static void Shake(this VisualElement element, float duration = .5f, float intensity = 10f)
         {
             var originalPosition = Vector3.zero;
@@ -42,14 +42,14 @@ namespace UnknownCreator.Modules
                     return;
                 }
 
-                // Ê¹ÓÃË¥¼õÇúÏßÊ¹¶¶¶¯Öğ½¥¼õÈõ
+                // ä½¿ç”¨è¡°å‡æ›²çº¿ä½¿æŠ–åŠ¨é€æ¸å‡å¼±
                 float decay = Mathf.Clamp01(1 - progress);
                 float shake = Mathf.Sin(elapsed * frequency) * intensity * decay;
 
-                // Ìí¼ÓÒ»Ğ©Ëæ»úĞÔµ«±£³ÖÁ¬¹á
+                // æ·»åŠ ä¸€äº›éšæœºæ€§ä½†ä¿æŒè¿è´¯
                 Vector2 offset = new(
-                    shake * RVUtils.RandomFloat(-1f, 1f, true),
-                    shake * RVUtils.RandomFloat(-1f, 1f, true)
+                    shake * RVGlobals.RandomFloat(-1f, 1f, true),
+                    shake * RVGlobals.RandomFloat(-1f, 1f, true)
                 );
 
                 element.style.translate = new StyleTranslate(new Translate(
@@ -62,7 +62,7 @@ namespace UnknownCreator.Modules
 
 
         /// <summary>
-        /// Ëõ·ÅĞ§¹û
+        /// ç¼©æ”¾æ•ˆæœ
         /// </summary>
         /// <param name="element"></param>
         /// <param name="duration"></param>
@@ -77,7 +77,7 @@ namespace UnknownCreator.Modules
 
             element.schedule.Execute(() =>
             {
-                // ¼ÆËãÖ¡¼ä¸ô
+                // è®¡ç®—å¸§é—´éš”
                 float now = Time.realtimeSinceStartup;
                 float delta = now - lastTime;
                 lastTime = now;
@@ -95,12 +95,12 @@ namespace UnknownCreator.Modules
 
 
         /// <summary>
-        /// Í¸Ã÷¶È½¥±äĞ§¹û
+        /// é€æ˜åº¦æ¸å˜æ•ˆæœ
         /// </summary>
-        /// <param name="element">Òª½¥±äµÄUIÔªËØ</param>
-        /// <param name="duration">³ÖĞøÊ±¼ä£¨Ãë£©</param>
-        /// <param name="from">ÆğÊ¼Í¸Ã÷¶È£¨0~1£©</param>
-        /// <param name="to">Ä¿±êÍ¸Ã÷¶È£¨0~1£©</param>
+        /// <param name="element">è¦æ¸å˜çš„UIå…ƒç´ </param>
+        /// <param name="duration">æŒç»­æ—¶é—´ï¼ˆç§’ï¼‰</param>
+        /// <param name="from">èµ·å§‹é€æ˜åº¦ï¼ˆ0~1ï¼‰</param>
+        /// <param name="to">ç›®æ ‡é€æ˜åº¦ï¼ˆ0~1ï¼‰</param>
         public static void Fade(this VisualElement element, float duration = 0.3f, float from = 0f, float to = 1f)
         {
             float startTime = Time.realtimeSinceStartup;
@@ -119,7 +119,7 @@ namespace UnknownCreator.Modules
 
 
         /// <summary>
-        /// »¬¶¯Ğ§¹û£¨Ö§³ÖÉÏÏÂ×óÓÒ·½Ïò£©
+        /// æ»‘åŠ¨æ•ˆæœï¼ˆæ”¯æŒä¸Šä¸‹å·¦å³æ–¹å‘ï¼‰
         /// </summary>
         public static void Slide(this VisualElement element, float duration, Vector2 from, Vector2 to)
         {
@@ -131,7 +131,7 @@ namespace UnknownCreator.Modules
             {
                 float elapsed = Time.realtimeSinceStartup - startTime;
                 float t = Mathf.Clamp01(elapsed / duration);
-                float smoothT = Mathf.SmoothStep(0f, 1f, t); // Æ½»¬²åÖµ
+                float smoothT = Mathf.SmoothStep(0f, 1f, t); // å¹³æ»‘æ’å€¼
 
                 float x = Mathf.Lerp(from.x, to.x, smoothT);
                 float y = Mathf.Lerp(from.y, to.y, smoothT);

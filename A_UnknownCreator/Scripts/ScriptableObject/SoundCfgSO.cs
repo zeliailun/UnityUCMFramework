@@ -1,8 +1,9 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
+    [HideScriptField]
     public class SoundCfgSO : CustomScriptableObject
     {
         [field: SerializeField]

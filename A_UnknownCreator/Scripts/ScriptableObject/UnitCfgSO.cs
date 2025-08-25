@@ -2,6 +2,7 @@
 
 namespace UnknownCreator.Modules
 {
+    [HideScriptField]
     public class UnitCfgSO : CustomScriptableObject
     {
         /// <summary>

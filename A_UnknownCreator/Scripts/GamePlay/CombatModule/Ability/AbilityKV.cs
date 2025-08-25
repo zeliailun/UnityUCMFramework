@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using System;
 using UnityEngine;
 
@@ -7,27 +7,26 @@ namespace UnknownCreator.Modules
     [Serializable]
     public struct AbilityKV
     {
-        [Header("»ù´¡Öµ")]
-        public List<double> value;
+        [Tooltip("é»˜è®¤å€¼")]
+        public List<double> baseValue;
 
-        [Header("Ìì¸³Ãû³Æ")]
+        [Tooltip("å¤©èµ‹åç§°")]
         public string talentName;
 
-        [Header("Ìì¸³Öµ¼ÆËãÀàĞÍ")]
+        [Tooltip("å¤©èµ‹å€¼è®¡ç®—ç±»å‹")]
         public TalentCalcType calcType;
 
-        [Header("¸²¸ÇÌì¸³Ô­ÓĞÊıÖµ£¿")]
-        [Tooltip("isOverrideValueÎªtrueÊ±£¬»áÊ¹ÓÃtalentValuesµÄÖµ¶ø²»ÊÇÌì¸³±¾ÉíµÄÖµ")]
+        [Tooltip("isOverrideValueä¸ºtrueæ—¶ï¼Œä¼šä½¿ç”¨talentValuesçš„å€¼è€Œä¸æ˜¯å¤©èµ‹æœ¬èº«çš„å€¼")]
         public bool isOverrideValue;
 
-        [Header("¸²¸ÇµÄÖµ")]
+        [Tooltip("è¦†ç›–çš„å€¼")]
         public List<double> talentValues;
 
-        [Header("Ê¹ÓÃ»ù´¡Öµ»¹ÊÇÍ³¼ÆÖµ£¿")]
-        [Tooltip("isOverrideValueÎªfalseÊ±¸ÃÑ¡Ïî²Å»áÉúĞ§£¬È»ºóÊ¹ÓÃÏÂÃætalentValueName»ñÈ¡Öµ")]
+
+        [Tooltip("isOverrideValueä¸ºfalseæ—¶è¯¥é€‰é¡¹æ‰ä¼šç”Ÿæ•ˆï¼Œç„¶åä½¿ç”¨ä¸‹é¢talentValueNameè·å–å€¼")]
         public bool isBaseOrStat;
 
-        [Header("»ñÈ¡ÖµµÄÃû³Æ")]
+        [Tooltip("è·å–å€¼çš„åç§°")]
         public string talentValueName;
     }
 
@@ -46,7 +45,7 @@ namespace UnknownCreator.Modules
 
     public enum TalentCalcType
     {
-        LinearAdd,    // Ö±½Ó¼Ó
-        PercentAdd    // °´°Ù·Ö±È¼Ó
+        LinearAdd,    // ç›´æ¥åŠ 
+        PercentAdd    // æŒ‰ç™¾åˆ†æ¯”åŠ 
     }
 }

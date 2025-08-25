@@ -1,4 +1,4 @@
-using System;
+锘縰sing System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -32,7 +32,7 @@ namespace UnknownCreator.Modules
         {
             hfsm = new HBSMController();
             if (!string.IsNullOrWhiteSpace(defaultInputClass))
-                SetInput(ObjectUtils.CreateInstance<IInputActionCollection2>(defaultInputClass));
+                SetInput(ObjectGlobals.CreateInstance<IInputActionCollection2>(defaultInputClass));
             if (!string.IsNullOrWhiteSpace(defaultInputClass))
                 inputAsset = UnityGlobals.LoadSync<InputActionAsset>(defaultInputClass);
         }
@@ -45,7 +45,7 @@ namespace UnknownCreator.Modules
 
         void IDearMgr.UpdateMGR()
         {
-            if (inputClass is null) UCMDebug.LogError("没有设置自定义输入类");
+            if (inputClass is null) UCMDebug.LogError("娌℃湁璁剧疆鑷畾涔夎緭鍏ョ被");
 
             if (!isActivated || target == null) return;
             hfsm?.UpdateAllHBSM();

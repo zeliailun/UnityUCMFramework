@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 namespace UnknownCreator.Modules
 {
+    [HideScriptField]
     public class StatsCfgSO : CustomScriptableObject
     {
         [Info("ID必须唯一 ")]

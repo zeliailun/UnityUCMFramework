@@ -1,17 +1,17 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 namespace UnknownCreator.Modules
 {
     public static partial class UnityGlobals
     {
 
         /// <summary>
-        /// ÅĞ¶ÏÄ¿±êÊÇ·ñÔÚµØÃæ
+        /// åˆ¤æ–­ç›®æ ‡æ˜¯å¦åœ¨åœ°é¢
         /// </summary>
-        /// <param name="target">ÓÎÏ·¶ÔÏó</param>
-        /// <param name="targetRadius">Åö×²¿ò°ë¾¶</param>
-        /// <param name="targetHeight">Åö×²¿ò¸ß¶È</param>
-        /// <param name="hitsCollider">´¢´æµÄÅö×²ĞÅÏ¢Êı×é</param>
-        /// <param name="groundLayer">µØÃæ²ã</param>
+        /// <param name="target">æ¸¸æˆå¯¹è±¡</param>
+        /// <param name="targetRadius">ç¢°æ’æ¡†åŠå¾„</param>
+        /// <param name="targetHeight">ç¢°æ’æ¡†é«˜åº¦</param>
+        /// <param name="hitsCollider">å‚¨å­˜çš„ç¢°æ’ä¿¡æ¯æ•°ç»„</param>
+        /// <param name="groundLayer">åœ°é¢å±‚</param>
         /// <returns></returns>
         public static bool IsGrounded(this GameObject target, float targetRadius, float targetHeight, Collider[] hitsCollider, LayerMask groundLayer)
         => Physics.OverlapCapsuleNonAlloc
@@ -24,18 +24,18 @@ namespace UnknownCreator.Modules
            ) > 0;
 
         /// <summary>
-        /// ÅĞ¶ÏÄ¿±êÓëµØÃæµÄ¸ß¶È²î¾àÊÇ·ñÂú×ã
+        /// åˆ¤æ–­ç›®æ ‡ä¸åœ°é¢çš„é«˜åº¦å·®è·æ˜¯å¦æ»¡è¶³
         /// </summary>
-        /// <param name="target">ÓÎÏ·¶ÔÏó</param>
-        /// <param name="hitsRaycast">´¢´æµÄÅö×²ĞÅÏ¢Êı×é</param>
-        /// <param name="height">¸ß¶È²î¾à</param>
-        /// <param name="groundLayer">µØÃæ²ã</param>
+        /// <param name="target">æ¸¸æˆå¯¹è±¡</param>
+        /// <param name="hitsRaycast">å‚¨å­˜çš„ç¢°æ’ä¿¡æ¯æ•°ç»„</param>
+        /// <param name="height">é«˜åº¦å·®è·</param>
+        /// <param name="groundLayer">åœ°é¢å±‚</param>
         /// <returns></returns>
         public static bool IsEnoughHeight(this GameObject target, RaycastHit[] hitsRaycast, float height, LayerMask groundLayer)
         => Physics.RaycastNonAlloc(target.transform.position, -Vector3.up, hitsRaycast, height, groundLayer) > 0;
 
         /// <summary>
-        /// ´ÓÄ¿±ê×ÔÉí£¬¸¸ÎïÌå£¬×ÓÎïÌåÖĞ²éÕÒµ½Ö¸¶¨×é¼ş
+        /// ä»ç›®æ ‡è‡ªèº«ï¼Œçˆ¶ç‰©ä½“ï¼Œå­ç‰©ä½“ä¸­æŸ¥æ‰¾åˆ°æŒ‡å®šç»„ä»¶
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="target"></param>
@@ -154,7 +154,7 @@ namespace UnknownCreator.Modules
         }
 
         /// <summary>
-        /// ÅĞ¶ÏÄ¿±êÎ»ÖÃÄÜ·ñ±»×ÔÉí¿´µ½
+        /// åˆ¤æ–­ç›®æ ‡ä½ç½®èƒ½å¦è¢«è‡ªèº«çœ‹åˆ°
         /// </summary>
         public static bool IsAlwaysVisible(Transform viewer, Vector3 targetPosition, LayerMask obstacleMask)
         {
@@ -225,7 +225,7 @@ namespace UnknownCreator.Modules
         }
 
         /// <summary>
-        /// »ñÈ¡Â·¾¶µãµÄ×Ü¾àÀë
+        /// è·å–è·¯å¾„ç‚¹çš„æ€»è·ç¦»
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
@@ -249,6 +249,6 @@ namespace UnknownCreator.Modules
         }
 
         public static bool IsZero(this Vector3 vector)
-        => vector.sqrMagnitude < MathUtils.Epsilon;
+        => vector.sqrMagnitude < MathGlobals.Epsilon;
     }
 }

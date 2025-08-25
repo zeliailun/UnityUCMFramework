@@ -17,7 +17,7 @@ namespace UnknownCreator.Modules
 
         public static void SaveBoolValue(string key, bool val)
         {
-            PlayerPrefs.SetInt(key, ValueTypeUtils.BoolToInt(val));
+            PlayerPrefs.SetInt(key, ValueTypeGlobals.BoolToInt(val));
         }
 
         public static void SaveSoundValue(string key)

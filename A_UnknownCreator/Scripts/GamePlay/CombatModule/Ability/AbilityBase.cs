@@ -121,7 +121,7 @@ namespace UnknownCreator.Modules
                 }
 
 
-                if (kv.Value.abilityKV.value == null || kv.Value.abilityKV.value.Count < 1)
+                if (kv.Value.abilityKV.baseValue == null || kv.Value.abilityKV.baseValue.Count < 1)
                 {
                     var stat = owner.statsC.AddStats(stCfg, 0, this);
 
@@ -131,9 +131,9 @@ namespace UnknownCreator.Modules
                 }
                 else
                 {
-                    for (int x = 0; x < kv.Value.abilityKV.value.Count; x++)
+                    for (int x = 0; x < kv.Value.abilityKV.baseValue.Count; x++)
                     {
-                        double value = kv.Value.abilityKV.value[x];
+                        double value = kv.Value.abilityKV.baseValue[x];
                         var stat = owner.statsC.AddStats(stCfg, value, this);
                         statsList.Add(stat);
                         statsKVList.Add(stat);

@@ -46,7 +46,7 @@ MonoBehaviour:
       - Key: StatCooldown
         Value:
           abilityKV:
-            value: []
+            baseValue: []
             talentName: 
             calcType: 0
             isOverrideValue: 0
@@ -58,7 +58,7 @@ MonoBehaviour:
       - Key: StatCastRange
         Value:
           abilityKV:
-            value: []
+            baseValue: []
             talentName: 
             calcType: 0
             isOverrideValue: 0
@@ -70,7 +70,7 @@ MonoBehaviour:
       - Key: StatCastRangeBuffer
         Value:
           abilityKV:
-            value: []
+            baseValue: []
             talentName: 
             calcType: 0
             isOverrideValue: 0
@@ -82,7 +82,7 @@ MonoBehaviour:
       - Key: StatCastPoint
         Value:
           abilityKV:
-            value: []
+            baseValue: []
             talentName: 
             calcType: 0
             isOverrideValue: 0
@@ -94,7 +94,7 @@ MonoBehaviour:
       - Key: StatCharge
         Value:
           abilityKV:
-            value: []
+            baseValue: []
             talentName: 
             calcType: 0
             isOverrideValue: 0

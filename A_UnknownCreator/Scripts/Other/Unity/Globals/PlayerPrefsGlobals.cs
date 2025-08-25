@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace UnknownCreator.Modules
@@ -7,12 +7,12 @@ namespace UnknownCreator.Modules
     {
         public static bool GetValue(string key)
         {
-          return  ValueTypeUtils.IntToBool(PlayerPrefs.GetInt(key));
+          return  ValueTypeGlobals.IntToBool(PlayerPrefs.GetInt(key));
         }
 
         public static void SetKV(string key, bool value)
         {
-            SetKV(key, ValueTypeUtils.BoolToInt(value));
+            SetKV(key, ValueTypeGlobals.BoolToInt(value));
         }
 
         public static void SetKV(string key, int value)

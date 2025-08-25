@@ -3,7 +3,8 @@
 namespace UnknownCreator.Modules
 {
 
-     [CreateAssetMenu(fileName = "UCMGameCfg")]
+    [HideScriptField]
+    [CreateAssetMenu(fileName = "UCMGameCfg")]
     public class GameCfgSO : CustomScriptableObject
     {
         [field: SerializeReference]

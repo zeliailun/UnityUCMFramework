@@ -9,8 +9,11 @@ namespace UnknownCreator.Modules
     {
         [field: ReadOnly]
         [field: SerializeField]
-        public string cfgName { get; internal set; }
+        public string CachedSoName { get; internal set; }
 
+
+        [TextArea]
+        public string description;
 
 
         public virtual void OnEnable()
@@ -20,7 +23,7 @@ namespace UnknownCreator.Modules
 
         public virtual void OnValidate()
         {
-            cfgName = name;
+            CachedSoName = name;
         }
 
         /*

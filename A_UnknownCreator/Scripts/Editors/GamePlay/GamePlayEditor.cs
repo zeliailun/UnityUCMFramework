@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+ï»¿#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -38,22 +38,22 @@ namespace UnknownCreator.Modules
         private TextField jsonPath, filePath;
 
 
-        //µ±Ç°ÁĞ±í
+        //å½“å‰åˆ—è¡¨
         private static List<CustomScriptableObject> soList = new();
 
-        //ÁĞ±í×é
+        //åˆ—è¡¨ç»„
         private Dictionary<string, List<CustomScriptableObject>> groupDict = new();
 
-        //×éÃû³Æ
+        //ç»„åç§°
         private List<(string key, string displayName)> groupNames = new();
 
-        // ±£´æÃ¿¸öÅäÖÃÀàĞÍµÄÑ¡ÖĞË÷Òı
+        // ä¿å­˜æ¯ä¸ªé…ç½®ç±»å‹çš„é€‰ä¸­ç´¢å¼•
         private Dictionary<string, int> selectedIndexDict = new();
 
         private Dictionary<string, Action<bool>> exportActions;
         private Dictionary<string, Action> importActions;
 
-        private const string nameCfg = "CfgSO"; //ÅäÖÃÎ²Ãû£¨È·±£×Ê²úÃû³ÆÎ²²¿Ò»ÖÂ£©
+        private const string nameCfg = "CfgSO"; //é…ç½®å°¾åï¼ˆç¡®ä¿èµ„äº§åç§°å°¾éƒ¨ä¸€è‡´ï¼‰
         private const string SortKey = nameof(SortKey);
         private const string folderPathKey = nameof(folderPathKey);
         private const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
@@ -93,7 +93,7 @@ namespace UnknownCreator.Modules
             };
 
             if (m_VisualTreeAsset == null)
-                m_VisualTreeAsset = EditorUtils.GetAsset<VisualTreeAsset>("GamePlayEditor");
+                m_VisualTreeAsset = UnityEditorGlobals.GetAsset<VisualTreeAsset>("GamePlayEditor");
             root.Add(m_VisualTreeAsset.CloneTree());
 
             itemList = root.Q<ListView>("ItemList");
@@ -121,12 +121,12 @@ namespace UnknownCreator.Modules
             groupList.selectionType = SelectionType.Single;
             itemList.selectionType = SelectionType.Multiple;
 
-            // ÅäÖÃÀàĞÍÏÂÀ­
+            // é…ç½®ç±»å‹ä¸‹æ‹‰
             configSelection.choices = Enum.GetValues(typeof(CfgTypes)).Cast<CfgTypes>().Select(e => e.ToString()).ToList();
             configSelection.value = configSelection.choices[0];
             configSelection.RegisterValueChangedCallback(ChangeCfg);
 
-            // °ó¶¨ groupList
+            // ç»‘å®š groupList
             groupList.makeItem = () => new Label();
             groupList.bindItem = (element, index) =>
             {
@@ -134,23 +134,23 @@ namespace UnknownCreator.Modules
             };
             groupList.selectionChanged += ChangeGroup;
 
-            // °ó¶¨ itemList
+            // ç»‘å®š itemList
             itemList.makeItem = () =>
             {
                 var container = new VisualElement();
                 container.style.flexDirection = FlexDirection.Row;
 
-                // Í¼±ê
+                // å›¾æ ‡
                 var icon = new VisualElement { name = "Icon", style = { width = 24, height = 24 } };
                 icon.style.marginTop = 7;
                 container.Add(icon);
 
-                // Ãû³Æ
+                // åç§°
                 var nameLabel = new Label { name = "Name" };
                 nameLabel.style.marginTop = 7;
                 container.Add(nameLabel);
 
-                // Òş²Ø±ê¼Ç
+                // éšè—æ ‡è®°
                 var hideMark = new VisualElement { name = "Hide" };
                 container.Add(hideMark);
 
@@ -174,11 +174,11 @@ namespace UnknownCreator.Modules
 
                     nameLabel.text = currentSO.name;
 
-                    // AbilityNull ÌØÊâ´¦Àí
+                    // AbilityNull ç‰¹æ®Šå¤„ç†
                     if (currentSO.name == nameof(AbilityNull))
                     {
                         hideMark.style.display = DisplayStyle.Flex;
-                        e.SetEnabled(false); // ½ûÓÃµã»÷ºÍÍÏ¶¯
+                        e.SetEnabled(false); // ç¦ç”¨ç‚¹å‡»å’Œæ‹–åŠ¨
                     }
                     else
                     {
@@ -241,7 +241,7 @@ namespace UnknownCreator.Modules
                 list.Add(so);
             }
 
-            // »Ö¸´ÅÅĞò
+            // æ¢å¤æ’åº
             if (EditorPrefs.HasKey(SortKey))
             {
                 var sortJson = EditorPrefs.GetString(SortKey);
@@ -263,7 +263,7 @@ namespace UnknownCreator.Modules
                 }
             }
 
-            // Ä¬ÈÏÑ¡ÖĞµÚÒ»¸ö·Ö×é
+            // é»˜è®¤é€‰ä¸­ç¬¬ä¸€ä¸ªåˆ†ç»„
             if (groupNames.Count > 0)
             {
                 var firstKey = groupNames[0].key;
@@ -274,7 +274,7 @@ namespace UnknownCreator.Modules
                 groupList.RefreshItems();
                 groupList.selectedIndex = 0;
 
-                // »Ö¸´ÉÏ´ÎÑ¡ÖĞ
+                // æ¢å¤ä¸Šæ¬¡é€‰ä¸­
                 if (selectedIndexDict.TryGetValue(configSelection.value, out int savedIndex))
                 {
                     if (savedIndex >= 0 && savedIndex < soList.Count)
@@ -301,7 +301,7 @@ namespace UnknownCreator.Modules
                 itemList.itemsSource = soList;
                 itemList.RefreshItems();
 
-                // »Ö¸´ÉÏ´ÎÑ¡ÖĞ
+                // æ¢å¤ä¸Šæ¬¡é€‰ä¸­
                 if (selectedIndexDict.TryGetValue(configSelection.value, out int savedIndex))
                 {
                     if (savedIndex >= 0 && savedIndex < soList.Count)
@@ -317,7 +317,7 @@ namespace UnknownCreator.Modules
         private void ChangeCfg(ChangeEvent<string> value)
         {
             content.Clear();
-            contentName.text = "ÅäÖÃÃû³Æ";
+            contentName.text = "é…ç½®åç§°";
             itemList.ClearSelection();
             groupList.ClearSelection();
             LoadAllAssets(value.newValue + "CfgSO");
@@ -346,7 +346,7 @@ namespace UnknownCreator.Modules
             string searchText = filePath.value;
             if (string.IsNullOrEmpty(searchText))
             {
-                EditorUtility.DisplayDialog("´íÎó", "ÇëÊäÈëËÑË÷ÄÚÈİ£¡", "È·¶¨");
+                EditorUtility.DisplayDialog("é”™è¯¯", "è¯·è¾“å…¥æœç´¢å†…å®¹ï¼", "ç¡®å®š");
                 return;
             }
 
@@ -357,7 +357,7 @@ namespace UnknownCreator.Modules
 
             if (matches.Count == 0)
             {
-                EditorUtility.DisplayDialog("Î´ÕÒµ½ÅäÖÃ", $"Î´ÕÒµ½Æ¥Åä¡°{searchText}¡±µÄÅäÖÃ", "È·¶¨");
+                EditorUtility.DisplayDialog("æœªæ‰¾åˆ°é…ç½®", $"æœªæ‰¾åˆ°åŒ¹é…â€œ{searchText}â€çš„é…ç½®", "ç¡®å®š");
                 return;
             }
             else if (matches.Count == 1)
@@ -396,7 +396,7 @@ namespace UnknownCreator.Modules
 
         private void FindJsonPath()
         {
-            string folderPath = EditorUtility.OpenFolderPanel("Ñ¡ÔñÒ»¸öÎÄ¼ş¼Ğ", "", "");
+            string folderPath = EditorUtility.OpenFolderPanel("é€‰æ‹©ä¸€ä¸ªæ–‡ä»¶å¤¹", "", "");
             if (!string.IsNullOrWhiteSpace(folderPath))
             {
                 jsonPath.value = folderPath;
@@ -407,8 +407,13 @@ namespace UnknownCreator.Modules
         private void AddAsset()
         {
             var className = configSelection.value + "CfgSO";
-            EditorUtils.Create(className, "New" + className);
-            LoadAllAssets(className);
+            var cfg = UnityEditorGlobals.Create(className, "New" + className);
+            if (cfg != null)
+            {
+                LoadAllAssets(className);
+                SelectSO(cfg as CustomScriptableObject);
+            }
+
         }
 
         private void RemoveAsset()
@@ -416,15 +421,15 @@ namespace UnknownCreator.Modules
             var selectedItems = itemList.selectedItems?.Cast<CustomScriptableObject>().Where(so => so.name != nameof(AbilityNull)).ToList();
             if (selectedItems == null || selectedItems.Count == 0)
             {
-                EditorUtility.DisplayDialog("É¾³ıÌáÊ¾", "Ã»ÓĞÑ¡ÔñÈÎºÎ¿ÉÉ¾³ıÅäÖÃ£¡", "È·¶¨");
+                EditorUtility.DisplayDialog("åˆ é™¤æç¤º", "æ²¡æœ‰é€‰æ‹©ä»»ä½•å¯åˆ é™¤é…ç½®ï¼", "ç¡®å®š");
                 return;
             }
 
             string message = selectedItems.Count == 1 ?
-                $"È·¶¨ÒªÉ¾³ıÅäÖÃ¡¾{selectedItems[0].name}¡¿Âğ£¿" :
-                $"È·¶¨ÒªÉ¾³ıÑ¡ÖĞµÄ {selectedItems.Count} ¸öÅäÖÃÂğ£¿";
+                $"ç¡®å®šè¦åˆ é™¤é…ç½®ã€{selectedItems[0].name}ã€‘å—ï¼Ÿ" :
+                $"ç¡®å®šè¦åˆ é™¤é€‰ä¸­çš„ {selectedItems.Count} ä¸ªé…ç½®å—ï¼Ÿ";
 
-            bool confirm = EditorUtility.DisplayDialog("É¾³ıÈ·ÈÏ", message, "È·¶¨", "È¡Ïû");
+            bool confirm = EditorUtility.DisplayDialog("åˆ é™¤ç¡®è®¤", message, "ç¡®å®š", "å–æ¶ˆ");
             if (confirm)
             {
                 DeleteSelectedAssets(selectedItems);
@@ -434,7 +439,7 @@ namespace UnknownCreator.Modules
         private void DeleteSelectedAssets(List<CustomScriptableObject> items)
         {
             content.Clear();
-            contentName.text = "ÅäÖÃÃû³Æ";
+            contentName.text = "é…ç½®åç§°";
 
             foreach (var obj in items)
             {
@@ -453,7 +458,7 @@ namespace UnknownCreator.Modules
                 AssetDatabase.DeleteAsset(path);
             }
 
-            // ÇåÀí¿Õ·Ö×é
+            // æ¸…ç†ç©ºåˆ†ç»„
             var emptyGroups = groupDict.Where(kv => kv.Value.Count == 0).Select(kv => kv.Key).ToList();
             foreach (var g in emptyGroups) groupDict.Remove(g);
 
@@ -461,22 +466,46 @@ namespace UnknownCreator.Modules
             groupList.itemsSource = groupNames;
             groupList.RefreshItems();
 
-            if (soList.Count == 0 && groupDict.Count > 0)
+            if (groupNames.Count > 0)
             {
+                // é€‰ä¸­ç¬¬ä¸€ä¸ªåˆ†ç»„
                 var firstKey = groupNames[0].key;
-                soList = groupDict[firstKey];
-                groupList.selectedIndex = 0;
+                groupList.SetSelection(0);
+
+                if (groupDict.TryGetValue(firstKey, out var list) && list.Count > 0)
+                {
+                    soList = list;
+                    itemList.itemsSource = soList;
+                    itemList.RefreshItems();
+
+                    // è‡ªåŠ¨é€‰ä¸­ç¬¬ä¸€ä¸ªèµ„äº§
+                    itemList.ClearSelection();
+                    itemList.AddToSelection(0);
+                    itemList.ScrollToItem(0);
+                    CreateAssetsPanel(soList[0]);
+                }
+                else
+                {
+                    soList.Clear();
+                    itemList.itemsSource = soList;
+                    itemList.RefreshItems();
+                }
+            }
+            else
+            {
+                soList.Clear();
+                itemList.itemsSource = soList;
+                itemList.RefreshItems();
             }
 
             AssetDatabase.Refresh();
-            itemList.RefreshItems();
         }
 
         private void CopyName(CustomScriptableObject so)
         {
             if (so == null) return;
             GUIUtility.systemCopyBuffer = so.name;
-            UCMDebug.Log($"ÒÑ¸´ÖÆÃû³Æ: {so.name}");
+            UCMDebug.Log($"å·²å¤åˆ¶åç§°: {so.name}");
         }
 
         private void Rename(CustomScriptableObject so, int index)
@@ -486,7 +515,7 @@ namespace UnknownCreator.Modules
             {
                 if (string.IsNullOrEmpty(newName) || soList.Any(x => x.name == newName))
                 {
-                    EditorUtility.DisplayDialog("´íÎó", "ÖØ¸´»òÎŞĞ§Ãû³Æ£¡", "È·¶¨");
+                    EditorUtility.DisplayDialog("é”™è¯¯", "é‡å¤æˆ–æ— æ•ˆåç§°ï¼", "ç¡®å®š");
                     return;
                 }
 
@@ -508,10 +537,10 @@ namespace UnknownCreator.Modules
 
         private void ExportJson()
         {
-            if (itemList.selectedItems?.Count() < 1) 
-            { 
-                EditorUtility.DisplayDialog("´íÎó", "Ã»ÓĞÑ¡ÔñÅäÖÃ£¡", "È·¶¨");
-                return; 
+            if (itemList.selectedItems?.Count() < 1)
+            {
+                EditorUtility.DisplayDialog("é”™è¯¯", "æ²¡æœ‰é€‰æ‹©é…ç½®ï¼", "ç¡®å®š");
+                return;
             }
 
             if (exportActions.TryGetValue(configSelection.value, out var action))
@@ -526,7 +555,7 @@ namespace UnknownCreator.Modules
         {
             if (soList.Count == 0)
             {
-                EditorUtility.DisplayDialog("´íÎó", "Ã»ÓĞ¿Éµ¼³öµÄÏîÄ¿£¡", "È·¶¨");
+                EditorUtility.DisplayDialog("é”™è¯¯", "æ²¡æœ‰å¯å¯¼å‡ºçš„é¡¹ç›®ï¼", "ç¡®å®š");
                 return;
             }
 
@@ -540,10 +569,10 @@ namespace UnknownCreator.Modules
 
         private void ImportJson()
         {
-            string path = EditorUtility.OpenFilePanel("Ñ¡ÔñÎÄ¼ş", "", "json");
+            string path = EditorUtility.OpenFilePanel("é€‰æ‹©æ–‡ä»¶", "", "json");
             if (string.IsNullOrEmpty(path))
             {
-                EditorUtility.DisplayDialog("´íÎó", "µ¼ÈëÈ¡Ïû»òÄÚÈİÎŞĞ§£¡", "È·¶¨");
+                EditorUtility.DisplayDialog("é”™è¯¯", "å¯¼å…¥å–æ¶ˆæˆ–å†…å®¹æ— æ•ˆï¼", "ç¡®å®š");
                 return;
             }
 
@@ -555,6 +584,7 @@ namespace UnknownCreator.Modules
                 LoadAllAssets($"{configSelection.value}{nameCfg}");
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
+                EditorUtility.DisplayDialog("æç¤º", "å¯¼å…¥å®Œæˆ", "ç¡®å®š");
             }
         }
 
@@ -566,11 +596,11 @@ namespace UnknownCreator.Modules
                 File.WriteAllText(filePath, json);
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
-                EditorUtility.DisplayDialog("ÌáÊ¾", "JSONÎÄ¼şÒÑ±£´æµ½: " + filePath, "È·¶¨");
+                EditorUtility.DisplayDialog("æç¤º", "JSONæ–‡ä»¶å·²ä¿å­˜åˆ°: " + filePath, "ç¡®å®š");
             }
             else
             {
-                EditorUtility.DisplayDialog("¾¯¸æ", "±£´æÈ¡Ïû»òÄÚÈİÎŞĞ§£¡", "È·¶¨");
+                EditorUtility.DisplayDialog("è­¦å‘Š", "ä¿å­˜å–æ¶ˆæˆ–å†…å®¹æ— æ•ˆï¼", "ç¡®å®š");
             }
         }
 
@@ -581,7 +611,7 @@ namespace UnknownCreator.Modules
             SaveJson(JsonMapper.ToJson(
                 (isAll ? soList.OfType<T>() : itemList.selectedItems.OfType<T>())
                 .ToDictionary(
-                    item => item.cfgName,
+                    item => item.CachedSoName,
                     item =>
                     {
                         var type = item.GetType();
@@ -597,7 +627,7 @@ namespace UnknownCreator.Modules
                             return property.GetValue(item) as T2;
                         }
 
-                        return null; // Èç¹ûÃ»ÓĞÕÒµ½×Ö¶Î»òÊôĞÔ
+                        return null; // å¦‚æœæ²¡æœ‰æ‰¾åˆ°å­—æ®µæˆ–å±æ€§
                     }
                 )
             ));
@@ -615,7 +645,7 @@ namespace UnknownCreator.Modules
                 {
                     SetCfgValue(data, item.Value);
                     EditorUtility.SetDirty(data);
-                    UCMDebug.Log($"ÒÑ¸üĞÂ{typeof(Y).Name}ÅäÖÃ¡¾{item.Key}¡¿Êı¾İ");
+                    UCMDebug.Log($"å·²æ›´æ–°{typeof(Y).Name}é…ç½®ã€{item.Key}ã€‘æ•°æ®");
                 }
                 else
                 {
@@ -630,11 +660,11 @@ namespace UnknownCreator.Modules
                             break;
                         }
                     }
-                    // Èç¹ûÃ»ÕÒµ½£¬´´½¨ĞÂµÄ
-                    if (so == null) so = EditorUtils.Create<Y>(item.Key);
+                    // å¦‚æœæ²¡æ‰¾åˆ°ï¼Œåˆ›å»ºæ–°çš„
+                    if (so == null) so = UnityEditorGlobals.Create<Y>(item.Key);
                     SetCfgValue(so, item.Value);
                     EditorUtility.SetDirty(so);
-                    UCMDebug.Log($"´´½¨ĞÂ{typeof(Y).Name}ÅäÖÃ¡¾{item.Key}¡¿Êı¾İ");
+                    UCMDebug.Log($"åˆ›å»ºæ–°{typeof(Y).Name}é…ç½®ã€{item.Key}ã€‘æ•°æ®");
                 }
             }
         }
@@ -661,7 +691,7 @@ namespace UnknownCreator.Modules
             if (Directory.Exists(jsonPath.value))
             {
                 return EditorUtility.SaveFilePanel(
-                    "±£´æJsonÎÄ¼ş",
+                    "ä¿å­˜Jsonæ–‡ä»¶",
                     jsonPath.value,
                     configSelection.value,
                     "json"
@@ -670,10 +700,10 @@ namespace UnknownCreator.Modules
             else
             {
                 return EditorUtility.SaveFilePanelInProject(
-                    "±£´æJsonÎÄ¼ş",
+                    "ä¿å­˜Jsonæ–‡ä»¶",
                     configSelection.value,
                     "json",
-                    "ÇëÊäÈëÎÄ¼şÃûÒÔ±£´æJSONÊı¾İ"
+                    "è¯·è¾“å…¥æ–‡ä»¶åä»¥ä¿å­˜JSONæ•°æ®"
                 );
             }
         }
@@ -686,7 +716,7 @@ namespace UnknownCreator.Modules
         private TextField renameField;
         public static void ShowPanel(string currentName, Action<string> renameCallback)
         {
-            var window = GetWindow<RenameWindow>("ĞŞ¸ÄÃû³Æ");
+            var window = GetWindow<RenameWindow>("ä¿®æ”¹åç§°");
             window.minSize = new Vector2(300, 100);
             window.CreateUI(currentName, renameCallback);
         }
@@ -695,7 +725,7 @@ namespace UnknownCreator.Modules
         {
             rootVisualElement.Clear();
 
-            renameField = new TextField("ÊäÈëĞÂµÄÃû³Æ:") { value = currentName };
+            renameField = new TextField("è¾“å…¥æ–°çš„åç§°:") { value = currentName };
             rootVisualElement.Add(renameField);
 
             rootVisualElement.Add(new Button(() =>
@@ -705,9 +735,9 @@ namespace UnknownCreator.Modules
                     renameCallback?.Invoke(newName);
                 Close();
             })
-            { text = "È·ÈÏ" });
+            { text = "ç¡®è®¤" });
 
-            rootVisualElement.Add(new Button(() => Close()) { text = "È¡Ïû" });
+            rootVisualElement.Add(new Button(() => Close()) { text = "å–æ¶ˆ" });
         }
     }
 
@@ -724,7 +754,7 @@ namespace UnknownCreator.Modules
             var window = CreateInstance<SearchResultWindow>();
             window.results = results;
             window.onSelect = onSelect;
-            window.titleContent = new GUIContent("ËÑË÷½á¹û");
+            window.titleContent = new GUIContent("æœç´¢ç»“æœ");
             window.minSize = new Vector2(300, 300);
             window.ShowUtility();
         }
@@ -733,7 +763,7 @@ namespace UnknownCreator.Modules
         {
             rootVisualElement.Clear();
 
-            // ¹ö¶¯ÊÓÍ¼
+            // æ»šåŠ¨è§†å›¾
             scrollView = new ScrollView();
             rootVisualElement.Add(scrollView);
 
@@ -746,7 +776,7 @@ namespace UnknownCreator.Modules
 
             if (results == null || results.Count == 0)
             {
-                Label emptyLabel = new("ÎŞÆ¥ÅäÏî");
+                Label emptyLabel = new("æ— åŒ¹é…é¡¹");
                 scrollView.Add(emptyLabel);
                 return;
             }
@@ -765,7 +795,7 @@ namespace UnknownCreator.Modules
             }
         }
 
-        // Èç¹ûĞèÒª¶¯Ì¬¸üĞÂËÑË÷½á¹û£¬¿ÉÒÔ±©Â¶Ò»¸ö·½·¨
+        // å¦‚æœéœ€è¦åŠ¨æ€æ›´æ–°æœç´¢ç»“æœï¼Œå¯ä»¥æš´éœ²ä¸€ä¸ªæ–¹æ³•
         public void UpdateResults(List<CustomScriptableObject> newResults)
         {
             results = newResults;

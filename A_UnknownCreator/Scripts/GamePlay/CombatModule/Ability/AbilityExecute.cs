@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Animancer;
 using System;
 
@@ -220,7 +220,7 @@ namespace UnknownCreator.Modules
             if (!isIgnoreCastRange)
             {
                 if (Mgr.Cntlr.IsControllerTarget(owner.ent) &&
-                    Physics.Raycast(Mgr.Camera.mainCam.ScreenPointToRay(GetInputValue()), out var hit, MathUtils.PInfinity, ~(1 << 2)))
+                    Physics.Raycast(Mgr.Camera.mainCam.ScreenPointToRay(GetInputValue()), out var hit, MathGlobals.PInfinity, ~(1 << 2)))
                     selectedPos = hit.point;
 
                 if (!IsEnoughCastRange(UnityGlobals.DistanceH(owner.entP, selectedPos)))
@@ -250,7 +250,7 @@ namespace UnknownCreator.Modules
             if (HasOnlyTargetTeam(AbTargetTeam.None)) return false;
 
             if (Mgr.Cntlr.IsControllerTarget(owner.ent) &&
-                Physics.Raycast(Mgr.Camera.mainCam.ScreenPointToRay(GetInputValue()), out var hit, MathUtils.PInfinity, 1 << Mgr.Unit.hitBoxLayer))
+                Physics.Raycast(Mgr.Camera.mainCam.ScreenPointToRay(GetInputValue()), out var hit, MathGlobals.PInfinity, 1 << Mgr.Unit.hitBoxLayer))
                 selectedTarget = hit.collider.gameObject.GetUnitByHitBox();
 
             if (selectedTarget is null)

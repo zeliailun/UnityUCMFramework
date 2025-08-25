@@ -1,12 +1,10 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
+    [HideScriptField]
     public class AbilityCfgSO : CustomScriptableObject
     {
-        [TextArea]
-        public string desc;
-
         [field: SerializeField]
         public AbilityCfg cfg { internal set; get; } = new();
 
@@ -31,7 +29,7 @@ namespace UnknownCreator.Modules
             if (cfg.startLevel > cfg.maxLevel)
                 cfg.maxLevel = cfg.startLevel;
 
-            cfg.cfgName = cfgName;
+            cfg.cfgName = CachedSoName;
 
             cfg.baseKV ??= new();
             cfg.statsKV ??= new();
@@ -55,7 +53,7 @@ namespace UnknownCreator.Modules
 
             if (icon != null && icon.name == cfg.icon) return;
 
-            icon = EditorUtils.GetAsset<Texture2D>(cfg.icon);
+            icon = UnityEditorGlobals.GetAsset<Texture2D>(cfg.icon);
 #endif
         }
 

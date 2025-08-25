@@ -1,10 +1,11 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
+    [HideScriptField]
     public class ItemCfgSO : ScriptableObject
     {
         public Texture2D icon { private set; get; }

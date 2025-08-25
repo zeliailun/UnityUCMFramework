@@ -1,10 +1,11 @@
-﻿
-using System;
+﻿using System;
 using UnityEngine;
 using System.Diagnostics;
 
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditor.UIElements;
+using UnityEngine.UIElements;
 #endif
 
 namespace UnknownCreator.Modules
@@ -13,19 +14,21 @@ namespace UnknownCreator.Modules
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
     public class ReadOnlyAttribute : PropertyAttribute
     {
-
     }
 
 #if UNITY_EDITOR
     [CustomPropertyDrawer(typeof(ReadOnlyAttribute))]
     public class ReadOnlyDrawer : PropertyDrawer
     {
-
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
-            GUI.enabled = false; // 使属性在Inspector中变为只读
-            EditorGUI.PropertyField(position, property, label);
-            GUI.enabled = true; // 重新启用GUI
+            // 使用默认字段控件
+            var field = new PropertyField(property);
+
+            // 设置为只读
+            field.SetEnabled(false);
+
+            return field;
         }
     }
 #endif

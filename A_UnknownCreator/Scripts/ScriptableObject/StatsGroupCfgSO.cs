@@ -2,6 +2,7 @@
 using UnityEngine;
 namespace UnknownCreator.Modules
 {
+    [HideScriptField]
     public class StatsGroupCfgSO : CustomScriptableObject
     {
         [SerializeField]

@@ -1,10 +1,9 @@
-using System;
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections.Generic;
-using Animancer;
 
 namespace UnknownCreator.Modules
 {
+    [HideScriptField]
     public class AnimCfgSO : CustomScriptableObject
     {
         [SerializeField]

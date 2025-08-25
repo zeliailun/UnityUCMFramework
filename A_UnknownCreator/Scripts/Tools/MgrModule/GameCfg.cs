@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -50,11 +50,11 @@ namespace UnknownCreator.Modules
         [SerializeReference, ShowSerializeReference]
         public IEntityMgr entityMgr = new EntityMgr();
 
-        [Tooltip("-Õ½¶·Ä£¿éĞÅÏ¢ÌáÊ¾-\n\n " +
-          "1.StateCount»á¸ù¾İÌîĞ´µÄÊıÁ¿´Ó100¿ªÊ¼´´½¨£¬µ±µ¥Î»´´½¨Ê±»áÄ¬ÈÏ¼ÓÈëÆä×´Ì¬¿ØÖÆÆ÷\n\n " +
-          "2.ÉèÖÃÍÅ¶ÓIDÊ±±ØĞëĞ¡ÓÚTeamCountÉè¶¨µÄÖµ\n\n " +
-          "3.ÉèÖÃµ¥Î»ÀàĞÍIDÊ±±ØĞëĞ¡ÓÚTypeCountÉè¶¨µÄÖµ\n\n " +
-          "4.GlobalLevelExpÎªtrueÊ±ËùÓĞÊµÌåµ¥Î»µÄµÈ¼¶¾­Ñé»á¸úËæ¹ÜÀíÆ÷ÉèÖÃ")]
+        [Tooltip("-æˆ˜æ–—æ¨¡å—ä¿¡æ¯æç¤º-\n\n " +
+          "1.StateCountä¼šæ ¹æ®å¡«å†™çš„æ•°é‡ä»100å¼€å§‹åˆ›å»ºï¼Œå½“å•ä½åˆ›å»ºæ—¶ä¼šé»˜è®¤åŠ å…¥å…¶çŠ¶æ€æ§åˆ¶å™¨\n\n " +
+          "2.è®¾ç½®å›¢é˜ŸIDæ—¶å¿…é¡»å°äºTeamCountè®¾å®šçš„å€¼\n\n " +
+          "3.è®¾ç½®å•ä½ç±»å‹IDæ—¶å¿…é¡»å°äºTypeCountè®¾å®šçš„å€¼\n\n " +
+          "4.GlobalLevelExpä¸ºtrueæ—¶æ‰€æœ‰å®ä½“å•ä½çš„ç­‰çº§ç»éªŒä¼šè·Ÿéšç®¡ç†å™¨è®¾ç½®")]
         [SerializeReference, ShowSerializeReference]
         public IUnitMgr unitMgr = new UnitMgr();
 

@@ -1,11 +1,14 @@
 ﻿#if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
-using UnityEngine.Rendering;
+using UnityEngine.UIElements;
 using UnknownCreator.Modules;
+
 
 internal static class EditorTools
 {
@@ -65,9 +68,9 @@ internal static class EditorTools
         te.Copy();
     }
 
-    private static T GetTarget<T>() where T : Object
+    private static T GetTarget<T>() where T : UnityEngine.Object
     {
-        Object[] objs = Selection.objects;
+        UnityEngine.Object[] objs = Selection.objects;
         if (objs.Length < 1)
             return default;
 
@@ -79,4 +82,7 @@ internal static class EditorTools
     }
 
 }
+
+
+
 #endif

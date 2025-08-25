@@ -1,4 +1,4 @@
-using System;
+锘縰sing System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
@@ -78,7 +78,7 @@ namespace UnknownCreator.Modules
 
         public BuffBase AddPermanentBuff(string buffName, AbilityBase ability, Unit inflicter, IVariableMgr kv = null, bool isKVRecyclePool = false)
         {
-            return AddBuff(buffName, ability, inflicter, MathUtils.PInfinity, kv, isKVRecyclePool);
+            return AddBuff(buffName, ability, inflicter, MathGlobals.PInfinity, kv, isKVRecyclePool);
         }
 
 
@@ -185,7 +185,7 @@ namespace UnknownCreator.Modules
 
                 if (attemptCount > maxAttempts)
                 {
-                    UCMDebug.LogWarning("Buff生成可能触发了死循环");
+                    UCMDebug.LogWarning("Buff鐢熸垚鍙兘瑙﹀彂浜嗘寰幆");
                     break;
                 }
 

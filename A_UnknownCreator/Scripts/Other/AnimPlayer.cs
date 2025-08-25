@@ -1,4 +1,4 @@
-using Animancer;
+﻿using Animancer;
 using UnknownCreator.Modules;
 using UnityEngine;
 using System.Collections.Generic;
@@ -85,7 +85,7 @@ namespace UnknownCreator.Modules
             ClearAnimAsset();
             canReleaseAsset = canReleaseAssets;
             state = null;
-            var result = RVUtils.RandomElement(clipAssets);
+            var result = RVGlobals.RandomElement(clipAssets);
             clip = result.asset;
             baseSpeed = result.baseSpeed;
         }
