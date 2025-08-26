@@ -1,4 +1,4 @@
-#region Header
+ï»¿#region Header
 /**
  * JsonMapper.cs
  *   JSON to .Net object and object to JSON conversions.
@@ -494,13 +494,14 @@ namespace UnknownCreator.Modules
 
                 foreach (DictionaryEntry entry in dictionary)
                 {
-                    var propertyName = entry.Key is string key ?
-                        key
-                        :
-                        Convert.ToString(entry.Key, CultureInfo.InvariantCulture);
+                    string propertyName = entry.Key is string s
+                        ? s
+                        : Convert.ToString(entry.Key, CultureInfo.InvariantCulture);
+
                     writer.WritePropertyName(propertyName);
                     WriteValue(entry.Value, writer, writer_is_private, depth + 1);
                 }
+
                 writer.WriteObjectEnd();
                 return;
             }
@@ -1058,7 +1059,7 @@ namespace UnknownCreator.Modules
                 return DateTimeOffset.Parse((string)input, datetime_format);
             });
 
-            //string×ªfloat Õı¸ºÎŞÏŞ
+            //stringè½¬float æ­£è´Ÿæ— é™
             RegisterImporter(typeof(string), typeof(float), delegate (object input)
                               {
                                   var result = (string)input;
@@ -1069,7 +1070,7 @@ namespace UnknownCreator.Modules
                                   return 0;
                               });
 
-            //string×ªdouble Õı¸ºÎŞÏŞ
+            //stringè½¬double æ­£è´Ÿæ— é™
             RegisterImporter(typeof(string), typeof(double), delegate (object input)
             {
                 var result = (string)input;
@@ -1081,7 +1082,7 @@ namespace UnknownCreator.Modules
             });
 
 
-            //string×ªType·´ĞòÁĞ»¯
+            //stringè½¬Typeååºåˆ—åŒ–
             RegisterImporter(typeof(string), typeof(Type), delegate (object input)
             {
                 return Type.GetType((string)input);
@@ -1235,8 +1236,6 @@ namespace UnknownCreator.Modules
 
 
         public static Func<Type, object> OnObjectCreate;
-
-
 
 
 

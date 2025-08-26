@@ -521,6 +521,7 @@ namespace UnknownCreator.Modules
 
                 AssetDatabase.RenameAsset(AssetDatabase.GetAssetPath(so), newName);
                 so.name = newName;
+                contentName.text = newName;
                 itemList.RefreshItem(index);
                 AssetDatabase.SaveAssets();
             });
@@ -678,12 +679,18 @@ namespace UnknownCreator.Modules
             if (fieldInfo != null)
             {
                 fieldInfo.SetValue(obj, value);
+                return;
             }
-            else
+
+            PropertyInfo propertyInfo = type.GetProperty("cfg", flags);
+            if (propertyInfo != null)
             {
-                PropertyInfo propertyInfo = type.GetProperty("cfg", flags);
-                propertyInfo?.SetValue(obj, value);
+                propertyInfo.SetValue(obj, value);
+                return;
             }
+
+            string message = $"配置【{obj.name}】类型 {type.FullName} 中不存在名为 'cfg' 的字段或属性！";
+            UCMDebug.LogWarning(message);
         }
 
         private string GetSaveFilePath()

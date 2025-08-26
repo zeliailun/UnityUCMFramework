@@ -100,7 +100,7 @@ namespace UnknownCreator.Modules
 
             Type parentType = property.serializedObject.targetObject.GetType();
             string[] path = property.propertyPath.Split('.');
-            FieldInfo field;
+            FieldInfo field = null;
 
             Type currentType = parentType;
             for (int i = 0; i < path.Length; i++)
@@ -143,12 +143,14 @@ namespace UnknownCreator.Modules
             {
                 if (element.Contains("["))
                 {
-                    // 处理数组/列表
                     string elementName = element[..element.IndexOf("[")];
-                    int index = Convert.ToInt32(element[element.IndexOf("[")..].Trim('[', ']'));
+                    int start = element.IndexOf('[') + 1;
+                    int end = element.IndexOf(']');
+                    int index = int.Parse(element[start..end]);
 
                     obj = GetFieldValue(obj, elementName);
-                    if (obj is System.Collections.IEnumerable enumerable)
+
+                    if (obj is System.Collections.IEnumerable enumerable && obj is not string)
                     {
                         var enumerator = enumerable.GetEnumerator();
                         for (int i = 0; i <= index; i++) enumerator.MoveNext();
@@ -159,6 +161,8 @@ namespace UnknownCreator.Modules
                 {
                     obj = GetFieldValue(obj, element);
                 }
+
+                if (obj == null) break; // 防止后续访问空对象
             }
 
             return obj;

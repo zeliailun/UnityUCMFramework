@@ -42,21 +42,12 @@ namespace UnknownCreator.Modules
         {
             if (type.IsGenericType)
             {
-                // Get the generic type definition
                 var genericTypeDefinition = type.GetGenericTypeDefinition();
-
-                // Get the number of generic arguments
                 int genericArgumentCount = genericTypeDefinition.GetGenericArguments().Length;
-
-                // Construct the base generic type name without the backtick and count
                 string typeName = genericTypeDefinition.FullName.Remove(genericTypeDefinition.FullName.IndexOf('`'));
-
-                // Get the generic arguments formatted as needed
                 var argumentNames = type.GetGenericArguments()
                                         .Select(arg => GetFullTypeName(arg))
                                         .ToArray();
-
-                // Construct the full name with arguments, adding backtick and argument count only once
                 return $"{typeName}`{genericArgumentCount}[[{string.Join("],[", argumentNames)}]]";
             }
             else if (type.IsArray)
