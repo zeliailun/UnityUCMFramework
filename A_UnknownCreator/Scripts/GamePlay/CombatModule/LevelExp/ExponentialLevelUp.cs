@@ -1,8 +1,9 @@
+﻿using System;
 using System.Collections.Generic;
-using Unity.Mathematics;
 
 namespace UnknownCreator.Modules
 {
+    [Serializable]
     public class ExponentialLevelUp : IUnitExpBuilder
     {
         public double baseExperience;
@@ -15,7 +16,7 @@ namespace UnknownCreator.Modules
         {
             List<double> result = new();
             for (int k = 0; k < maxLv; k++)
-                result.Add((baseExperience + math.round(math.pow(k + 1, exponent)) * experienceIncrement));
+                result.Add((baseExperience + Math.Round(Math.Pow(k + 1, exponent)) * experienceIncrement));
             return result;
         }
     }

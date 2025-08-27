@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
@@ -46,16 +46,13 @@ namespace UnknownCreator.Modules
 
     public abstract class SLMonoNormal<T> : MonoBehaviour where T : MonoBehaviour
     {
-
-        private static T instance;
-
-        public static T i => instance;
+        public static T i { get; private set; }
 
         private void Awake()
         {
-            if (instance == null)
+            if (i == null)
             {
-                instance = this as T;
+                i = this as T;
                 DontDestroyOnLoad(gameObject);
                 OnAwake();
             }
@@ -67,7 +64,7 @@ namespace UnknownCreator.Modules
 
         public static void CreateSelf()
         {
-            if (instance == null)
+            if (i == null)
             {
                 GameObject obj = new(typeof(T).Name);
                 obj.AddComponent<T>();

@@ -4,14 +4,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine;
-using UnityEngine.UIElements;
 using UnknownCreator.Modules;
 
 
 internal static class EditorTools
 {
+
+
     [MenuItem("GameObject/UnknownCreator/EmptyUnit", false, 0)]
     public static void CreatePlayer()
     {
@@ -49,7 +49,11 @@ internal static class EditorTools
     public static void CopyPath()
     {
         var obj = GetTarget<GameObject>();
-        if (obj == null) return;
+        if (obj == null)
+        {
+            EditorUtility.DisplayDialog("提示", "没选择对象不能复制", "确定");
+            return;
+        }
 
         string path = obj.name;
         Transform parent = obj.transform.parent;

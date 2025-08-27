@@ -1,9 +1,9 @@
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
+    [Serializable]
     public class LinearLevelUp : IUnitExpBuilder
     {
         public double baseExperience;

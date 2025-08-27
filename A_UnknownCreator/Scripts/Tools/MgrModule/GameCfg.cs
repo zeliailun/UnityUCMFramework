@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 namespace UnknownCreator.Modules
 {
+    [Serializable]
     public class GameCfg
     {
         public bool enableDebug;

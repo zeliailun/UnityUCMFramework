@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using UnityEngine;
-
-namespace UnknownCreator.Modules
+﻿namespace UnknownCreator.Modules
 {
     public interface ILevelExp
     {

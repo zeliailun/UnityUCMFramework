@@ -1,8 +1,9 @@
-using System;
+锘縰sing System;
 using System.Collections.Generic;
 
 namespace UnknownCreator.Modules
 {
+    [Serializable]
     public sealed class ULevelExpComp : StateComp
     {
         private List<double> unitExpList = new();
@@ -70,7 +71,7 @@ namespace UnknownCreator.Modules
                 }
             }
 
-            // 如果达到最大等级，清除多余经验
+            // 濡傛灉杈惧埌鏈�澶х瓑绾э紝娓呴櫎澶氫綑缁忛獙
             if (currentLevel >= maxLevel) currentExp = 0;
         }
 

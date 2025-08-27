@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using Unity.Mathematics;
 
 namespace UnknownCreator.Modules
 {
+    [Serializable]
     public class CurvedLevelUp : IUnitExpBuilder
     {
         public double baseExperience;
@@ -16,7 +16,7 @@ namespace UnknownCreator.Modules
         {
             List<double> result = new();
             for (int k = 0; k < maxLv; k++)
-                result.Add((baseExperience + math.round(curveFactor + math.log2(k + 1)) * experienceIncrement));
+                result.Add((baseExperience + Math.Round(curveFactor + Math.Log(k + 1)) * experienceIncrement));
             return result;
         }
     }

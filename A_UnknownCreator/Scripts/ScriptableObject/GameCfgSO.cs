@@ -4,10 +4,10 @@ namespace UnknownCreator.Modules
 {
 
     [HideScriptField]
-    [CreateAssetMenu(fileName = "UCMGameCfg")]
+    [CreateAssetMenu(menuName = "UnknownCreator/GameCfgSO", fileName = "GameCfg")]
     public class GameCfgSO : CustomScriptableObject
     {
-        [field: SerializeReference]
+        [field: SerializeField]
         public GameCfg cfg { internal set; get; } = new();
     }
 
