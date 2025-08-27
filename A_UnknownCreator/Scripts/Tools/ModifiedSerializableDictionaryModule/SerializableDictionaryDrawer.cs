@@ -1,13 +1,9 @@
 ﻿#if UNITY_EDITOR
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
-using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.UIElements;
-using static VoxelImporter.StructureData;
 
 namespace UnknownCreator.Modules
 {
@@ -66,49 +62,27 @@ namespace UnknownCreator.Modules
                     var kvpContainer = new VisualElement
                     {
                         style =
-                    {
-                        flexDirection = FlexDirection.Row,
-                        alignItems = Align.Center,
-                        marginTop = 4,
-                        marginBottom = 4,
-                        marginLeft = 4,
-                        marginRight = 4,
-                        paddingBottom=4,
-                        paddingTop = 4,
-                        borderTopWidth = 1,
-                        borderBottomWidth = 1,
-                        borderLeftWidth = 1,
-                        borderRightWidth = 1,
-                        borderTopColor = color1,
-                        borderBottomColor = color1,
-                        borderLeftColor = color1,
-                        borderRightColor = color1,
-                    }
+                        {
+                            alignContent=Align.FlexStart,
+                            alignSelf = Align.Auto,
+                            marginTop = 4,
+                            marginBottom = 4,
+                            marginLeft = 4,
+                            marginRight = 4,
+                            paddingBottom=2,
+                            paddingTop = 2,
+                            //paddingLeft = 4,
+                            paddingRight = 4,
+                            borderTopWidth = 1,
+                            borderBottomWidth = 1,
+                            borderLeftWidth = 1,
+                            borderRightWidth = 1,
+                            borderTopColor = color1,
+                            borderBottomColor = color1,
+                            borderLeftColor = color1,
+                            borderRightColor = color1,
+                        }
                     };
-
-                    var keyProp = element.FindPropertyRelative("Key");
-                    var valueProp = element.FindPropertyRelative("Value");
-
-                    var keyField = new PropertyField(keyProp);
-                    var valueField = new PropertyField(valueProp);
-
-                    keyField.Bind(keyProp.serializedObject);
-                    valueField.Bind(valueProp.serializedObject);
-
-                    keyField.style.flexBasis = new StyleLength(new Length(59, LengthUnit.Percent));
-                    keyField.style.flexGrow = 0;
-                    keyField.style.alignSelf = Align.FlexStart;
-                    keyFields.Add((keyProp, keyField));
-                    keyField.RegisterValueChangeCallback(evt =>
-                    {
-                        property.serializedObject.ApplyModifiedProperties();
-                        HighlightDuplicates(keyFields);
-                    });
-
-                    valueField.style.flexBasis = new StyleLength(new Length(39, LengthUnit.Percent));
-                    valueField.style.flexGrow = 0;
-                    valueField.style.marginLeft = valueProp.propertyType == SerializedPropertyType.Generic ? 15 : 5;
-
                     // 选中逻辑
                     kvpContainer.RegisterCallback<ClickEvent>(_ =>
                     {
@@ -118,6 +92,35 @@ namespace UnknownCreator.Modules
                             child.style.backgroundColor = color1; // reset
                         kvpContainer.style.backgroundColor = new Color(0.2f, 0.4f, 1f, 0.3f); // 蓝色高亮
                     });
+
+                    var keyProp = element.FindPropertyRelative("Key");
+                    var keyField = new PropertyField(keyProp, "");
+                    keyField.Bind(keyProp.serializedObject);
+                    keyFields.Add((keyProp, keyField));
+                    keyField.RegisterValueChangeCallback(evt =>
+                    {
+                        property.serializedObject.ApplyModifiedProperties();
+                        HighlightDuplicates(keyFields);
+                    });
+
+                    var valueProp = element.FindPropertyRelative("Value");
+                    var valueField = new PropertyField(valueProp, "");
+                    valueField.Bind(valueProp.serializedObject);
+
+                    if (valueProp.propertyType == SerializedPropertyType.Generic)
+                    {
+                        kvpContainer.style.flexDirection = FlexDirection.Column;
+                        keyField.style.minHeight = 20;
+                        valueField.style.marginLeft = !valueProp.isArray ? 14 : 3;
+                    }
+                    else
+                    {
+                        kvpContainer.style.flexDirection = FlexDirection.Row;
+                        keyField.style.flexGrow = 1;
+                        valueField.style.flexGrow = 1;
+                    }
+
+
 
                     kvpContainer.Add(keyField);
                     kvpContainer.Add(valueField);
@@ -136,8 +139,8 @@ namespace UnknownCreator.Modules
                     marginBottom = 4,
                     marginLeft = 4,
                     marginRight = 4,
-                    paddingLeft = 4,
-                    paddingRight = 4,
+                    paddingLeft = 2,
+                    paddingRight =2,
                     paddingTop = 2,
                     paddingBottom = 2
                 }
@@ -171,7 +174,6 @@ namespace UnknownCreator.Modules
                     }
 
                     dictionaryListProp.arraySize++;
-
                     property.serializedObject.ApplyModifiedProperties();
                     RefreshList();
                 })
@@ -179,6 +181,7 @@ namespace UnknownCreator.Modules
                     text = "+",
                     style =
                     {
+                        fontSize = 20,
                         marginRight = 4,
                         width = 50,
                         height= 30,
@@ -214,6 +217,7 @@ namespace UnknownCreator.Modules
                     text = "-",
                     style =
                             {
+                                fontSize = 20,
                                 width = 50,
                                 height= 30,
                                 borderTopWidth = 1,
@@ -238,6 +242,15 @@ namespace UnknownCreator.Modules
             }
 
             RefreshList();
+
+            Undo.undoRedoPerformed += () =>
+            {
+
+                property?.serializedObject?.Update();
+                RefreshList();
+            };
+
+
             return foldout;
         }
 
