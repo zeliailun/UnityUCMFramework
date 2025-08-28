@@ -48,8 +48,10 @@
 *支持任意字典Key<br>
 *支持string转Type运行时类型的反序列化<br>
 *支持double,float正负无限大序列化和反序列化（会显示PInf,NInf字符串）<br>
+*支持double和float序列化时自动避免科学计数法显示，同时反序列化保持原值<br>
 *支持Unity内建类型(Vector2、Vector3、Rect、AnimationCure、Bounds、Color、Color32、Quaternion、RectOffset等）<br>
 *AudioClip，Texture2D，AvatarMask等unity对象序列化时会储存其名称字符串，编辑器内通过AssetDatabase加载，运行时通过Addressables加载<br>
+
 ]<br>
 
 *修改版序列化字典<br>
