@@ -1,5 +1,6 @@
 ﻿#if UNITY_EDITOR
 using System.Collections.Generic;
+using System.Reflection.Emit;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -116,8 +117,10 @@ namespace UnknownCreator.Modules
                     else
                     {
                         kvpContainer.style.flexDirection = FlexDirection.Row;
-                        keyField.style.flexGrow = 1;
-                        valueField.style.flexGrow = 1;
+                        keyField.style.width = new StyleLength(new Length(40, LengthUnit.Percent));
+                        valueField.style.width = new StyleLength(new Length(60, LengthUnit.Percent));
+                        keyField.style.alignSelf = Align.Center;
+                        valueField.style.alignSelf = Align.Center;
                     }
 
 

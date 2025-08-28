@@ -963,6 +963,20 @@ namespace UnknownCreator.Modules
                 {
                     writer.Write(((DateTimeOffset)obj).ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz", datetime_format));
                 };
+
+
+            base_exporters_table[typeof(double)] = (obj, writer) =>
+            {
+                double d = (double)obj;
+                writer.Write(d.ToString("G17", CultureInfo.InvariantCulture));
+            };
+
+            base_exporters_table[typeof(float)] = (obj, writer) =>
+            {
+                float f = (float)obj;
+                writer.Write(f.ToString("G9", CultureInfo.InvariantCulture));
+            };
+
         }
 
         private static void RegisterBaseImporters()
@@ -1063,22 +1077,26 @@ namespace UnknownCreator.Modules
             RegisterImporter(typeof(string), typeof(float), delegate (object input)
                               {
                                   var result = (string)input;
-                                  if (result == "PInf")
-                                      return float.PositiveInfinity;
-                                  else if (result == "NInf")
-                                      return float.NegativeInfinity;
-                                  return 0;
+                                  if (result == "PInf") return double.PositiveInfinity;
+                                  if (result == "NInf") return double.NegativeInfinity;
+                                  return double.Parse(result, CultureInfo.InvariantCulture);
                               });
 
-            //string转double 正负无限
-            RegisterImporter(typeof(string), typeof(double), delegate (object input)
+            //string转 正负无限
+            RegisterImporter(typeof(string), typeof(double), input =>
             {
-                var result = (string)input;
-                if (result == "PInf")
-                    return double.PositiveInfinity;
-                else if (result == "NInf")
-                    return double.NegativeInfinity;
-                return 0;
+                var s = ((string)input).Trim();
+                if (s == "PInf") return double.PositiveInfinity;
+                if (s == "NInf") return double.NegativeInfinity;
+                return double.Parse(s, CultureInfo.InvariantCulture);
+            });
+
+            RegisterImporter(typeof(string), typeof(float), input =>
+            {
+                var s = ((string)input).Trim();
+                if (s == "PInf") return float.PositiveInfinity;
+                if (s == "NInf") return float.NegativeInfinity;
+                return float.Parse(s, CultureInfo.InvariantCulture);
             });
 
 
@@ -1087,6 +1105,8 @@ namespace UnknownCreator.Modules
             {
                 return Type.GetType((string)input);
             });
+
+
 
         }
 

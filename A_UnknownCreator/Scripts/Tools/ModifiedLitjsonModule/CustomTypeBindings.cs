@@ -55,7 +55,8 @@ namespace UnknownCreator.Modules
 
         private static void CustomBuilt()
         {
-            RegisterUnityObject<ScriptableObject>();
+
+           
         }
 
         private static void UnityBuilt()
@@ -63,6 +64,7 @@ namespace UnknownCreator.Modules
             RegisterUnityObject<AudioClip>();
             RegisterUnityObject<Texture2D>();
             RegisterUnityObject<AvatarMask>();
+            RegisterUnityObject<ScriptableObject>();
 
             // 注册Vector2类型的Exporter
             static void writeVector2(Vector2 v, JsonWriter w)

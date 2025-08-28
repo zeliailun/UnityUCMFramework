@@ -18,87 +18,87 @@ MonoBehaviour:
     enableDebug: 0
     customMgr: []
     refPoolMgr:
-      rid: 5626871218225283592
+      rid: 5626871229677043813
     gameObjPoolMgr:
-      rid: 5626871218225283593
+      rid: 5626871229677043814
     variableBox:
-      rid: 5626871218225283594
+      rid: 5626871229677043815
     eventsMgr:
-      rid: 5626871218225283595
+      rid: 5626871229677043816
     updateMgr:
-      rid: 5626871218225283596
+      rid: 5626871229677043817
     timerMgr:
-      rid: 5626871218225283597
+      rid: 5626871229677043818
     sceneMgr:
-      rid: 5626871218225283598
+      rid: 5626871229677043819
     soundMgr:
-      rid: 5626871218225283599
+      rid: 5626871229677043820
     vfxMgr:
-      rid: 5626871218225283600
+      rid: 5626871229677043821
     cameraMgr:
-      rid: 5626871218225283601
+      rid: 5626871229677043822
     inputMgr:
-      rid: 5626871218225283602
+      rid: 5626871229677043823
     hfsmMgr:
-      rid: 5626871218225283603
+      rid: 5626871229677043824
     entityMgr:
-      rid: 5626871218225283604
+      rid: 5626871229677043825
     unitMgr:
-      rid: 5626871218225283605
+      rid: 5626871229677043826
     dmgMgr:
-      rid: 5626871218225283606
+      rid: 5626871229677043827
     projMgr:
-      rid: 5626871218225283607
+      rid: 5626871229677043828
     jsonMgr:
-      rid: 5626871218225283608
+      rid: 5626871229677043829
   references:
     version: 2
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 5626871218225283592
+    - rid: 5626871229677043813
       type: {class: ReferencePoolMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
       data: 
-    - rid: 5626871218225283593
+    - rid: 5626871229677043814
       type: {class: GameObjPoolMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
       data: 
-    - rid: 5626871218225283594
+    - rid: 5626871229677043815
       type: {class: VariableMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
       data: 
-    - rid: 5626871218225283595
+    - rid: 5626871229677043816
       type: {class: EventsMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
       data: 
-    - rid: 5626871218225283596
+    - rid: 5626871229677043817
       type: {class: GameUpdateMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
       data: 
-    - rid: 5626871218225283597
+    - rid: 5626871229677043818
       type: {class: TimerMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
       data: 
-    - rid: 5626871218225283598
+    - rid: 5626871229677043819
       type: {class: LoadSceneMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
       data: 
-    - rid: 5626871218225283599
+    - rid: 5626871229677043820
       type: {class: SoundMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
       data:
         <mixer>k__BackingField: {fileID: 0}
-    - rid: 5626871218225283600
+    - rid: 5626871229677043821
       type: {class: VfxMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
       data: 
-    - rid: 5626871218225283601
+    - rid: 5626871229677043822
       type: {class: CameraMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
       data: 
-    - rid: 5626871218225283602
+    - rid: 5626871229677043823
       type: {class: ControllerMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
       data:
         defaultInputClass: 
         defaultInputAsset: 
-    - rid: 5626871218225283603
+    - rid: 5626871229677043824
       type: {class: HBSMController, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
       data: 
-    - rid: 5626871218225283604
+    - rid: 5626871229677043825
       type: {class: EntityMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
       data: 
-    - rid: 5626871218225283605
+    - rid: 5626871229677043826
       type: {class: UnitMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
       data:
         <hitBoxLayer>k__BackingField: 0
@@ -110,13 +110,13 @@ MonoBehaviour:
         <isUseGlobalLevelExp>k__BackingField: 1
         <expBuilder>k__BackingField:
           rid: -2
-    - rid: 5626871218225283606
+    - rid: 5626871229677043827
       type: {class: DamageMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
       data: 
-    - rid: 5626871218225283607
+    - rid: 5626871229677043828
       type: {class: ProjectileMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
       data: 
-    - rid: 5626871218225283608
+    - rid: 5626871229677043829
       type: {class: JsonDataMgr, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
       data:
         _jsonData: []

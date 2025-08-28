@@ -1,9 +1,7 @@
-﻿
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UIElements;
 using System;
 using System.Diagnostics;
-
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -12,21 +10,32 @@ using UnityEditor.UIElements;
 
 namespace UnknownCreator.Modules
 {
-    /*
     [Conditional("UNITY_EDITOR")]
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
     public class DisplayNameAttribute : PropertyAttribute
     {
         public string name;
         public string colorHex;
+        public int fontSize;
+        public float labelWidthPercent;
+        public FontStyle fontStyle;
+        
 
-        public DisplayNameAttribute(string name, string colorHex = "#A9A9A9")
+        public DisplayNameAttribute(
+            string name,
+            string colorHex = "#D2D2D2",
+            int fontSize = 12,
+            float labelWidthPercent = 33f,
+            FontStyle fontStyle = FontStyle.Normal)
         {
             this.name = name;
             this.colorHex = colorHex;
+            this.fontSize = fontSize;
+            this.fontStyle = fontStyle;
+            this.labelWidthPercent = labelWidthPercent;
         }
 
-        public Color color
+        public UnityEngine.Color color
         {
             get
             {
@@ -37,42 +46,30 @@ namespace UnknownCreator.Modules
     }
 
 #if UNITY_EDITOR
-    [CustomEditor(typeof(ScriptableObject), true, isFallback = true)]
-    public class DisplayNameEditor : Editor
+    [CustomPropertyDrawer(typeof(DisplayNameAttribute))]
+    public class DisplayNameDrawer : PropertyDrawer
     {
-        public override VisualElement CreateInspectorGUI()
+        public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement();
-            if (target == null) return root;
+            root.style.flexDirection = FlexDirection.Row;
 
-            var so = serializedObject;
-            var iterator = so.GetIterator();
-            bool enterChildren = true;
+            var displayAttr = attribute as DisplayNameAttribute;
 
-            while (iterator.NextVisible(enterChildren))
-            {
-                enterChildren = false;
+            var label = new Label(displayAttr.name);
+            var field = new PropertyField(property, "");
+            label.style.color = displayAttr.color;
+            label.style.fontSize = displayAttr.fontSize;
+            label.style.unityFontStyleAndWeight = displayAttr.fontStyle;
+            label.style.width = new StyleLength(new Length(displayAttr.labelWidthPercent, LengthUnit.Percent));
+            field.style.width = new StyleLength(new Length(100 - displayAttr.labelWidthPercent, LengthUnit.Percent));
+            label.style.alignSelf = Align.Center;
+            field.style.alignSelf = Align.Center;
 
-                var field = new PropertyField(iterator);
-
-                var type = target.GetType();
-                var member = type.GetField(iterator.name, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
-                if (member != null)
-                {
-                    if (System.Attribute.GetCustomAttribute(member, typeof(DisplayNameAttribute)) is DisplayNameAttribute attr)
-                    {
-                        field.label = attr.name;
-                        field.style.color = attr.color;
-                    }
-                }
-
-                field.Bind(so);
-                root.Add(field);
-            }
-
+            root.Add(label);
+            root.Add(field);
             return root;
         }
     }
 #endif
-    */
 }
