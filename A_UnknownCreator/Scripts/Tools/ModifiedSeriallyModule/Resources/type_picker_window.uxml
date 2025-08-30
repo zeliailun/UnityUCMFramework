@@ -1,0 +1,4 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <uie:ToolbarSearchField name="search-field" style="width: auto;" />
+    <ui:ListView name="type-list" item-height="18" show-border="true" show-add-remove-footer="false" show-bound-collection-size="false" virtualization-method="DynamicHeight" />
+</ui:UXML>
