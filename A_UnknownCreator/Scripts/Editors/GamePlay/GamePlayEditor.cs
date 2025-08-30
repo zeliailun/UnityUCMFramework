@@ -639,12 +639,24 @@ namespace UnknownCreator.Modules
 
         private void ExportJson(bool isAll = false)
         {
-            var items = isAll ? soList : itemList.selectedItems;
-            if (items == null || !items.Any())
+            if (isAll)
             {
-                EditorUtility.DisplayDialog("错误", "没有选择配置！", "确定");
-                return;
+                if (groupDict.Count < 1)
+                {
+                    EditorUtility.DisplayDialog("错误", "没有选择配置！", "确定");
+                    return;
+                }
             }
+            else
+            {
+                var items = itemList.selectedItems;
+                if (items == null || !items.Any())
+                {
+                    EditorUtility.DisplayDialog("错误", "没有选择配置！", "确定");
+                    return;
+                }
+            }
+
 
             if (exportActions.TryGetValue(configSelection.value, out var action))
             {
@@ -676,22 +688,43 @@ namespace UnknownCreator.Modules
         }
 
         private void Write<T, T2>(bool isAll = false, string name = "cfg")
-            where T : CustomScriptableObject
-            where T2 : class
+         where T : CustomScriptableObject
+         where T2 : class
         {
-            // 生成字典
-            var dict = (isAll ? soList.OfType<T>() : itemList.selectedItems.OfType<T>())
-                .ToDictionary(
-                    item => item.CachedSoName,
-                    item =>
-                    {
-                        var type = item.GetType();
-                        var value = type.GetField(name, flags)?.GetValue(item)
-                                 ?? type.GetProperty(name, flags)?.GetValue(item);
-                        return value as T2;
-                    });
+            var dict = new Dictionary<string, T2>();
+            var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
-            // 获取保存路径
+            IEnumerable<T> items;
+
+            if (isAll)
+            {
+                var temp = new List<T>();
+                foreach (var list in groupDict.Values)
+                {
+                    foreach (var item in list)
+                    {
+                        if (item is T tItem)
+                            temp.Add(tItem);
+                    }
+                }
+                items = temp;
+            }
+            else
+            {
+                items = itemList.selectedItems.OfType<T>();
+            }
+
+            foreach (var item in items)
+            {
+                if (item == null) continue;
+
+                object value = item.GetType().GetField(name, flags)?.GetValue(item)
+                             ?? item.GetType().GetProperty(name, flags)?.GetValue(item);
+
+                if (value is T2 typedValue)
+                    dict[item.CachedSoName] = typedValue;
+            }
+
             string filePath = Directory.Exists(jsonPath.value)
                 ? EditorUtility.SaveFilePanel("保存Json文件", jsonPath.value, configSelection.value, "json")
                 : EditorUtility.SaveFilePanelInProject("保存Json文件", configSelection.value, "json", "请输入文件名以保存JSON数据");
@@ -708,6 +741,7 @@ namespace UnknownCreator.Modules
                 EditorUtility.DisplayDialog("警告", "保存取消或内容无效！", "确定");
             }
         }
+
 
         private void Read<T, Y>() where Y : ScriptableObject
         {
@@ -766,6 +800,7 @@ namespace UnknownCreator.Modules
             string message = $"配置【{obj.name}】类型 {type.FullName} 中不存在名为 'cfg' 的字段或属性！";
             UCMDebug.LogWarning(message);
         }
+
 
         #endregion
 
