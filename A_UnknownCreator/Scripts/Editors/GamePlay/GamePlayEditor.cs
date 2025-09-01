@@ -27,6 +27,7 @@ namespace UnknownCreator.Modules
 
     public class GamePlayEditor : EditorWindow
     {
+
         private VisualTreeAsset m_VisualTreeAsset;
         private VisualElement root => rootVisualElement;
 
@@ -35,6 +36,7 @@ namespace UnknownCreator.Modules
         private Label contentName;
         private DropdownField configSelection;
         private TextField jsonPath, filePath;
+        private Button openScript;
 
         private static Dictionary<string, Action<bool>> exportActions;
         private static Dictionary<string, Action> importActions;
@@ -43,14 +45,15 @@ namespace UnknownCreator.Modules
         private static List<CustomScriptableObject> soList = new();
 
         //列表组
-        private Dictionary<string, List<CustomScriptableObject>> groupDict = new();
+        private static Dictionary<string, List<CustomScriptableObject>> groupDict = new();
 
         //组名称
-        private List<(string key, string displayName)> groupNames = new();
+        private static List<(string key, string displayName)> groupNames = new();
 
         // 保存每个配置类型的选中索引
-        private Dictionary<string, int> selectedIndexDict = new();
+        private static Dictionary<string, int> selectedIndexDict = new();
 
+        private static string fileContent;
         private const string nameCfg = "CfgSO"; //配置尾名（确保资产名称尾部一致）
         private const string SortKey = nameof(SortKey);
         private const string folderPathKey = nameof(folderPathKey);
@@ -58,7 +61,7 @@ namespace UnknownCreator.Modules
         private const string LastCfgType = nameof(LastCfgType);
         private const string LastGroupIndex = nameof(LastGroupIndex);
         private const string LastItemIndex = nameof(LastItemIndex);
-        private string fileContent;
+
 
         [MenuItem("UnknownCreator/GamePlayEditor")]
         public static void GamePlay()
@@ -107,6 +110,9 @@ namespace UnknownCreator.Modules
             jsonPath = root.Q<TextField>("JsonPath");
             if (EditorPrefs.HasKey(folderPathKey))
                 jsonPath.value = EditorPrefs.GetString(folderPathKey);
+
+            openScript=root.Q<Button>("OpenScript");
+            openScript.clicked += OpenScript;
 
             root.Q<Button>("FindFile").clicked += FindFile;
             root.Q<Button>("FindJsonPath").clicked += FindJsonPath;
@@ -284,6 +290,11 @@ namespace UnknownCreator.Modules
             itemList.ClearSelection();
             groupList.ClearSelection();
             LoadAllAssets(value.newValue + "CfgSO");
+
+            if(value.newValue == CfgTypes.Ability.ToString())
+                openScript.style.display=DisplayStyle.Flex;
+            else
+                openScript.style.display=DisplayStyle.None;
         }
 
         private VisualElement CreateItemElement()
@@ -468,13 +479,21 @@ namespace UnknownCreator.Modules
                     if (!File.Exists(scriptPath))
                     {
                         string scriptContent = $@"
-                        using UnityEngine;
-                        using UnknownCreator.Modules;
+using UnityEngine;
+using UnknownCreator.Modules;
 
-                        public class {abilityName} : AbilityBase
-                        {{
-                            // 在这里实现你的技能逻辑
-                        }}";
+public class {abilityName} : AbilityBase
+{{
+        public override void OnCreated()
+        {{
+
+        }}
+
+        protected override void OnRelease()
+        {{
+
+        }}  
+}}";
 
                         File.WriteAllText(scriptPath, scriptContent);
                     }
@@ -630,6 +649,24 @@ namespace UnknownCreator.Modules
             EditorUtility.FocusProjectWindow();
         }
 
+        private void OpenScript()
+        {
+            var so=itemList.selectedItem as CustomScriptableObject;
+            if(so==null) return;
+
+            string[] guids = AssetDatabase.FindAssets(so.name + " t:script");
+            if (guids.Length == 0)
+            {
+                EditorUtility.DisplayDialog("错误", "无法打开！", "确定");
+                return;
+            }
+
+            string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+            var scriptAsset = AssetDatabase.LoadAssetAtPath<MonoScript>(path);
+            AssetDatabase.OpenAsset(scriptAsset);
+        }
+
+
         #endregion
 
 
@@ -700,13 +737,8 @@ namespace UnknownCreator.Modules
             {
                 var temp = new List<T>();
                 foreach (var list in groupDict.Values)
-                {
-                    foreach (var item in list)
-                    {
-                        if (item is T tItem)
-                            temp.Add(tItem);
-                    }
-                }
+                                    foreach (var item in list)
+                         temp.Add(item as T);
                 items = temp;
             }
             else
@@ -722,7 +754,7 @@ namespace UnknownCreator.Modules
                              ?? item.GetType().GetProperty(name, flags)?.GetValue(item);
 
                 if (value is T2 typedValue)
-                    dict[item.CachedSoName] = typedValue;
+                    dict[item.name] = typedValue;
             }
 
             string filePath = Directory.Exists(jsonPath.value)

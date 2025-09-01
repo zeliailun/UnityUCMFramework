@@ -2,11 +2,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using UnknownCreator.Modules;
-
+namespace UnknownCreator.Modules
+{
 
 internal static class EditorTools
 {
@@ -72,6 +74,45 @@ internal static class EditorTools
         te.Copy();
     }
 
+
+
+  
+
+
+
+    public static void FocusAbilityFromScript()
+    {
+        // 获取当前选中的 C# 脚本
+        var obj = Selection.activeObject as MonoScript;
+        if (obj == null) return;
+
+        string scriptName = obj.name; // 脚本类名
+        // 这里假设 AbilityCfgSO 名称和脚本类名一致
+        var cfg = AssetDatabase.FindAssets(scriptName + " t:AbilityCfgSO")
+            .Select(guid => AssetDatabase.LoadAssetAtPath<AbilityCfgSO>(AssetDatabase.GUIDToAssetPath(guid)))
+            .FirstOrDefault();
+
+        if (cfg != null)
+        {
+            // 打开你的编辑器并选中该配置
+            var wnd = EditorWindow.GetWindow<GamePlayEditor>();
+            wnd.titleContent = new GUIContent("GamePlayEditor");
+            wnd.Show();
+            wnd.Focus();
+
+            // 选中对应的配置
+            var method = typeof(GamePlayEditor).GetMethod("SelectSO", BindingFlags.NonPublic | BindingFlags.Instance);
+            method?.Invoke(wnd, new object[] { cfg });
+        }
+        else
+        {
+            EditorUtility.DisplayDialog("提示", $"找不到对应的 Ability 配置: {scriptName}", "确定");
+        }
+    }
+
+
+
+
     private static T GetTarget<T>() where T : UnityEngine.Object
     {
         UnityEngine.Object[] objs = Selection.objects;
@@ -87,6 +128,5 @@ internal static class EditorTools
 
 }
 
-
-
+}
 #endif
