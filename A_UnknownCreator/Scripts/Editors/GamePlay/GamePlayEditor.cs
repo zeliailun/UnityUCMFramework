@@ -111,7 +111,7 @@ namespace UnknownCreator.Modules
             if (EditorPrefs.HasKey(folderPathKey))
                 jsonPath.value = EditorPrefs.GetString(folderPathKey);
 
-            openScript=root.Q<Button>("OpenScript");
+            openScript = root.Q<Button>("OpenScript");
             openScript.clicked += OpenScript;
 
             root.Q<Button>("FindFile").clicked += FindFile;
@@ -291,10 +291,10 @@ namespace UnknownCreator.Modules
             groupList.ClearSelection();
             LoadAllAssets(value.newValue + "CfgSO");
 
-            if(value.newValue == CfgTypes.Ability.ToString())
-                openScript.style.display=DisplayStyle.Flex;
+            if (value.newValue == CfgTypes.Ability.ToString())
+                openScript.style.display = DisplayStyle.Flex;
             else
-                openScript.style.display=DisplayStyle.None;
+                openScript.style.display = DisplayStyle.None;
         }
 
         private VisualElement CreateItemElement()
@@ -651,19 +651,35 @@ public class {abilityName} : AbilityBase
 
         private void OpenScript()
         {
-            var so=itemList.selectedItem as CustomScriptableObject;
-            if(so==null) return;
+            var so = itemList.selectedItem as AbilityCfgSO;
+            if (so == null) return;
 
-            string[] guids = AssetDatabase.FindAssets(so.name + " t:script");
-            if (guids.Length == 0)
+            // 搜索项目中所有脚本文件（不限定类型）
+            string[] guids = AssetDatabase.FindAssets("t:Script");
+            string soName = so.cfgScript == null ? so.name : so.cfgScript.name;
+            string targetPath = null;
+
+            foreach (var guid in guids)
             {
-                EditorUtility.DisplayDialog("错误", "无法打开！", "确定");
-                return;
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                string fileName = Path.GetFileNameWithoutExtension(path);
+
+                if (fileName == soName) // 精确匹配文件名
+                {
+                    targetPath = path;
+                    break;
+                }
             }
 
-            string path = AssetDatabase.GUIDToAssetPath(guids[0]);
-            var scriptAsset = AssetDatabase.LoadAssetAtPath<MonoScript>(path);
-            AssetDatabase.OpenAsset(scriptAsset);
+            if (!string.IsNullOrEmpty(targetPath))
+            {
+                var scriptAsset = AssetDatabase.LoadAssetAtPath<MonoScript>(targetPath);
+                AssetDatabase.OpenAsset(scriptAsset);
+            }
+            else
+            {
+                EditorUtility.DisplayDialog("错误", $"无法找到脚本 {soName}！", "确定");
+            }
         }
 
 
@@ -737,8 +753,8 @@ public class {abilityName} : AbilityBase
             {
                 var temp = new List<T>();
                 foreach (var list in groupDict.Values)
-                                    foreach (var item in list)
-                         temp.Add(item as T);
+                    foreach (var item in list)
+                        temp.Add(item as T);
                 items = temp;
             }
             else

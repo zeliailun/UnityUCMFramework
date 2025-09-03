@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
 using Animancer;
 using System;
@@ -92,12 +92,12 @@ namespace UnknownCreator.Modules
             this.owner = owner;
             this.abName = abName;
             this.index = index;
-            abilityCfg = Mgr.JD.GetData<Dictionary<string, AbilityCfg>>(JsonCfgNameGlobals.AbilityJson)[string.IsNullOrWhiteSpace(cfgName) ? abName : cfgName];
+            abilityCfg = Mgr.JD.GetData<Dictionary<string, AbilityCfg>>(JsonCfgKeyGlobals.AbilityJson)[string.IsNullOrWhiteSpace(cfgName) ? abName : cfgName];
 
             level = abilityCfg.startLevel;
             maxlevel = abilityCfg.maxLevel;
 
-            //¼ÓÔØÄ¬ÈÏÊ©·¨¶¯»­
+            //åŠ è½½é»˜è®¤æ–½æ³•åŠ¨ç”»
             ap = Mgr.RPool.Load<AnimPlayer>();
             if (abilityCfg.castAnimAsset != null)
             {
@@ -109,10 +109,10 @@ namespace UnknownCreator.Modules
                 castAnimName = string.Empty;
             }
 
-            //Ìí¼ÓÍ³¼Æµ½×é¼þ
+            //æ·»åŠ ç»Ÿè®¡åˆ°ç»„ä»¶
             foreach (var kv in abilityCfg.statsKV)
             {
-                var stCfg = Mgr.JD.GetData<Dictionary<string, StatsCfg>>(JsonCfgNameGlobals.StatsJson)[kv.Key];
+                var stCfg = Mgr.JD.GetData<Dictionary<string, StatsCfg>>(JsonCfgKeyGlobals.StatsJson)[kv.Key];
 
                 if (!statsKVDict.TryGetValue(kv.Key, out var statsList))
                 {
@@ -155,7 +155,7 @@ namespace UnknownCreator.Modules
         {
             if (isRelease) return;
 
-            //ÄÜÁ¦µãºÍCD¼ÆËã
+            //èƒ½åŠ›ç‚¹å’ŒCDè®¡ç®—
             if (canCalcCooldown)
             {
                 currentCd = Math.Max(0, currentCd - CustomTime.DeltaTime());
@@ -176,7 +176,7 @@ namespace UnknownCreator.Modules
                 }
             }
 
-            //±»¶¯¼ì²éÉèÖÃ
+            //è¢«åŠ¨æ£€æŸ¥è®¾ç½®
             passiveName = GetCurrentPassiveName();
             if (string.IsNullOrWhiteSpace(passiveName))
             {
@@ -193,7 +193,7 @@ namespace UnknownCreator.Modules
 
             OnUpdate();
 
-            //ËÀÍöÅÐ¶Ï
+            //æ­»äº¡åˆ¤æ–­
             if (!owner.isAlive && !isDie)
             {
                 isDie = true;

@@ -1,4 +1,4 @@
-using System;
+锘縰sing System;
 using System.Collections.Generic;
 using Animancer;
 using UnityEngine;
@@ -26,7 +26,7 @@ namespace UnknownCreator.Modules
             {
                 foreach (var item in self.unitCfg.animGroup)
                 {
-                    groupCfgDict.TryAdd(item.Key, Mgr.JD.GetData<Dictionary<string, List<AnimCfgInfo>>>(JsonCfgNameGlobals.AnimJson)[item.Value]);
+                    groupCfgDict.TryAdd(item.Key, Mgr.JD.GetData<Dictionary<string, List<AnimCfgInfo>>>(JsonCfgKeyGlobals.AnimJson)[item.Value]);
                 }
             }
 
@@ -58,7 +58,7 @@ namespace UnknownCreator.Modules
         {
             if (string.IsNullOrWhiteSpace(group))
             {
-                UCMDebug.LogWarning("没有动画配置文件");
+                UCMDebug.LogWarning("娌℃湁鍔ㄧ敾閰嶇疆鏂囦欢");
                 return;
             }
 

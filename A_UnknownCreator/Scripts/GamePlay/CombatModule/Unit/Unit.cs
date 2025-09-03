@@ -159,7 +159,7 @@ namespace UnknownCreator.Modules
             modelLayerT = entT.Find(UnitGlobals.Model);
             //modelLayerObj.SetActive(true);
 
-            unitCfg = Mgr.JD.GetData<Dictionary<string, UnitCfg>>(JsonCfgNameGlobals.UnitJson)[string.IsNullOrWhiteSpace(cfgName) ? entName : cfgName];
+            unitCfg = Mgr.JD.GetData<Dictionary<string, UnitCfg>>(JsonCfgKeyGlobals.UnitJson)[string.IsNullOrWhiteSpace(cfgName) ? entName : cfgName];
 
             hbsm = Mgr.RPool.Load<HBSMController>();
             hbsm.kv.AddValue<Unit>(this);
@@ -169,11 +169,11 @@ namespace UnknownCreator.Modules
             statsC = hbsm.AddComp<UStatsComp>(true);
             if (!string.IsNullOrWhiteSpace(unitCfg.statsGroup))
             {
-                var list = Mgr.JD.GetData<Dictionary<string, List<OverrideStats>>>(JsonCfgNameGlobals.StatsGroupJson)[unitCfg.statsGroup];
+                var list = Mgr.JD.GetData<Dictionary<string, List<OverrideStats>>>(JsonCfgKeyGlobals.StatsGroupJson)[unitCfg.statsGroup];
                 StatsCfg st;
                 foreach (var item in list)
                 {
-                    st = Mgr.JD.GetData<Dictionary<string, StatsCfg>>(JsonCfgNameGlobals.StatsJson)[item.baseCfgName];
+                    st = Mgr.JD.GetData<Dictionary<string, StatsCfg>>(JsonCfgKeyGlobals.StatsJson)[item.baseCfgName];
                     statsC.AddStats(st, item.baseValue, null);
                 }
             }
@@ -253,7 +253,7 @@ namespace UnknownCreator.Modules
             modelT.SetParent(modelLayerT);
             modelT.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
             animC.SetAnimComp(model.GetComp<AnimancerComponent>());
-            var modelCfg = Mgr.JD.GetData<Dictionary<string, UnitModelCfg>>(JsonCfgNameGlobals.UnitModelJson)[name];
+            var modelCfg = Mgr.JD.GetData<Dictionary<string, UnitModelCfg>>(JsonCfgKeyGlobals.UnitModelJson)[name];
             if (modelCfg != null)
             {
                 foreach (var result in modelCfg.hitBoxList)

@@ -44,7 +44,7 @@ namespace UnknownCreator.Modules
         {
             soundName = name;
             soundObj = go;
-            soundCfg = Mgr.JD.GetData<Dictionary<string, SoundCfg>>(JsonCfgNameGlobals.SoundJson)[soundName];
+            soundCfg = Mgr.JD.GetData<Dictionary<string, SoundCfg>>(JsonCfgKeyGlobals.SoundJson)[soundName];
             id = soundObj.GetInstanceID();
             soundT = soundObj.GetComponent<Transform>();
             source = soundObj.GetComponent<AudioSource>();

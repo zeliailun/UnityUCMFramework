@@ -1,14 +1,24 @@
-﻿using UnityEngine;
+﻿using UnityEditor;
+using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
     [HideScriptField]
     public class AbilityCfgSO : CustomScriptableObject
     {
+#if UNITY_EDITOR
+
+        [SerializeReference]
+        public MonoScript cfgScript;
+
+        internal Texture2D icon;
+
+#endif
         [field: SerializeField]
         public AbilityCfg cfg { internal set; get; } = new();
 
-        internal Texture2D icon;
+
+
 
 
 
@@ -51,9 +61,8 @@ namespace UnknownCreator.Modules
                 return;
             }
 
-            if (icon != null && icon.name == cfg.icon) return;
-
-            icon = UnityEditorGlobals.GetAsset<Texture2D>(cfg.icon);
+            if (icon == null || icon.name != cfg.icon) 
+                icon = UnityEditorGlobals.GetAsset<Texture2D>(cfg.icon);
 #endif
         }
 

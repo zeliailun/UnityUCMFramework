@@ -2,9 +2,17 @@
     <Style src="project://database/Assets/A_UnknownCreator/Scripts/Editors/GamePlay/GamePlayEditor.uss?fileID=7433441132597879392&amp;guid=00f546fcc3d5e964a9eea45440d38576&amp;type=3#GamePlayEditor"/>
     <ui:VisualElement style="flex-grow: 1; justify-content: space-evenly; align-self: stretch;">
         <ui:Label name="ContentName" text="&#37197;&#32622;&#21517;&#31216;" class="BaseText Title Panel" style="display: flex; background-color: rgba(11, 11, 11, 0.2);"/>
+        <ui:VisualElement class="Panel" style="display: none;">
+            <ui:TextField label="&#25216;&#33021;&#33050;&#26412;&#20445;&#23384;&#36335;&#24452;" placeholder-text="&#36755;&#20837;&#21517;&#31216;" name="AbilityScriptPath" auto-correction="true" class="BaseText" style="flex-shrink: 1; flex-grow: 1; -unity-text-align: middle-left; flex-direction: row;"/>
+            <ui:Button text="&#36873;&#25321;" name="FindAbilityScriptPath" class="OptionButton BaseText"/>
+        </ui:VisualElement>
+        <ui:VisualElement class="Panel" style="display: none;">
+            <ui:TextField label="&#25216;&#33021;&#37197;&#32622;&#20445;&#23384;&#36335;&#24452;" placeholder-text="&#36755;&#20837;&#21517;&#31216;" name="AbilitySOPath" auto-correction="true" class="BaseText" style="flex-shrink: 1; flex-grow: 1; -unity-text-align: middle-left; flex-direction: row;"/>
+            <ui:Button text="&#36873;&#25321;" name="FindAbilitySOPath" class="OptionButton BaseText"/>
+        </ui:VisualElement>
         <ui:VisualElement class="Panel">
-            <ui:TextField label="&#20445;&#23384;JSON&#36335;&#24452;" placeholder-text="&#36755;&#20837;&#25991;&#20214;&#22841;&#36335;&#24452;" name="JsonPath" auto-correction="true" class="BaseText" style="flex-shrink: 1; flex-grow: 1; -unity-text-align: middle-left;"/>
-            <ui:Button text="&#36873;&#25321;&#36335;&#24452;" name="FindJsonPath" class="OptionButton BaseText" style="flex-shrink: 1; flex-grow: 0; align-self: center;"/>
+            <ui:TextField label="JSON&#20445;&#23384;&#36335;&#24452;" placeholder-text="&#36755;&#20837;&#25991;&#20214;&#22841;&#36335;&#24452;" name="JsonPath" auto-correction="true" class="BaseText" style="flex-shrink: 1; flex-grow: 1; -unity-text-align: middle-left;"/>
+            <ui:Button text="&#36873;&#25321;" name="FindJsonPath" class="OptionButton BaseText"/>
         </ui:VisualElement>
         <ui:VisualElement class="Panel" style="display: flex;">
             <ui:DropdownField index="0" name="ConfigSelection" class="BaseText" style="flex-grow: 0; flex-shrink: 1; align-content: auto; align-self: stretch; justify-content: space-evenly; align-items: stretch; flex-direction: row; flex-wrap: nowrap; -unity-text-align: middle-center; min-width: 150px; max-width: none;"/>
@@ -21,7 +29,7 @@
         <ui:VisualElement class="Panel" style="flex-direction: column;">
             <ui:VisualElement class="Panel" style="flex-grow: 1; border-left-color: rgba(0, 0, 0, 0); border-right-color: rgba(0, 0, 0, 0); border-top-color: rgba(0, 0, 0, 0); border-bottom-color: rgba(0, 0, 0, 0); border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0;">
                 <ui:TextField label="&#21517;&#31216;&#26597;&#25214;" placeholder-text="&#36755;&#20837;&#21517;&#31216;" name="FilePath" auto-correction="true" class="BaseText" style="flex-shrink: 1; flex-grow: 1; -unity-text-align: middle-left; flex-direction: row;"/>
-                <ui:Button text="&#26597;&#25214;" name="FindFile" class="OptionButton BaseText" style="flex-shrink: 1; flex-grow: 0; align-self: center;"/>
+                <ui:Button text="&#26597;&#25214;" name="FindFile" class="OptionButton BaseText"/>
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement style="flex-grow: 1; flex-direction: row; margin-top: 10px; margin-right: 5px; margin-bottom: 10px; margin-left: 5px; display: flex; border-left-color: rgba(0, 0, 0, 0.2); border-right-color: rgba(0, 0, 0, 0.2); border-top-color: rgba(0, 0, 0, 0.2); border-bottom-color: rgba(0, 0, 0, 0.2); border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px;">
