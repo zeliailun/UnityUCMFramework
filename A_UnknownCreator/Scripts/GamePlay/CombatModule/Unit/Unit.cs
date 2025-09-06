@@ -420,6 +420,9 @@ namespace UnknownCreator.Modules
             return master != null;
         }
 
+        public int GetOwnerID()
+        => !HasMaster() ? master.entID : entID;
+
         #endregion
 
 

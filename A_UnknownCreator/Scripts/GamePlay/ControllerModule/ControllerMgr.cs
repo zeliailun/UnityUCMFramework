@@ -24,13 +24,16 @@ namespace UnknownCreator.Modules
 
         public bool isActivated { private set; get; }
 
-        public GameObject target { private set; get; }
+        public Dictionary<int, GameObject> targetDict { private set; get; }
+        public List<GameObject> targets { private set; get; }
 
-        //private ControllerMgr() { }
+        public bool hasTarget => targetDict.Count > 0;
 
         void IDearMgr.WorkWork()
         {
             hfsm = new HBSMController();
+            targets = new();
+            targetDict = new();
             if (!string.IsNullOrWhiteSpace(defaultInputClass))
                 SetInput(ObjectGlobals.CreateInstance<IInputActionCollection2>(defaultInputClass));
             if (!string.IsNullOrWhiteSpace(defaultInputClass))
@@ -41,20 +44,18 @@ namespace UnknownCreator.Modules
         {
             ReleaseController();
             hfsm = null;
+            targets = null;
+            targetDict = null;
         }
 
         void IDearMgr.UpdateMGR()
         {
             if (inputClass is null) UCMDebug.LogError("没有设置自定义输入类");
 
-            if (!isActivated || target == null) return;
+            if (!isActivated || !targets.IsValid()) return;
             hfsm?.UpdateAllHBSM();
         }
 
-        public void SetControllerTarget(GameObject target)
-        {
-            this.target = target;
-        }
 
         public void SetInput(IInputActionCollection2 actionInput)
         {
@@ -73,6 +74,56 @@ namespace UnknownCreator.Modules
             return (T)inputClass;
         }
 
+
+
+        public void AddControllerTarget(GameObject target)
+        {
+            if (target == null) return;
+
+            var id = target.GetInstanceID();
+            if (targetDict.TryGetValue(id, out _)) return;
+
+            targetDict[id] = target;
+            targets.Add(target);
+     
+        }
+
+        public void RemoveControllerTarget(GameObject target)
+        {
+            if (target == null) return;
+
+            var id = target.GetInstanceID();
+            if (targetDict.Remove(id, out _))
+                targets.Remove(target);
+        }
+
+        public GameObject GetFirstTarget()
+        => targets.IsValid() ? targets[0] : null;
+
+        public GameObject GetTargetByIndex(int index)
+        {
+            if (targets.IsValid() && index < targets.Count && index >= 0)
+            {
+                return targets[0];
+            }
+            return null;
+        }
+
+        public GameObject GetTargetByID(int id)
+        {
+            if (targetDict.TryGetValue(id, out var target))
+            {
+                return target;
+            }
+            return null;
+        }
+
+        public List<GameObject> GetAllTarget()
+        {
+            return targets;
+        }
+
+
         public Vector3 GetControllerDir(string name)
         {
             if (sm is null || sm.stateName != name) sm = hfsm.GetHBSM(name);
@@ -81,10 +132,11 @@ namespace UnknownCreator.Modules
 
         public void ChangeTarget(GameObject target)
         {
-            if (target != null && this.target != null && target.GetInstanceID() == this.target.GetInstanceID()) return;
+            if (target == null || targetDict.TryGetValue(target.GetInstanceID(), out _)) return;
+
             DisableController();
-            SetControllerTarget(target);
-            if (target != null) EnableController();
+            AddControllerTarget(target);
+            EnableController();
         }
 
         public void EnableController()
@@ -110,7 +162,8 @@ namespace UnknownCreator.Modules
         public void ClearController()
         {
             DisableController();
-            target = null;
+            targetDict.Clear();
+            targets.Clear();
         }
 
         public void ReleaseController()
@@ -121,7 +174,7 @@ namespace UnknownCreator.Modules
         }
 
         public bool IsControllerTarget(GameObject target)
-        => Mgr.Cntlr.target != null && target != null && target.GetInstanceID() == Mgr.Cntlr.target.GetInstanceID();
+        => target != null && targetDict.TryGetValue(target.GetInstanceID(), out _);
 
         private void DestroyController()
         {
@@ -131,4 +184,3 @@ namespace UnknownCreator.Modules
         }
     }
 }
-

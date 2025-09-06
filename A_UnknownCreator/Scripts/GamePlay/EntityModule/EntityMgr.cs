@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
+using UnityEngine;
 namespace UnknownCreator.Modules
 {
     public sealed partial class EntityMgr : IEntityMgr
@@ -77,19 +79,20 @@ namespace UnknownCreator.Modules
         public bool IsValidEntity<T>(T ent) where T : IEntity
         => ent != null && GetEntity(ent.entID) != null;
 
-        public IEntity CreateEntity(string entityName, string groupName, Type type,string config = null)
+        public IEntity CreateEntity(string entityName, string groupName, Type type, string config, Action<IEntity, GameObject> entCreated)
         {
             var obj = Mgr.GPool.Load(entityName, true, false);
             var entity = (IEntity)Mgr.RPool.Load(type);
+            entCreated?.Invoke(entity, obj);
             entity.InitEnt(entityName, obj, config);
             entityDict.Add(obj.GetInstanceID(), entity);
-            entityList.Add( entity);
+            entityList.Add(entity);
             if (!string.IsNullOrWhiteSpace(groupName)) SetGroup(groupName, entity);
             return entity;
         }
 
-        public T CreateEntity<T>(string entityName, string groupName, string config) where T : IEntity, new()
-        => (T)CreateEntity(entityName, groupName, typeof(T),config);
+        public T CreateEntity<T>(string entityName, string groupName, string config, Action<IEntity, GameObject> entCreated) where T : IEntity, new()
+        => (T)CreateEntity(entityName, groupName, typeof(T), config, entCreated);
 
         public void ReleaseEntity(int id)
         {
