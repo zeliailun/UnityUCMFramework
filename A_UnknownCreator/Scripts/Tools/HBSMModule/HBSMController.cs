@@ -56,21 +56,18 @@ namespace UnknownCreator.Modules
 
         public void UpdateAllHBSM()
         {
-            int countBefore = compListBefore.Count;
             StateComp compB;
-            for (int i = 0; i < countBefore; i++)
+            for (int i = 0; i < compListBefore.Count; i++)
             {
                 compB = compListBefore[i];
                 if (compB.enable) compB.UpdateComp();
             }
 
-            int hfsmCount = hfsmList.Count;
-            for (int i = 0; i < hfsmCount; i++)
+            for (int i = 0; i < hfsmList.Count; i++)
                 hfsmList[i].Update();
 
-            int countAfter = compListAfter.Count;
             StateComp compA;
-            for (int i = 0; i < countAfter; i++)
+            for (int i = 0; i < compListAfter.Count; i++)
             {
                 compA = compListAfter[i];
                 if (compA.enable) compA.UpdateComp();
@@ -79,21 +76,18 @@ namespace UnknownCreator.Modules
 
         public void FixedUpdateAllHBSM()
         {
-            int countBefore = compListBefore.Count;
             StateComp compB;
-            for (int i = 0; i < countBefore; i++)
+            for (int i = 0; i < compListBefore.Count; i++)
             {
                 compB = compListBefore[i];
                 if (compB.enable) compB.FixedUpdateComp();
             }
 
-            int hfsmCount = hfsmList.Count;
-            for (int i = 0; i < hfsmCount; i++)
+            for (int i = 0; i < hfsmList.Count; i++)
                 hfsmList[i].FixedUpdate();
 
-            int countAfter = compListAfter.Count;
             StateComp compA;
-            for (int i = 0; i < countAfter; i++)
+            for (int i = 0; i < compListAfter.Count; i++)
             {
                 compA = compListAfter[i];
                 if (compA.enable) compA.FixedUpdateComp();
@@ -102,21 +96,18 @@ namespace UnknownCreator.Modules
 
         public void LateUpdateAllHBSM()
         {
-            int countBefore = compListBefore.Count;
             StateComp compB;
-            for (int i = 0; i < countBefore; i++)
+            for (int i = 0; i < compListBefore.Count; i++)
             {
                 compB = compListBefore[i];
                 if (compB.enable) compB.LateUpdateComp();
             }
 
-            int hfsmCount = hfsmList.Count;
-            for (int i = 0; i < hfsmCount; i++)
+            for (int i = 0; i < hfsmList.Count; i++)
                 hfsmList[i].LateUpdate();
 
-            int countAfter = compListAfter.Count;
             StateComp compA;
-            for (int i = 0; i < countAfter; i++)
+            for (int i = 0; i < compListAfter.Count; i++)
             {
                 compA = compListAfter[i];
                 if (compA.enable) compA.LateUpdateComp();
@@ -125,21 +116,18 @@ namespace UnknownCreator.Modules
 
         public void EnableAllHBSM()
         {
-            int countBefore = compListBefore.Count;
             StateComp compB;
-            for (int i = 0; i < countBefore; i++)
+            for (int i = 0; i < compListBefore.Count; i++)
             {
                 compB = compListBefore[i];
                 compB.enable |= !compB.IsSkipGlobalEnable();
             }
 
-            int hfsmCount = hfsmList.Count;
-            for (int i = 0; i < hfsmCount; i++)
+            for (int i = 0; i < hfsmList.Count; i++)
                 hfsmList[i].Enter();
 
-            int countAfter = compListAfter.Count;
             StateComp compA;
-            for (int i = 0; i < countAfter; i++)
+            for (int i = 0; i < compListAfter.Count; i++)
             {
                 compA = compListAfter[i];
                 compA.enable |= !compA.IsSkipGlobalEnable();
@@ -148,21 +136,19 @@ namespace UnknownCreator.Modules
 
         public void DisableAllHBSM()
         {
-            int countBefore = compListBefore.Count;
             StateComp compB;
-            for (int i = 0; i < countBefore; i++)
+            for (int i = 0; i < compListBefore.Count; i++)
             {
                 compB = compListBefore[i];
                 compB.enable &= compB.IsSkipGlobalDisable();
             }
 
-            int hfsmCount = hfsmList.Count;
-            for (int i = 0; i < hfsmCount; i++)
+
+            for (int i = 0; i < hfsmList.Count; i++)
                 hfsmList[i].Exit();
 
-            int countAfter = compListAfter.Count;
             StateComp compA;
-            for (int i = 0; i < countAfter; i++)
+            for (int i = 0; i < compListAfter.Count; i++)
             {
                 compA = compListAfter[i];
                 compA.enable &= compA.IsSkipGlobalDisable();

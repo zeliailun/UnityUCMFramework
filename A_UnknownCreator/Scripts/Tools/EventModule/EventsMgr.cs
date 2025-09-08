@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System;
 namespace UnknownCreator.Modules
 {
@@ -42,7 +42,8 @@ namespace UnknownCreator.Modules
 
         public void Remove<T>(Delegate del, string key, int id = -1) where T : class, IEvent, new()
         {
-            if (del == null || !delegateDict.TryGetValue((id, key), out var list)) return;
+            var compositeKey = (id, key);
+            if (del == null || !delegateDict.TryGetValue(compositeKey, out var list)) return;
 
             for (int i = list.Count - 1; i >= 0; i--)
             {
@@ -54,7 +55,7 @@ namespace UnknownCreator.Modules
                 }
             }
 
-            if (list.Count == 0) delegateDict.Remove((id, key));
+            if (list.Count == 0) delegateDict.Remove(compositeKey);
         }
 
         private void AddInternal(string key, int id, IEvent evt)
@@ -131,7 +132,9 @@ namespace UnknownCreator.Modules
 
         public void Send(string s, int id = -1)
         {
-            if (interrupt || !delegateDict.TryGetValue((id, s), out var result)) return;
+
+            var compositeKey = (id, s);
+            if (interrupt || !delegateDict.TryGetValue(compositeKey, out var result)) return;
 
             for (int i = 0; i < result.Count;)
             {
@@ -148,12 +151,13 @@ namespace UnknownCreator.Modules
                 i++;
             }
 
-            if (result.Count == 0) delegateDict.Remove((id, s));
+            if (result.Count == 0) delegateDict.Remove(compositeKey);
         }
 
         public void Send<U>(U info, string s, int id = -1)
         {
-            if (interrupt || !delegateDict.TryGetValue((id, s), out var result)) return;
+            var compositeKey = (id, s);
+            if (interrupt || !delegateDict.TryGetValue(compositeKey, out var result)) return;
 
             for (int i = 0; i < result.Count;)
             {
@@ -170,7 +174,7 @@ namespace UnknownCreator.Modules
                 i++;
             }
 
-            if (result.Count == 0) delegateDict.Remove((id, s));
+            if (result.Count == 0) delegateDict.Remove(compositeKey);
         }
 
         #endregion

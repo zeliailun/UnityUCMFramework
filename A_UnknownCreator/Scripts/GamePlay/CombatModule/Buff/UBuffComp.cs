@@ -87,28 +87,29 @@ namespace UnknownCreator.Modules
             if (buff is null ||
                 buff.isRelease ||
                 !buffDict.TryGetValue(buff.buffName, out var list) ||
-                list is null ||
-                list.Count < 1 ||
-                !list.Contains(buff)) return;
+                !list.IsValid() ||
+                !list.Contains(buff))
+            {
+              
+                return;
+            }
 
             buff.OnRemove(false);
             list.Remove(buff);
             buffList.Remove(buff);
-            Mgr.RPool.Release(buff);
             if (list.Count < 1)
             {
                 buffDict.Remove(buff.buffName);
                 ListPool<BuffBase>.Release(list);
             }
-
+            Mgr.RPool.Release(buff);
         }
 
         public void RemoveBuff(string buffName)
         {
             if (string.IsNullOrWhiteSpace(buffName) ||
                 !buffDict.TryGetValue(buffName, out var list) ||
-                list is null ||
-                list.Count < 1) return;
+                !list.IsValid()) return;
 
             var buff = list[^1];
             if (buff is null ||
@@ -118,12 +119,12 @@ namespace UnknownCreator.Modules
             buff.OnRemove(false);
             list.Remove(buff);
             buffList.Remove(buff);
-            Mgr.RPool.Release(buff);
             if (list.Count < 1)
             {
                 buffDict.Remove(buff.buffName);
                 ListPool<BuffBase>.Release(list);
             }
+            Mgr.RPool.Release(buff);
         }
 
         public void RemoveSameBuff(string buffName)

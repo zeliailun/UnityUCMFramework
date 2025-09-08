@@ -1,8 +1,6 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System;
 using Unity.Mathematics;
-using UnityEngine;
-using System.Security.Cryptography;
 
 namespace UnknownCreator.Modules
 {
@@ -91,8 +89,10 @@ namespace UnknownCreator.Modules
             this.kv = kv;
             this.isKVRecyclePool = isKVRecyclePool;
             inflicterType = typeof(Unit);
-            stackCount = 0;
             origDuration = duration = dur;
+            timer = 0;
+            stack = 0;
+            isEnableTimer = false;
             isInterruptMotion = true;
             isRelease = false;
             OnInitialized();
@@ -135,6 +135,10 @@ namespace UnknownCreator.Modules
             if (isRelease) return;
 
             OnUpdate();
+
+
+            if (isRelease) return;
+
 
             if (shouldRemoveBuff)
             {
@@ -198,8 +202,13 @@ namespace UnknownCreator.Modules
 
         private bool MotionCheck(BuffBase newBuff)
         {
+            if (isRelease) return true;
+
+            UCMDebug.Log("新" + newBuff.owner.entID);
+            UCMDebug.Log("旧" + owner.entID);
             if (newBuff.GetMotionPriority() >= this.GetMotionPriority())
             {
+                UCMDebug.Log(111);
                 this.RemoveMotionController();
                 return false;
             }
@@ -211,16 +220,13 @@ namespace UnknownCreator.Modules
             if (isRelease) return;
 
             isRelease = true;
-            isInterruptMotion = true;
             OnRelease();
             StopThink();
             RemoveEvnets();
             RemoveMotionController();
             ClearStats();
             ClearState();
-            stackCount = 0;
-            if (isKVRecyclePool)
-                Mgr.RPool.Release(kv);
+            if (isKVRecyclePool) Mgr.RPool.Release(kv);
             kv = null;
             owner = null;
             inflicter = null;
