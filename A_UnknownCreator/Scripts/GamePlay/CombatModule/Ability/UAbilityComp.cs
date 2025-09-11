@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -14,7 +14,7 @@ namespace UnknownCreator.Modules
         => abilityCount > 0;
 
         public bool isCastPhase
-        => castAbility != null;
+        => castAbility != null && (isCastPoint || isCastBackswing);
 
         public bool isCastPoint { internal set; get; }
 
@@ -98,7 +98,7 @@ namespace UnknownCreator.Modules
         {
             if (target == null)
             {
-                UCMDebug.Log("Ê©·¨¼¼ÄÜÄ¿±ê²»ÄÜÎª¿Õ");
+                UCMDebug.Log("æ–½æ³•æŠ€èƒ½ç›®æ ‡ä¸èƒ½ä¸ºç©º");
                 return;
             }
             GetAbility(abName)?.ExecuteAbilityOnTarget(target);
@@ -343,7 +343,7 @@ namespace UnknownCreator.Modules
 
                 if (attemptCount > maxAttempts)
                 {
-                    UCMDebug.LogWarning("¼¼ÄÜÉú³É¿ÉÄÜ´¥·¢ÁËËÀÑ­»·");
+                    UCMDebug.LogWarning("æŠ€èƒ½ç”Ÿæˆå¯èƒ½è§¦å‘äº†æ­»å¾ªç¯");
                     break;
                 }
             }

@@ -1,4 +1,4 @@
-namespace UnknownCreator.Modules
+﻿namespace UnknownCreator.Modules
 {
     public struct ObjPoolInfo
     {
@@ -9,9 +9,9 @@ namespace UnknownCreator.Modules
 
         public readonly static ObjPoolInfo defaultInfo = new()
         {
-            maxNum = 400,
+            maxNum = 200,
             remainingNum = 0,
-            clearInterval = 60F,
+            clearInterval = 90F,
             isAutoClear = true,
         };
     }

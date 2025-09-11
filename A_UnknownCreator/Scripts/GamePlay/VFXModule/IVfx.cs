@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 namespace UnknownCreator.Modules
 {
     public interface IVfx
@@ -13,6 +13,7 @@ namespace UnknownCreator.Modules
         void InitVfx(string vfxName, GameObject obj, IEntity owner);
         void PlayVfx();
         void StopVfx();
+        void RestartVfx();
         void PauseVfx(bool isPause);
         void UpdateVfx();
         void DestroyVfx(float delay);

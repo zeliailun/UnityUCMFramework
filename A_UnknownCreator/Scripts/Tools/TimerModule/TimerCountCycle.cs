@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace UnknownCreator.Modules
 {
@@ -26,6 +26,9 @@ namespace UnknownCreator.Modules
 
         protected override void OnUpdateTimer()
         {
+
+            if (isCompleted) return;
+
             if (time >= delay)
             {
                 time = 0;

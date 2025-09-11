@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace UnknownCreator.Modules
 {
@@ -33,7 +33,7 @@ namespace UnknownCreator.Modules
         public T CreateVfx<T>(string vfxName, IEntity owner)
         where T : class, IVfx
         {
-            var obj = Mgr.GPool.Load(vfxName, true, false);
+            var obj = Mgr.GPool.Load(vfxName, true, true);
             var vfx = Mgr.RPool.Load<T>();
             vfx.InitVfx(vfxName, obj, owner);
             vfxDict.Add(vfx.id, vfx);

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 namespace UnknownCreator.Modules
 {
     public class GameObjPool : ObjPoolBase<GameObject>
@@ -41,8 +41,8 @@ namespace UnknownCreator.Modules
 
         protected override void OnRelease(GameObject obj)
         {
-            Mgr.GPool.SetRoot(obj, true);
             obj.SetActive(false);
+            Mgr.GPool.SetRoot(obj, true);
         }
 
         protected override void OnClear(GameObject obj)

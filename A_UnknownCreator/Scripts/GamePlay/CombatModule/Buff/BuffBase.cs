@@ -204,8 +204,6 @@ namespace UnknownCreator.Modules
         {
             if (isRelease) return true;
 
-            UCMDebug.Log("新" + newBuff.owner.entID);
-            UCMDebug.Log("旧" + owner.entID);
             if (newBuff.GetMotionPriority() >= this.GetMotionPriority())
             {
                 UCMDebug.Log(111);

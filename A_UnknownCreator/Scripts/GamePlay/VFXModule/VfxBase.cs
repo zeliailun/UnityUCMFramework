@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 namespace UnknownCreator.Modules
 {
@@ -27,11 +27,12 @@ namespace UnknownCreator.Modules
             isRelease = false;
             this.owner = owner;
             this.vfxName = vfxName;
+            if (owner != null) type = owner.GetType();
             rootObj = obj;
             rootT = rootObj.GetComponent<Transform>();
             id = rootObj.GetInstanceID();
             destroyVfx = Destroy;
-            if (owner != null) type = owner.GetType();
+            rootObj.SetActive(false);
         }
 
         public virtual void DestroyVfx(float delay)
@@ -52,13 +53,14 @@ namespace UnknownCreator.Modules
 
         public virtual void UpdateVfx()
         {
-            if (Mgr.RPool.HasObject(type,owner))
+            if (owner != null && Mgr.RPool.HasObject(type, owner))
                 Destroy(null);
         }
 
         public virtual void PlayVfx() { }
 
         public virtual void StopVfx() { }
+        public virtual void RestartVfx() { }
 
         public virtual void PauseVfx(bool isPause) { }
 
@@ -79,12 +81,18 @@ namespace UnknownCreator.Modules
             if (isRelease) return;
 
             isRelease = true;
+
+            timer.DestroySelf();
+            timer = null;
+
             OnRelease();
             Mgr.GPool.Release(vfxName, rootObj);
-            rootT = null;
             rootObj = null;
-            destroyVfx = null;
+            rootT = null;
             owner = null;
+            vfxName = null;
+            destroyVfx = null;
+            id = -1;
         }
 
         private void Destroy(TimerCountCycle cycle)
