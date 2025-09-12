@@ -18,6 +18,12 @@ namespace UnknownCreator.Modules
             Mgr.Timer.RemoveTimer(timer);
         }
 
+        public static void DestroySelf(this ref long timerID)
+        {
+            Mgr.Timer.RemoveTimer(timerID);
+            timerID = -1;
+        }
+
 
         //指定次数的帧循环 （注意：当isRemove为true时，对象会被回收对象池，外部引用需要赋NULL）
         public static ITimer CycleFrame(this ITimerMgr mgr, int frameCount, bool isRemove, Action<TimerFrameCycle> onCompleted = null, bool isApplyTimeScale = true)

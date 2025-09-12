@@ -19,7 +19,6 @@ namespace UnknownCreator.Modules
         public bool isPlaying => rootObj.activeSelf;
 
         private ITimer timer;
-        private Action<TimerCountCycle> destroyVfx;
         private Type type;
 
         public virtual void InitVfx(string vfxName, GameObject obj, IEntity owner)
@@ -31,8 +30,6 @@ namespace UnknownCreator.Modules
             rootObj = obj;
             rootT = rootObj.GetComponent<Transform>();
             id = rootObj.GetInstanceID();
-            destroyVfx = Destroy;
-            rootObj.SetActive(false);
         }
 
         public virtual void DestroyVfx(float delay)
@@ -46,9 +43,14 @@ namespace UnknownCreator.Modules
             }
 
             if (delay > 0)
-                timer = Mgr.Timer.CycleCount(1, delay, false, destroyVfx);
+                timer = Mgr.Timer.CycleCount(1, delay, false, Destroy);
             else
                 Destroy(null);
+        }
+
+        public virtual void DestroyImmediateVfx()
+        {
+            Destroy(null);
         }
 
         public virtual void UpdateVfx()
@@ -91,7 +93,7 @@ namespace UnknownCreator.Modules
             rootT = null;
             owner = null;
             vfxName = null;
-            destroyVfx = null;
+            type = null;
             id = -1;
         }
 
@@ -99,8 +101,6 @@ namespace UnknownCreator.Modules
         {
             Mgr.Vfx.DestroyVfx(id);
         }
-
-
     }
 
 }

@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -67,7 +67,7 @@ namespace UnknownCreator.Modules
 
                 if (attemptCount > maxAttempts)
                 {
-                    UCMDebug.LogWarning("Í¶ÉäÎïÉú³É¿ÉÄÜ´¥·¢ÁËËÀÑ­»·");
+                    UCMDebug.LogWarning("æŠ•å°„ç‰©ç”Ÿæˆå¯èƒ½è§¦å‘äº†æ­»å¾ªç¯");
                     break;
                 }
             }

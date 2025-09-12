@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace UnknownCreator.Modules
@@ -10,12 +10,12 @@ namespace UnknownCreator.Modules
         Projectile LaunchProjectile<IMvt, ICheck, Data>(ProjectileInfo<IMvt, ICheck, Data> info)
         where IMvt : class, IProjMvt
         where ICheck : class, IProjCheck
-        where Data : ProjectileData, new ();
+        where Data : ProjectileData, new();
 
         ProjectileInfo<IMvt, ICheck, Data> CreateProjectileData<IMvt, ICheck, Data>()
         where IMvt : class, IProjMvt
         where ICheck : class, IProjCheck
-        where Data : ProjectileData, new();
+        where Data : ProjectileData,new();
 
         void ReleaseProjectile(Projectile proj);
         void ReleaseProjectile(int id);

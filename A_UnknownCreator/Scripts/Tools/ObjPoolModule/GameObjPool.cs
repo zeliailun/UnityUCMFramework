@@ -28,10 +28,6 @@ namespace UnknownCreator.Modules
             return obj;
         }
 
-        protected override void OnPop(GameObject obj)
-        {
-            obj.SetActive(isActive);
-        }
 
         protected override void OnPreStored(GameObject obj)
         {
@@ -41,8 +37,9 @@ namespace UnknownCreator.Modules
 
         protected override void OnRelease(GameObject obj)
         {
+
+            Mgr.GPool.SetRoot(obj, false);
             obj.SetActive(false);
-            Mgr.GPool.SetRoot(obj, true);
         }
 
         protected override void OnClear(GameObject obj)

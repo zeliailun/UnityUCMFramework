@@ -140,12 +140,10 @@ namespace UnknownCreator.Modules
 
             if (storageCount > remainingNum)
             {
-
-
                 var obj = pool.Pop();
                 findPool.Remove(obj);
-                OnClear(obj);
                 storageCount--;
+                OnClear(obj);
             }
         }
 

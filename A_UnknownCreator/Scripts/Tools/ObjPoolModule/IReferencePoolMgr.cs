@@ -6,7 +6,7 @@ namespace UnknownCreator.Modules
     {
         int poolCount { get; }
         public object Load(Type type);
-        public T Load<T>() where T : class;//, new();
+        public T Load<T>() where T : class;
         void Release(object obj);
         bool HasObject(object obj);
         bool HasObject(Type type, object obj);
@@ -14,7 +14,7 @@ namespace UnknownCreator.Modules
         void DestroyPool(Type type);
         void ClearAll();
         void DestroyAll();
-        ObjPoolBase<object> CreatePool(Type type, ObjPoolInfo  info);
+        ObjPoolBase<object> CreatePool(Type type, ObjPoolInfo info);
         void Preload<T>(int count, ObjPoolInfo info) where T : class, new();
         void Preload(string className, int count, ObjPoolInfo info);
     }

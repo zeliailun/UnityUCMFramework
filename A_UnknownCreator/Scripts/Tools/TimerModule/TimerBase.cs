@@ -1,28 +1,10 @@
-using System;
+Ôªøusing System;
 
 namespace UnknownCreator.Modules
 {
     public abstract class TimerBase : ITimer, IReference
     {
-        private long _id;
-        private readonly object _idLock = new();
-        public long id
-        {
-            get
-            {
-                if (_id == 0)
-                {
-                    lock (_idLock)
-                    {
-                        if (_id == 0)
-                        {
-                            _id = GlobalID.GetUniqueID();
-                        }
-                    }
-                }
-                return _id;
-            }
-        }
+        public long id { get; private set; }
 
         public bool isStart { get; protected set; }
 
@@ -33,15 +15,16 @@ namespace UnknownCreator.Modules
         public Action onUpdate { get; set; }
         public Action onRelease { get; set; }
 
-        // ≥ı ºªØ Timer
+        // ÂàùÂßãÂåñ Timer
         public void Init()
         {
             time = 0;
+            id = GlobalID.GetUniqueID();
             OnInitTimer();
             isStart = true;
         }
 
-        // ITimer ∏¸–¬∑Ω∑®
+        // ITimer Êõ¥Êñ∞ÊñπÊ≥ï
         void ITimer.Update()
         {
             if (!isStart) return;
@@ -52,7 +35,7 @@ namespace UnknownCreator.Modules
             onUpdate?.Invoke();
         }
 
-        // ÷ÿ÷√ Timer
+        // ÈáçÁΩÆ Timer
         public void Reset()
         {
             OnResetTimer();
@@ -60,14 +43,14 @@ namespace UnknownCreator.Modules
             isStart = true;
         }
 
-        // ‘›Õ£ªÚª÷∏¥ Timer
+        // ÊöÇÂÅúÊàñÊÅ¢Â§ç Timer
         public void Pause(bool pause)
         {
             isStart = !pause;
             OnPauseTimer(pause);
         }
 
-        //  Õ∑≈ Timer ◊ ‘¥
+        // ÈáäÊîæ Timer ËµÑÊ∫ê
         void IReference.ObjRelease()
         {
             isStart = false;
@@ -76,14 +59,8 @@ namespace UnknownCreator.Modules
             OnClearTimer();
             onUpdate = null;
             onRelease = null;
-            lock (_idLock)
-            {
-                if (_id != 0)
-                {
-                    GlobalID.RecycleID(_id);
-                    _id = 0;
-                }
-            }
+            GlobalID.RecycleID(id);
+            id = 0;
         }
 
         protected virtual void OnInitTimer() { }

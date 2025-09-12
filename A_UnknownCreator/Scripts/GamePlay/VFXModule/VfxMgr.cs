@@ -4,9 +4,9 @@ namespace UnknownCreator.Modules
 {
     public sealed class VfxMgr : IVfxMgr
     {
-        internal Dictionary<int, IVfx> vfxDict = new();
+        private Dictionary<int, IVfx> vfxDict = new();
 
-        internal List<IVfx> vfxList = new();
+        private List<IVfx> vfxList = new();
 
         //private VfxMgr() { }
 
@@ -24,16 +24,14 @@ namespace UnknownCreator.Modules
 
         void IDearMgr.UpdateMGR()
         {
-            for (int i = vfxList.Count - 1; i >= 0; i--)
-            {
+            for (int i = 0; i < vfxList.Count; i++)
                 vfxList[i]?.UpdateVfx();
-            }
         }
 
         public T CreateVfx<T>(string vfxName, IEntity owner)
         where T : class, IVfx
         {
-            var obj = Mgr.GPool.Load(vfxName, true, true);
+            var obj = Mgr.GPool.Load(vfxName, true, false);
             var vfx = Mgr.RPool.Load<T>();
             vfx.InitVfx(vfxName, obj, owner);
             vfxDict.Add(vfx.id, vfx);

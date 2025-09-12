@@ -49,7 +49,7 @@ namespace UnknownCreator.Modules
         public object Load(Type type)
         => CreatePool(type, ObjPoolInfo.defaultInfo).Love().t;
 
-        public T Load<T>() where T : class//, new()
+        public T Load<T>() where T : class
         => (T)Load(typeof(T));
 
         public void Release(object obj)

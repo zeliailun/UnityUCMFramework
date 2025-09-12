@@ -17,6 +17,7 @@ namespace UnknownCreator.Modules
         void PauseVfx(bool isPause);
         void UpdateVfx();
         void DestroyVfx(float delay);
+        void DestroyImmediateVfx();
         void SetFollowOwner(bool worldPositionStays);
     }
 
