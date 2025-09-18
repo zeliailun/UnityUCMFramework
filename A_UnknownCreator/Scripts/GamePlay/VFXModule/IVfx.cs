@@ -18,7 +18,10 @@ namespace UnknownCreator.Modules
         void UpdateVfx();
         void DestroyVfx(float delay);
         void DestroyImmediateVfx();
-        void SetFollowOwner(bool worldPositionStays);
+        void SetFollow(int bodyID, Vector3 offset);
+        void SetParent(bool worldPositionStays);
+        void ClearFollow();
+        void ClearParent();
     }
 
 

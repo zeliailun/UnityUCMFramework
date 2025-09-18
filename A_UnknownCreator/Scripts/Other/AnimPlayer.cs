@@ -125,7 +125,7 @@ namespace UnknownCreator.Modules
             if (state.Events(this, out AnimancerEvent.Sequence evt))
             {
                 onStart?.Invoke(evt);
-                if (!info.fadeOutLayer)
+                if (!info.skipFadeOutLayer)
                     evt.OnEnd += FadeOutLayer;
                 evt.OnEnd += onEnd;
             }
@@ -139,8 +139,7 @@ namespace UnknownCreator.Modules
             if (!animLayer.IsValid() || isFadeOutLayer) return;
             if (state.IsValid()) state = null;
             animLayer.StartFade(endWeight, endFade);
-            if (endFade <= 0)
-                animLayer.Stop();
+            if (endFade <= 0) animLayer.Stop();
             isFadeOutLayer = true;
         }
 
@@ -162,9 +161,9 @@ namespace UnknownCreator.Modules
             if (canReleaseAssets)
             {
 
-                foreach (var item in clipAssets)
+                for (int i = 0; i < clipAssets.Count; i++)
                 {
-                    UnityGlobals.Release(item.asset);
+                    UnityGlobals.Release(clipAssets[i].asset);
                 }
                 canReleaseAssets = false;
             }
@@ -202,6 +201,6 @@ namespace UnknownCreator.Modules
         public AvatarMask mask;
         public FadeMode fadeMode;
         public Easing.Function fadeGroup;
-        public bool fadeOutLayer;
+        public bool skipFadeOutLayer;
     }
 }

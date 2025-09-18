@@ -335,6 +335,30 @@ namespace UnknownCreator.Modules
 
 
         #region 功能方法
+
+
+        public void AddBodyPart(int id, string path)
+        {
+            if (!bodyPartsDict.TryGetValue(id, out _))
+                bodyPartsDict.Add(id, modelT.Find(path));
+        }
+
+        public void RemoveBodyPart(int id)
+        {
+            bodyPartsDict.Remove(id);
+        }
+
+        public Transform GetBodyPart(int id)
+        {
+            return bodyPartsDict.TryGetValue(id, out Transform result) ? result : null;
+        }
+
+        public void ClearBodyPart()
+        {
+            bodyPartsDict.Clear();
+        }
+
+
         public void ShowEnt()
         {
             ent.SetActive(true);
@@ -367,6 +391,9 @@ namespace UnknownCreator.Modules
             if (model != null && model.activeSelf) model.SetActive(false);
         }
 
+
+
+
         public T GetUnitBuilder<T>() where T : class, IUnitBuilder
         {
             if (unitCfg.builderDict.TryGetValue(typeof(T).Name, out var result))
@@ -374,27 +401,6 @@ namespace UnknownCreator.Modules
                 return result as T;
             }
             return null;
-        }
-
-        public void AddBodyPart(int id, string path)
-        {
-            if (!bodyPartsDict.TryGetValue(id, out _))
-                bodyPartsDict.Add(id, modelT.Find(path));
-        }
-
-        public void RemoveBodyPart(int id)
-        {
-            bodyPartsDict.Remove(id);
-        }
-
-        public Transform GetBodyPart(int id)
-        {
-            return bodyPartsDict.TryGetValue(id, out Transform result) ? result : null;
-        }
-
-        public void ClearBodyPart()
-        {
-            bodyPartsDict.Clear();
         }
 
         public void ChangeModel(string name)

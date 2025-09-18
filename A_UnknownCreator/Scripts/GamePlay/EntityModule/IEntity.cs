@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
@@ -33,6 +33,14 @@ namespace UnknownCreator.Modules
         void ShowEnt();
 
         void HideEnt();
+
+        void AddBodyPart(int id, string path);
+
+        void RemoveBodyPart(int id);
+
+        Transform GetBodyPart(int id);
+
+        void ClearBodyPart();
 
         public T As<T>() where T : class, IEntity
         => this as T;

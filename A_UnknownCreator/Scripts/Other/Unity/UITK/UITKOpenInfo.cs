@@ -1,5 +1,6 @@
 ﻿using UnityEngine.UIElements;
 using System;
+using UnityEngine.SceneManagement;
 namespace UnknownCreator.Modules
 {
     [Serializable]
@@ -15,5 +16,6 @@ namespace UnknownCreator.Modules
         public bool isTimeScale;
         public Action<VisualElement> onShow;
         public Action<VisualElement> onAutoHide;
+        public Action<Scene, Scene,VisualElement> onChangeScene;
     }
 }

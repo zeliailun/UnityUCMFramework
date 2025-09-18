@@ -1,11 +1,10 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
     public class UITKBuilder : UITKMonoBase
     {
-
         [field: SerializeField]
         public string idName { get; private set; }
 

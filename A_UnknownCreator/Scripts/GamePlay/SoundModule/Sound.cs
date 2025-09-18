@@ -22,6 +22,7 @@ namespace UnknownCreator.Modules
 
         public bool isPlayEndUnload { set; get; }
 
+
         public bool isRelease { private set; get; }
 
 
@@ -154,8 +155,9 @@ namespace UnknownCreator.Modules
 
         public void StopSound()
         {
-            if (isRelease || !source.isPlaying) return;
-            if (isFadingOut)
+            if (isRelease) return;
+
+            if (isFadingOut && source.isPlaying)
             {
                 isFadingOut = false;
                 time = 0;

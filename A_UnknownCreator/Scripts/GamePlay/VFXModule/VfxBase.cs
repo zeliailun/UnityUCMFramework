@@ -16,17 +16,26 @@ namespace UnknownCreator.Modules
 
         public bool isRelease { private set; get; }
 
-        public bool isPlaying => rootObj.activeSelf;
+        public virtual bool isPlaying => rootObj.activeSelf;
 
         private ITimer timer;
         private Type type;
+        private bool isFollowing;
+        private Transform followTarget;
+        private Vector3 followOffset;
 
         public virtual void InitVfx(string vfxName, GameObject obj, IEntity owner)
         {
             isRelease = false;
+            isFollowing = false;
+            followTarget = null;
+            followOffset = Vector3.zero;
+
             this.owner = owner;
             this.vfxName = vfxName;
-            if (owner != null) type = owner.GetType();
+            if (owner != null)
+                type = owner.GetType();
+
             rootObj = obj;
             rootT = rootObj.GetComponent<Transform>();
             id = rootObj.GetInstanceID();
@@ -55,8 +64,24 @@ namespace UnknownCreator.Modules
 
         public virtual void UpdateVfx()
         {
-            if (owner != null && Mgr.RPool.HasObject(type, owner))
-                Destroy(null);
+
+            if (owner != null)
+            {
+
+                if (Mgr.RPool.HasObject(type, owner))
+                {
+                    Destroy(null);
+                    return;
+                }
+
+
+                if (isFollowing)
+                {
+
+                    rootT.position = followTarget == null ? owner.entP + followOffset : followTarget.position + followOffset;
+                }
+
+            }
         }
 
         public virtual void PlayVfx() { }
@@ -66,11 +91,34 @@ namespace UnknownCreator.Modules
 
         public virtual void PauseVfx(bool isPause) { }
 
-        public virtual void SetFollowOwner(bool worldPositionStays)
+        public void SetFollow(int bodyID, Vector3 offset)
+        {
+            if (owner != null)
+            {
+                isFollowing = true;
+                followOffset = offset;
+                followTarget = owner.GetBodyPart(bodyID);
+            }
+
+        }
+
+        public void ClearFollow()
+        {
+            isFollowing = false;
+            followTarget = null;
+            followOffset = Vector3.zero;
+        }
+
+        public void SetParent(bool worldPositionStays)
         {
             if (owner == null) return;
 
             rootT.SetParent(owner.entT, worldPositionStays);
+        }
+
+        public void ClearParent()
+        {
+            Mgr.GPool.SetRoot(rootObj, false);
         }
 
         public virtual void OnRelease()

@@ -1,6 +1,7 @@
-﻿using UnityEngine.UIElements;
-using System;
+﻿using System;
+using UnityEditor;
 using UnityEngine.SceneManagement;
+using UnityEngine.UIElements;
 
 namespace UnknownCreator.Modules
 {
@@ -110,7 +111,10 @@ namespace UnknownCreator.Modules
         private void OnSceneChanged(Scene oldScene, Scene newScene)
         {
             if (showInfo.isChangeSceneHide)
+            {
+                showInfo.onChangeScene?.Invoke(oldScene, newScene, view);
                 Reset();
+            }
         }
 
         private void DestroyTween()
@@ -135,7 +139,7 @@ namespace UnknownCreator.Modules
             view.style.opacity = value;
         }
 
-        private void SetOpacity(bool b,float v, TimerTween<bool> tt)
+        private void SetOpacity(bool b, float v, TimerTween<bool> tt)
         {
             SetOpacity(v);
         }

@@ -28,6 +28,11 @@ namespace UnknownCreator.Modules
             return obj;
         }
 
+        protected override void OnPop(GameObject obj)
+        {
+            obj.SetActive(isActive);
+        }
+
 
         protected override void OnPreStored(GameObject obj)
         {
