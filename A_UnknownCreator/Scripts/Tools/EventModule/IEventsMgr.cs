@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 namespace UnknownCreator.Modules
 {
@@ -40,5 +40,7 @@ namespace UnknownCreator.Modules
         void ClearAllEvent();
 
         void Remove<T>(Delegate value, string s, int id = -1) where T : class, IEvent, new();
+
+        bool HasEvent(string s, int id = -1);
     }
 }

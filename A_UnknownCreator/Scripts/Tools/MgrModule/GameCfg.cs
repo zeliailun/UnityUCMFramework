@@ -7,13 +7,7 @@ namespace UnknownCreator.Modules
     [Serializable]
     public class GameCfg
     {
-        public bool enableDebug =
-#if UNITY_EDITOR
-                true;
-#else
-                false;  
-#endif
-
+        public bool enableDebug = true;
         public List<CustomMgrCreateInfo> customMgr = new();
 
         [SerializeReference, ShowSerializeReference]

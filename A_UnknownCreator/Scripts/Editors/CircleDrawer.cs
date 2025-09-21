@@ -4,7 +4,7 @@ using UnityEngine;
 namespace UnknownCreator.Modules
 {
 
-[ExecuteInEditMode] // 让它在编辑模式下也能执行
+[ExecuteInEditMode] 
 public class CircleDrawer : MonoBehaviour
 {
     public float radius = 2f;

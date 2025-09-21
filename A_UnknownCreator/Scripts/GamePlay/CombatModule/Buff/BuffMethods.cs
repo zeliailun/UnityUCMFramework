@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace UnknownCreator.Modules
 {
@@ -34,15 +34,58 @@ namespace UnknownCreator.Modules
         }
 
 
-        #region �˶�������
+        #region 运动控制器
 
         public void ApplyMotionController()
         {
             if (!isInterruptMotion) return;
-            if (!Mgr.Event.SendR<BuffBase, bool>(this, CombatEvtGlobals.MotionInterrupted, owner.entID))
+
+            var allBuffs = Mgr.Event.SendAllR<BuffBase>(CombatEvtGlobals.MotionInterrupted, owner.entID); 
+
+            bool hasHigherPriority = false;
+
+            if (allBuffs != null)
             {
+                foreach (var existingBuff in allBuffs)
+                {
+                    if (ReferenceEquals(existingBuff, this)) continue;
+
+                    int existingPriority = existingBuff.GetMotionPriority();
+                    int myPriority = this.GetMotionPriority();
+
+                    if (existingPriority > myPriority)
+                    {
+                        hasHigherPriority = true;
+                        break;
+                    }
+                }
+            }
+
+            if (hasHigherPriority)
+            {
+                // 存在比自己高的 Buff，只打断自身
+                this.RemoveMotionController();
+                OnMotionControllerApplyFail();
+            }
+            else
+            {
+                // 打断所有比自己低的 Buff
+                if (allBuffs != null)
+                {
+                    foreach (var existingBuff in allBuffs)
+                    {
+                        if (ReferenceEquals(existingBuff, this)) continue;
+
+                        if (existingBuff.GetMotionPriority() < this.GetMotionPriority())
+                        {
+                            existingBuff.RemoveMotionController();
+                        }
+                    }
+                }
+
+                // 注册自己
                 isInterruptMotion = false;
-                Mgr.Event.AddR<BuffBase, bool>(MotionCheck, CombatEvtGlobals.MotionInterrupted, owner.entID);
+                Mgr.Event.AddR<BuffBase>(GetSelf, CombatEvtGlobals.MotionInterrupted, owner.entID);
             }
         }
 
@@ -50,14 +93,20 @@ namespace UnknownCreator.Modules
         {
             if (isInterruptMotion) return;
             isInterruptMotion = true;
+            Mgr.Event.RemoveR<BuffBase>(GetSelf, CombatEvtGlobals.MotionInterrupted, owner.entID);
             OnMotionControllerInterrupted();
-            Mgr.Event.RemoveR<BuffBase, bool>(MotionCheck, CombatEvtGlobals.MotionInterrupted, owner.entID);
         }
+
+
+   
+
+        private BuffBase GetSelf() => this;
+
 
         #endregion
 
 
-        #region �¼�
+        #region 事件
 
         protected void AddActionEvent<T>(string name, Action<T> action, int id = -1, int priority = 0)
         {
@@ -106,7 +155,7 @@ namespace UnknownCreator.Modules
         #endregion
 
 
-        #region ͳ��
+        #region 统计
 
         public bool HasOrGetSSValue(string idName, CalcType type, out double value)
         {
@@ -141,7 +190,7 @@ namespace UnknownCreator.Modules
         #endregion
 
 
-        #region ״̬
+        #region 状态
 
         public bool HasOrGetSEValue(int id, out bool st)
         {

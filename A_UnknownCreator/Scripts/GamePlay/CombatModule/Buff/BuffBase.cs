@@ -194,25 +194,6 @@ namespace UnknownCreator.Modules
             }
         }
 
-        private void RemoveEvnets()
-        {
-            evtDict.Clear();
-            clearEvt?.Invoke();
-        }
-
-        private bool MotionCheck(BuffBase newBuff)
-        {
-            if (isRelease) return true;
-
-            if (newBuff.GetMotionPriority() >= this.GetMotionPriority())
-            {
-                UCMDebug.Log(111);
-                this.RemoveMotionController();
-                return false;
-            }
-            return true;
-        }
-
         void IReference.ObjRelease()
         {
             if (isRelease) return;
@@ -220,7 +201,8 @@ namespace UnknownCreator.Modules
             isRelease = true;
             OnRelease();
             StopThink();
-            RemoveEvnets();
+            evtDict.Clear();
+            clearEvt?.Invoke();
             RemoveMotionController();
             ClearStats();
             ClearState();

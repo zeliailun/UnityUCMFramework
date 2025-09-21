@@ -101,13 +101,13 @@ namespace UnknownCreator.Modules
         /// <param name="duration">持续时间（秒）</param>
         /// <param name="from">起始透明度（0~1）</param>
         /// <param name="to">目标透明度（0~1）</param>
-        public static void Fade(this VisualElement element, float duration = 0.3f, float from = 0f, float to = 1f)
+        public static IVisualElementScheduledItem Fade(this VisualElement element, float duration = 0.3f, float from = 0f, float to = 1f)
         {
             float startTime = Time.realtimeSinceStartup;
 
             element.style.opacity = from;
 
-            element.schedule.Execute(() =>
+            return element.schedule.Execute(() =>
             {
                 float elapsed = Time.realtimeSinceStartup - startTime;
                 float progress = Mathf.Clamp01(elapsed / duration);

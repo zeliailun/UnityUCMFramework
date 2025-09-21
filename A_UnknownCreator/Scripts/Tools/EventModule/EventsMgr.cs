@@ -69,6 +69,10 @@ namespace UnknownCreator.Modules
             list.Insert(i + 1, evt);
         }
 
+        public bool HasEvent(string key, int id = -1)
+        {
+            return delegateDict.TryGetValue((id, key), out _);
+        }
 
         //==========================================================================================================================//
 
@@ -227,7 +231,7 @@ namespace UnknownCreator.Modules
             if (interrupt || !delegateDict.TryGetValue((id, s), out var result) || result.Count == 0)
                 return default(X);
 
-            var func = result[0] as CFunc<X>;
+            var func = result[^1] as CFunc<X>;
             return func?.target != null ? func.target() : default(X);
         }
 
@@ -236,7 +240,7 @@ namespace UnknownCreator.Modules
             if (interrupt || !delegateDict.TryGetValue((id, s), out var result) || result.Count == 0)
                 return default(X1);
 
-            var func = result[0] as CFunc<X, X1>;
+            var func = result[^1] as CFunc<X, X1>;
             return func?.target != null ? func.target(info) : default(X1);
         }
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -125,6 +125,9 @@ namespace UnknownCreator.Modules
         protected virtual void OnUpdateMotionController() { }
 
         protected virtual void OnMotionControllerInterrupted() { }
+
+        protected virtual void OnMotionControllerApplyFail() { }
+        
 
     }
 }
