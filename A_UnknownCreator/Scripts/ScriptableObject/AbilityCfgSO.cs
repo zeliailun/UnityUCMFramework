@@ -70,7 +70,7 @@ namespace UnknownCreator.Modules
         private void SetStatsKV(string soName)
         {
             if (!cfg.statsKV.TryGetValue(soName, out _))
-                cfg.statsKV[soName] = new(); ;
+                cfg.statsKV[soName] = new AbilityKV();
         }
 
     }

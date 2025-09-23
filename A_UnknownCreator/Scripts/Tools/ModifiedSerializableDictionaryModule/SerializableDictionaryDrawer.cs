@@ -1,4 +1,5 @@
 ﻿#if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using UnityEditor;
@@ -9,6 +10,7 @@ using UnityEngine.UIElements;
 namespace UnknownCreator.Modules
 {
     [CustomPropertyDrawer(typeof(SerializableDictionary<,>), true)]
+    [CustomPropertyDrawer(typeof(SerializableDictionaryRef<,>), true)]
     public class SerializableDictionaryUIToolkitDrawer : PropertyDrawer
     {
         private readonly Color color1 = new Color(0, 0, 0, 0.2f);
@@ -24,6 +26,14 @@ namespace UnknownCreator.Modules
                 value = property.isExpanded,
 
             };
+
+            // 绘制 useSerializeReference Toggle
+            var useRefProp = property.FindPropertyRelative("useSerializeReference");
+            if (useRefProp != null)
+            {
+                var toggle = new PropertyField(useRefProp, "Use Serialize Reference");
+                foldout.Add(toggle);
+            }
 
             var dictionaryListProp = property.FindPropertyRelative("dictionaryList");
             var listContainer = new VisualElement
@@ -108,11 +118,21 @@ namespace UnknownCreator.Modules
                     var valueField = new PropertyField(valueProp, "");
                     valueField.Bind(valueProp.serializedObject);
 
-                    if (valueProp.propertyType == SerializedPropertyType.Generic)
+
+                    bool isGenericOrManaged = valueProp.propertyType == SerializedPropertyType.Generic
+                                              || valueProp.propertyType == SerializedPropertyType.ManagedReference;
+
+                    if (isGenericOrManaged)
                     {
                         kvpContainer.style.flexDirection = FlexDirection.Column;
                         keyField.style.minHeight = 20;
-                        valueField.style.marginLeft = !valueProp.isArray ? 14 : 3;
+
+                        // 根据类型和是否数组设置 margin
+                        valueField.style.marginLeft = valueProp.propertyType == SerializedPropertyType.ManagedReference
+                            ? 0
+                            : valueProp.isArray
+                                ? 3
+                                : 14;
                     }
                     else
                     {

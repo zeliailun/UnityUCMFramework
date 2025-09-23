@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <CachedSoName>k__BackingField: AbilityNull
   description: 
+  cfgScript: {fileID: 0}
   <cfg>k__BackingField:
     <icon>k__BackingField: 
     <abilityType>k__BackingField: 0
@@ -45,66 +46,81 @@ MonoBehaviour:
       dictionaryList:
       - Key: StatCooldown
         Value:
-          abilityKV:
-            baseValue: []
-            talentName: 
-            calcType: 0
-            isOverrideValue: 0
-            talentValues: []
-            isBaseOrStat: 0
-            talentValueName: 
-        index: 0
-        isKeyDuplicated: 0
+          rid: 3639409291768365263
+        Index: 0
+        IsKeyDuplicated: 0
       - Key: StatCastRange
         Value:
-          abilityKV:
-            baseValue: []
-            talentName: 
-            calcType: 0
-            isOverrideValue: 0
-            talentValues: []
-            isBaseOrStat: 0
-            talentValueName: 
-        index: 1
-        isKeyDuplicated: 0
+          rid: 3639409291768365264
+        Index: 1
+        IsKeyDuplicated: 0
       - Key: StatCastRangeBuffer
         Value:
-          abilityKV:
-            baseValue: []
-            talentName: 
-            calcType: 0
-            isOverrideValue: 0
-            talentValues: []
-            isBaseOrStat: 0
-            talentValueName: 
-        index: 2
-        isKeyDuplicated: 0
+          rid: 3639409291768365265
+        Index: 2
+        IsKeyDuplicated: 0
       - Key: StatCastPoint
         Value:
-          abilityKV:
-            baseValue: []
-            talentName: 
-            calcType: 0
-            isOverrideValue: 0
-            talentValues: []
-            isBaseOrStat: 0
-            talentValueName: 
-        index: 3
-        isKeyDuplicated: 0
+          rid: 3639409291768365266
+        Index: 3
+        IsKeyDuplicated: 0
       - Key: StatCharge
         Value:
-          abilityKV:
-            baseValue: []
-            talentName: 
-            calcType: 0
-            isOverrideValue: 0
-            talentValues: []
-            isBaseOrStat: 0
-            talentValueName: 
-        index: 4
-        isKeyDuplicated: 0
+          rid: 3639409291768365267
+        Index: 4
+        IsKeyDuplicated: 0
     <dataKV>k__BackingField:
       dictionaryList: []
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 3639409291768365263
+      type: {class: AbilityKV, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
+      data:
+        <baseValue>k__BackingField: []
+        <talentName>k__BackingField: 
+        <calcType>k__BackingField: 0
+        <isOverrideValue>k__BackingField: 0
+        <talentValues>k__BackingField: []
+        <isBaseOrStat>k__BackingField: 0
+        <talentValueName>k__BackingField: 
+    - rid: 3639409291768365264
+      type: {class: AbilityKV, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
+      data:
+        <baseValue>k__BackingField: []
+        <talentName>k__BackingField: 
+        <calcType>k__BackingField: 0
+        <isOverrideValue>k__BackingField: 0
+        <talentValues>k__BackingField: []
+        <isBaseOrStat>k__BackingField: 0
+        <talentValueName>k__BackingField: 
+    - rid: 3639409291768365265
+      type: {class: AbilityKV, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
+      data:
+        <baseValue>k__BackingField: []
+        <talentName>k__BackingField: 
+        <calcType>k__BackingField: 0
+        <isOverrideValue>k__BackingField: 0
+        <talentValues>k__BackingField: []
+        <isBaseOrStat>k__BackingField: 0
+        <talentValueName>k__BackingField: 
+    - rid: 3639409291768365266
+      type: {class: AbilityKV, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
+      data:
+        <baseValue>k__BackingField: []
+        <talentName>k__BackingField: 
+        <calcType>k__BackingField: 0
+        <isOverrideValue>k__BackingField: 0
+        <talentValues>k__BackingField: []
+        <isBaseOrStat>k__BackingField: 0
+        <talentValueName>k__BackingField: 
+    - rid: 3639409291768365267
+      type: {class: AbilityKV, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
+      data:
+        <baseValue>k__BackingField: []
+        <talentName>k__BackingField: 
+        <calcType>k__BackingField: 0
+        <isOverrideValue>k__BackingField: 0
+        <talentValues>k__BackingField: []
+        <isBaseOrStat>k__BackingField: 0
+        <talentValueName>k__BackingField: 

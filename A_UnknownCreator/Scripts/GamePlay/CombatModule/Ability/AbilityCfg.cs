@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Animancer;
 using UnityEngine;
@@ -87,15 +87,14 @@ namespace UnknownCreator.Modules
 
         [JsonMark]
         [field: SerializeField]
-        public SerializableDictionary<string, AbilityKV> baseKV { internal set; get; } = new();
+        public SerializableDictionaryRef<string, IAbilityKV> baseKV { internal set; get; } = new();
         [JsonMark]
         [field: SerializeField]
-        public SerializableDictionary<string, AbilityStatsKV> statsKV { internal set; get; } = new();
+        public SerializableDictionaryRef<string, IAbilityKV> statsKV { internal set; get; } = new();
         [JsonMark]
         [field: SerializeField]
-        public SerializableDictionary<string, AbilityObjectKV> dataKV { internal set; get; } = new();
+        public SerializableDictionaryRef<string, object> dataKV { internal set; get; } = new();
 
 
     }
-
 }

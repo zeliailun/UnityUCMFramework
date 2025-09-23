@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Animancer;
 
@@ -14,7 +14,7 @@ namespace UnknownCreator.Modules
 
 
         public T GetDataValue<T>(string name) where T : class
-        => abilityCfg.dataKV.TryGetValue(name, out var result) ? result.data as T : null;
+        => abilityCfg.dataKV.TryGetValue(name, out var result) ? result as T : null;
 
         public double GetValue(string name)
         => GetValue(name, level);
@@ -70,28 +70,28 @@ namespace UnknownCreator.Modules
             var askv = abilityCfg.statsKV[valueName];
             var baseValue = stats[lv - 1].finalValue;
 
-            if (string.IsNullOrWhiteSpace(askv.abilityKV.talentName))
+            if (string.IsNullOrWhiteSpace(askv.talentName))
                 return baseValue;
 
-            var talent = owner.talentC.GetTalent(askv.abilityKV.talentName);
+            var talent = owner.talentC.GetTalent(askv.talentName);
             if (talent == null || talent.isRelease)
                 return baseValue;
 
             double addValue = 0;
 
-            if (askv.abilityKV.isOverrideValue)
+            if (askv.isOverrideValue)
             {
-                if (askv.abilityKV.talentValues != null && lv <= askv.abilityKV.talentValues.Count)
-                    addValue = askv.abilityKV.talentValues[lv - 1];
+                if (askv.talentValues != null && lv <= askv.talentValues.Count)
+                    addValue = askv.talentValues[lv - 1];
             }
             else
             {
-                addValue = askv.abilityKV.isBaseOrStat
-                    ? talent.GetStatValue(askv.abilityKV.talentValueName)
-                    : talent.GetValue(askv.abilityKV.talentValueName);
+                addValue = askv.isBaseOrStat
+                    ? talent.GetStatValue(askv.talentValueName)
+                    : talent.GetValue(askv.talentValueName);
             }
 
-            return askv.abilityKV.calcType switch
+            return askv.calcType switch
             {
                 TalentCalcType.PercentAdd => baseValue * (1 + addValue),
                 TalentCalcType.LinearAdd => baseValue + addValue,
