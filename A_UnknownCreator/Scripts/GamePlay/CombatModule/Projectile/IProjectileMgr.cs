@@ -12,11 +12,6 @@ namespace UnknownCreator.Modules
         where ICheck : class, IProjCheck
         where Data : ProjectileData, new();
 
-        ProjectileInfo<IMvt, ICheck, Data> CreateProjectileData<IMvt, ICheck, Data>()
-        where IMvt : class, IProjMvt
-        where ICheck : class, IProjCheck
-        where Data : ProjectileData,new();
-
         void ReleaseProjectile(Projectile proj);
         void ReleaseProjectile(int id);
         void ReleaseAllProjectile();

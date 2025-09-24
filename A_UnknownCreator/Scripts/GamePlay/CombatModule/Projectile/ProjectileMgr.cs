@@ -27,6 +27,12 @@ namespace UnknownCreator.Modules
             projList = null;
         }
 
+        void IDearMgr.UpdateMGR()
+        {
+            for (int i = 0; i < projList.Count; i++)
+                projList[i]?.UpdateProjectile();
+        }
+
         [JsonIgnore] public Func<Projectile, GameObject, (bool, Unit)> FilterProjectileHit { set; get; }
 
         public void ReleaseProjectile(int id)
@@ -46,7 +52,6 @@ namespace UnknownCreator.Modules
                 Mgr.RPool.Release(value);
             }
         }
-
 
         public void ReleaseAllProjectile()
         {
@@ -100,7 +105,7 @@ namespace UnknownCreator.Modules
             return proj;
         }
 
-        public ProjectileInfo<IMvt, ICheck, Data> CreateProjectileData<IMvt, ICheck, Data>()
+       /* public ProjectileInfo<IMvt, ICheck, Data> CreateProjectileData<IMvt, ICheck, Data>()
         where IMvt : class, IProjMvt
         where ICheck : class, IProjCheck
         where Data : ProjectileData, new()
@@ -110,43 +115,7 @@ namespace UnknownCreator.Modules
             var vb = Mgr.RPool.Load<VariableMgr>();
             var data = Mgr.RPool.Load<Data>();
             return new(mvt, check, vb, data);
-        }
+        }*/
 
-        void IDearMgr.UpdateMGR()
-        {
-            for (int i = 0; i < projList.Count; i++)
-                projList[i]?.UpdateProjectile();
-        }
-    }
-
-    public struct ProjectileInfo<IMvt, ICheck, Data>
-    where IMvt : class, IProjMvt
-    where ICheck : class, IProjCheck
-    where Data : ProjectileData, new()
-    {
-        public IMvt mvt;
-        public ICheck check;
-        public IVariableMgr kv;
-        public Data data;
-
-        public ProjectileInfo(IMvt mvt, ICheck check, IVariableMgr kv, Data data)
-        {
-            this.mvt = mvt;
-            this.check = check;
-            this.kv = kv;
-            this.data = data;
-        }
-
-        public ProjectileInfo<IProjMvt, IProjCheck, ProjectileData> As()
-        {
-            return new ProjectileInfo<IProjMvt, IProjCheck, ProjectileData>(
-                mvt,
-                check,
-                kv,
-                data
-            );
-        }
-
-        public bool isVaild => mvt != null && check != null && kv != null && data != null;
     }
 }

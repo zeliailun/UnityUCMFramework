@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
@@ -92,7 +90,7 @@ namespace UnknownCreator.Modules
             Mgr.Event.Send<Projectile>(this, CombatEvtGlobals.OnProjectileMotion);
             if (isRelease) return;
 
-            var hitResults = check.OnProjCheck(this);
+            var hitResults = check?.OnProjCheck(this);
 
             if (hitResults.IsValid())
             {
