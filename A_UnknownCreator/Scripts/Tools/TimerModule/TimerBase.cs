@@ -1,4 +1,5 @@
 ﻿using System;
+using UnknownCreator.Modules;
 
 namespace UnknownCreator.Modules
 {
@@ -18,6 +19,7 @@ namespace UnknownCreator.Modules
         // 初始化 Timer
         public void Init()
         {
+
             time = 0;
             id = GlobalID.GetUniqueID();
             OnInitTimer();
@@ -50,6 +52,7 @@ namespace UnknownCreator.Modules
             OnPauseTimer(pause);
         }
 
+
         // 释放 Timer 资源
         void IReference.ObjRelease()
         {
@@ -74,3 +77,5 @@ namespace UnknownCreator.Modules
         protected virtual void OnPauseTimer(bool pause) { }
     }
 }
+
+

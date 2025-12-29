@@ -48,6 +48,7 @@ namespace UnknownCreator.Modules
             this.kv = kv;
             id = obj.GetInstanceID();
             objT = obj.GetComponent<Transform>();
+            objT.localScale = Vector3.one;
             objT.SetPositionAndRotation(this.data.spawnPos, this.data.spawnRot);
             timeCount = 0;
             isPause = false;
@@ -81,7 +82,8 @@ namespace UnknownCreator.Modules
 
             beforePos = objT.position;
 
-            mvt.OnProjMvt(this);
+            mvt?.OnProjMvt(this);
+
             if (isRelease) return;
 
             data.ability?.OnProjectileMotion(this);
@@ -112,6 +114,32 @@ namespace UnknownCreator.Modules
 
         }
 
+
+        public void ReplaceMovement(IProjMvt newMvt)
+        {
+            if (isRelease || newMvt is null) return;
+
+            if (mvt != null)
+            {
+                Mgr.RPool.Release(mvt);
+                mvt = null;
+            }
+            mvt = newMvt;
+            Mgr.Event.Send<Projectile>(this, CombatEvtGlobals.OnProjectileMvtReplaced);
+        }
+
+        public void ReplaceCheck(IProjCheck newCheck)
+        {
+            if (isRelease || newCheck is null) return;
+
+            if (check != null)
+            {
+                Mgr.RPool.Release(check);
+                check = null;
+            }
+            check = newCheck;
+            Mgr.Event.Send<Projectile>(this, CombatEvtGlobals.OnProjectileCheckReplaced);
+        }
 
         void IReference.ObjRelease()
         {

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Animancer;
-
-namespace UnknownCreator.Modules
+﻿namespace UnknownCreator.Modules
 {
     public abstract partial class AbilityBase
     {

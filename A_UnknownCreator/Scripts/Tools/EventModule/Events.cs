@@ -1,22 +1,28 @@
-using System;
+﻿using System;
 namespace UnknownCreator.Modules
 {
     public abstract class EventBase<TDelegate> : IEvent where TDelegate : Delegate
     {
-        public TDelegate target;
-        public int priority { get; private set; }
+        public TDelegate target { get; protected set; }
 
-        public bool once { get; private set; }  
+        public int priority { get; protected set; }
+
+        public bool once { get; protected set; }
+
+        private object targetObject;
+        private IntPtr methodPtr;
 
         public int Compare(IEvent x, IEvent y)
             => y.priority.CompareTo(x.priority);
 
-        public bool IsSameDelegate(Delegate @delegate)
-            => target?.Target == @delegate.Target && target?.Method == @delegate.Method;
+        public bool IsSameDelegate(Delegate d)
+            => targetObject == d.Target && methodPtr == d.Method.MethodHandle.Value;
 
         public IEvent SetDelegate(Delegate value, int priority, bool onceFlag = false)
         {
             target = (TDelegate)value;
+            targetObject = target.Target;
+            methodPtr = target.Method.MethodHandle.Value;
             this.priority = priority;
             this.once = onceFlag;
             return this;
@@ -25,6 +31,8 @@ namespace UnknownCreator.Modules
         public void ObjRelease()
         {
             target = null;
+            targetObject = null;
+            methodPtr = IntPtr.Zero;
             OnRelease();
         }
 

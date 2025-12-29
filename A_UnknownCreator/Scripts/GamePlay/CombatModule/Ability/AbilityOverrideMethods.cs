@@ -54,7 +54,7 @@ namespace UnknownCreator.Modules
 
         public virtual void OnProjectileHit(Projectile proj, Unit target, GameObject obj, RaycastHit hit) { }
 
-        public virtual void OnProjectileMotion(Projectile projD) { }
+        public virtual void OnProjectileMotion(Projectile proj) { }
 
         public virtual void OnProjectilePause(Projectile proj) { }
 

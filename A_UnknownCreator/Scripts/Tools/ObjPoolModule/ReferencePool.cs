@@ -17,7 +17,7 @@ namespace UnknownCreator.Modules
 
         protected override object OnCreate()
         {
-            object obj = Activator.CreateInstance(type);
+            var obj = Activator.CreateInstance(type);
             if (obj is IReference @base) @base.ObjRestart();
             return obj;
         }

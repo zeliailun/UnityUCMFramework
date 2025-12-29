@@ -1,10 +1,13 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
+
 
 namespace UnknownCreator.Modules
 {
 
     public interface IProjMvt
     {
+        float sp {  get; set; }
         void OnProjMvt(Projectile proj);
     }
 

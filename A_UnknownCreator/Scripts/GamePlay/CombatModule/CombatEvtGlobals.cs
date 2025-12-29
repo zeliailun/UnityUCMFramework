@@ -127,6 +127,12 @@
         /// Projectile
         /// </summary>
         public const string OnProjectileDestroy = nameof(OnProjectileDestroy);
+        
+
+        public const string OnProjectileMvtReplaced = nameof(OnProjectileMvtReplaced);
+
+        public const string OnProjectileCheckReplaced = nameof(OnProjectileCheckReplaced);
+        
 
         #endregion
 

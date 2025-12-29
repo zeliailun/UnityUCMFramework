@@ -1,4 +1,4 @@
-using System;
+Ôªøusing System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 using UnityEngine;
@@ -93,7 +93,11 @@ namespace UnknownCreator.Modules
         where T : class, ISound, new()
         {
             var info = Mgr.GPool.GetNewGameObject(SoundGlobals.SoundObj);
-            if (info.Item2) info.Item1.AddComponent<AudioSource>();
+            if (info.Item2)
+            {
+                info.Item1.AddComponent<AudioSource>();
+                info.Item1.layer = 2;
+            }
             var sound = Mgr.RPool.Load<T>();
             sound.Init(soundName, info.Item1);
             soundDict.Add(sound.id, sound);
@@ -156,7 +160,7 @@ namespace UnknownCreator.Modules
 
         public void SetSoundGroup(int id, string soundGroupName)
         {
-            if (string.IsNullOrWhiteSpace(soundGroupName)) UCMDebug.LogError("Œﬁ∑®…Ë÷√°æ" + soundGroupName + "°ø…˘“Ù◊È");
+            if (string.IsNullOrWhiteSpace(soundGroupName)) UCMDebug.LogError("Êó†Ê≥ïËÆæÁΩÆ„Äê" + soundGroupName + "„ÄëÂ£∞Èü≥ÁªÑ");
 
             var sound = GetSound(id);
             if (sound is null) return;

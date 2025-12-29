@@ -54,8 +54,10 @@ namespace UnknownCreator.Modules
             if (isRemove)
                 UCMDebug.LogWarning("注意自动销毁时，外部引用要赋为NULL,否则会引发对象池错误");
 
+           
             return mgr.CreateTimer(timer);
         }
+
 
         //循环延迟计时
         public static ITimer CycleDelay(this ITimerMgr mgr, float delay, Action<TimerDelayCycle> onTrigger, bool isApplyTimeScale = true)
@@ -114,6 +116,7 @@ namespace UnknownCreator.Modules
             timer.playCount = Math.Max(playCount, 1);
             timer.isApplyTimeScale = isApplyTimeScale;
             timer.onValueChanged = onValueChanged;
+            timer.onCompleted = onCompleted;
 
             if (isRemove)
                 UCMDebug.LogWarning("注意自动销毁时，外部引用要赋为NULL,否则会引发对象池错误");

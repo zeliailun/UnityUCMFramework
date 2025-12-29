@@ -11,7 +11,7 @@
         {
             maxNum = 200,
             remainingNum = 0,
-            clearInterval = 90F,
+            clearInterval = 10f,
             isAutoClear = true,
         };
     }

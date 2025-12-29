@@ -1,4 +1,4 @@
-
+ï»¿
 using System;
 using UnityEngine;
 namespace UnknownCreator.Modules
@@ -24,7 +24,7 @@ namespace UnknownCreator.Modules
                 if (isPooled)
                 {
                     Clear();
-                    UCMDebug.LogWarning("ÎŞ·¨µ÷ÓÃ¶ÔÏó³ØÖĞµÄ¶ÔÏó");
+                    UCMDebug.LogWarning("æ— æ³•è°ƒç”¨å¯¹è±¡æ± ä¸­çš„å¯¹è±¡");
                     return null;
                 }
 
@@ -36,13 +36,13 @@ namespace UnknownCreator.Modules
         {
             if (value == null)
             {
-                UCMDebug.LogWarning("ÎŞ·¨ÉèÖÃ¿ÕÖµ");
+                UCMDebug.LogWarning("æ— æ³•è®¾ç½®ç©ºå€¼");
                 return this;
             }
 
             if (_target != null)
             {
-                UCMDebug.LogWarning("Ö»ÄÜÉèÖÃÒ»´ÎÖµ");
+                UCMDebug.LogWarning("åªèƒ½è®¾ç½®ä¸€æ¬¡å€¼");
                 return this;
             }
 

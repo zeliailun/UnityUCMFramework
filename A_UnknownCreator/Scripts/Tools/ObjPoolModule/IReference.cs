@@ -1,4 +1,4 @@
-namespace UnknownCreator.Modules
+﻿namespace UnknownCreator.Modules
 {
     public interface IReference
     {
@@ -7,6 +7,7 @@ namespace UnknownCreator.Modules
         void ObjRelease() { }
 
         void ObjDestroy() { }
+
         void ObjPreload() { }
     }
 }
