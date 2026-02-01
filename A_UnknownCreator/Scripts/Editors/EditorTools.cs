@@ -55,31 +55,6 @@ namespace UnknownCreator.Modules
         }
 
 
-
-        [MenuItem("Assets/UnknownCreator/SOToJson", false, 0)]
-        public static void SOToJson()
-        {
-            var targetSO = GetTarget<ScriptableObject>();
-            if (targetSO == null) return;
-
-            string path = EditorUtility.SaveFilePanel("保存 JSON", "", targetSO.name + ".json", "json");
-            if (string.IsNullOrEmpty(path))
-                return;
-            var data = new Dictionary<string, object>();
-            FieldInfo[] fields = targetSO.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            foreach (var field in fields)
-            {
-                if (field.DeclaringType != typeof(ScriptableObject))
-                    data[field.Name] = field.GetValue(targetSO);
-            }
-
-            string json = JsonMapper.ToJson(data);
-            File.WriteAllText(path, json);
-            AssetDatabase.Refresh();
-            UCMDebug.Log("转换完成: " + path);
-        }
-
-
         [MenuItem("GameObject/UnknownCreator/CopyPath %Q")]
         public static void CopyPath()
         {
@@ -105,6 +80,63 @@ namespace UnknownCreator.Modules
             };
             te.SelectAll();
             te.Copy();
+        }
+
+        [MenuItem("Assets/UnknownCreator/SOToJson", false, 0)]
+        public static void SOToJson()
+        {
+            var targetSO = GetTarget<ScriptableObject>();
+            if (targetSO == null) return;
+
+            string path = EditorUtility.SaveFilePanel("保存 JSON", "", targetSO.name + ".json", "json");
+            if (string.IsNullOrEmpty(path))
+                return;
+            var data = new Dictionary<string, object>();
+            FieldInfo[] fields = targetSO.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            foreach (var field in fields)
+            {
+                if (field.DeclaringType != typeof(ScriptableObject))
+                    data[field.Name] = field.GetValue(targetSO);
+            }
+
+            string json = JsonMapper.ToJson(data);
+            File.WriteAllText(path, json);
+            AssetDatabase.Refresh();
+            UCMDebug.Log("转换完成: " + path);
+        }
+
+
+
+        [MenuItem("Assets/UnknownCreator/创建bcvox", false, 1)]
+        private static void CopyAndRename()
+        {
+            // ===== 校验阶段 =====
+            if (Selection.objects.Length != 1)
+                return;
+
+            UnityEngine.Object obj = Selection.activeObject;
+            string srcPath = AssetDatabase.GetAssetPath(obj);
+
+            if (string.IsNullOrEmpty(srcPath))
+                return;
+
+            // 排除文件夹
+            if (AssetDatabase.IsValidFolder(srcPath))
+                return;
+
+            // 只允许 .vox
+            if (!srcPath.EndsWith(".vox", System.StringComparison.OrdinalIgnoreCase))
+                return;
+
+            // ===== 执行阶段 =====
+            string directory = Path.GetDirectoryName(srcPath);
+            string filename = Path.GetFileNameWithoutExtension(srcPath);
+            string targetPath = Path.Combine(directory, filename + ".bcvox");
+
+            targetPath = AssetDatabase.GenerateUniqueAssetPath(targetPath);
+
+            File.Copy(srcPath, targetPath);
+            AssetDatabase.Refresh();
         }
 
 

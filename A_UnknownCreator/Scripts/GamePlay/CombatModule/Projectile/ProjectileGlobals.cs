@@ -2,7 +2,7 @@
 {
     public static class ProjectileGlobals
     {
-        public static float MaxDuration = 10F;
+        public static float MaxDuration = 5F;
         public static float MaxDistance = 50F;
     }
 }

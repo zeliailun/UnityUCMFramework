@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,8 +8,8 @@ namespace UnknownCreator.Modules
     public class UnitModelCfg
     {
         /// <summary>
-        /// ¸ù¾İµ¥Î»Ä£ĞÍÃû³ÆÀ´¼ÓÔØ¸ÃÎÄ¼ş
-        /// "Â·¾¶´ÓModel¿ªÊ¼±éÀú,×¢Òâ+(Clone)"
+        /// æ ¹æ®å•ä½æ¨¡å‹åç§°æ¥åŠ è½½è¯¥æ–‡ä»¶
+        /// "è·¯å¾„ä»Modelå¼€å§‹éå†,æ³¨æ„+(Clone)"
         /// </summary>
         
         public List<string> hitBoxList = new();
@@ -19,6 +19,9 @@ namespace UnknownCreator.Modules
     [Serializable]
     public class BodyPartInfo
     {
+#if UNITY_EDITOR
+        public string desc;
+#endif
         public int id;
         public string path;
     }
