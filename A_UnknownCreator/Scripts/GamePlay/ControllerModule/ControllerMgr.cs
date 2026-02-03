@@ -24,7 +24,7 @@ namespace UnknownCreator.Modules
 
         public bool isActivated { private set; get; }
 
-        public Dictionary<int, GameObject> targetDict { private set; get; }
+        public Dictionary<EntityId, GameObject> targetDict { private set; get; }
         public List<GameObject> targets { private set; get; }
 
         public bool hasTarget => targetDict.Count > 0;
@@ -80,7 +80,7 @@ namespace UnknownCreator.Modules
         {
             if (target == null) return;
 
-            var id = target.GetInstanceID();
+            var id = target.GetEntityId();
             if (targetDict.TryGetValue(id, out _)) return;
 
             targetDict[id] = target;
@@ -92,7 +92,7 @@ namespace UnknownCreator.Modules
         {
             if (target == null) return;
 
-            var id = target.GetInstanceID();
+            var id = target.GetEntityId();
             if (targetDict.Remove(id, out _))
                 targets.Remove(target);
         }
@@ -109,7 +109,7 @@ namespace UnknownCreator.Modules
             return null;
         }
 
-        public GameObject GetTargetByID(int id)
+        public GameObject GetTargetByID(EntityId id)
         {
             if (targetDict.TryGetValue(id, out var target))
             {
@@ -132,7 +132,7 @@ namespace UnknownCreator.Modules
 
         public void ChangeTarget(GameObject target)
         {
-            if (target == null || targetDict.TryGetValue(target.GetInstanceID(), out _)) return;
+            if (target == null || targetDict.TryGetValue(target.GetEntityId(), out _)) return;
 
             DisableController();
             AddControllerTarget(target);
@@ -174,7 +174,7 @@ namespace UnknownCreator.Modules
         }
 
         public bool IsControllerTarget(GameObject target)
-        => target != null && targetDict.TryGetValue(target.GetInstanceID(), out _);
+        => target != null && targetDict.TryGetValue(target.GetEntityId(), out _);
 
         private void DestroyController()
         {

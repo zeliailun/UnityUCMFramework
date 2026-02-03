@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -42,7 +42,7 @@ namespace UnknownCreator.Modules
 
         //===========================================================================
 
-        private Dictionary<int, Unit> rootDict = new();
+        private Dictionary<EntityId, Unit> rootDict = new();
 
         void IDearMgr.WorkWork()
         {
@@ -55,13 +55,13 @@ namespace UnknownCreator.Modules
             rootDict.Clear();
         }
 
-        public void AddUnitRoot(int selfID, Unit unit)
+        public void AddUnitRoot(EntityId selfID, Unit unit)
          => rootDict.TryAdd(selfID, unit);
 
-        public Unit GetUnitRoot(int selfID)
+        public Unit GetUnitRoot(EntityId selfID)
         => rootDict.TryGetValue(selfID, out var value) ? value : null;
 
-        public void RemoveUnitRoot(int selfID)
+        public void RemoveUnitRoot(EntityId selfID)
         => rootDict.Remove(selfID);
 
         public void UpdateMaxLevelAndFormula(IUnitExpBuilder expBuilder, int value)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 namespace UnknownCreator.Modules
 {
@@ -27,6 +28,12 @@ namespace UnknownCreator.Modules
         public static float RemapDBTo01(float db)
         {
             return (float)Math.Pow(10, db / 20f);
+        }
+
+
+        public static bool IsDefault<T>(T value) where T : struct
+        {
+            return EqualityComparer<T>.Default.Equals(value, default);
         }
     }
 }

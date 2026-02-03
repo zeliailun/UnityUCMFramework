@@ -27,14 +27,14 @@ namespace UnknownCreator.Modules
             finalOpacity = ApplyFinalOpacity;
             hideView = HideView;
             autoHideView = AutoHideHandle;
-            Mgr.Event.Add(Reset, CGE.OnBackMainMenu, -1, CustomEvtOrder.order1);
+            Mgr.Event.Add(Reset, CGE.OnBackMainMenu, default, CustomEvtOrder.order1);
             SceneManager.activeSceneChanged += OnSceneChanged;
         }
 
         public void ObjRelease()
         {
             SceneManager.activeSceneChanged -= OnSceneChanged;
-            Mgr.Event.Remove(Reset, CGE.OnBackMainMenu, -1);
+            Mgr.Event.Remove(Reset, CGE.OnBackMainMenu, default);
             Reset();
             showInfo = default;
             hideInfo = default;

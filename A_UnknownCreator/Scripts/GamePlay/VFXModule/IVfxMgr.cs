@@ -1,14 +1,16 @@
-﻿namespace UnknownCreator.Modules
+﻿using UnityEngine;
+
+namespace UnknownCreator.Modules
 {
     public interface IVfxMgr : IDearMgr
     {
         public T CreateVfx<T>(string vfxName,IEntity owner = null)
         where T : class, IVfx;
-        void DestroyVfx(int id);
-        IVfx GetVfx(int id);
-        T GetVfx<T>(int id)
+        void DestroyVfx(EntityId id);
+        IVfx GetVfx(EntityId id);
+        T GetVfx<T>(EntityId id)
         where T : class, IVfx;
-        bool HasVfx(int id);
+        bool HasVfx(EntityId id);
         void ReleaseAllVfx();
     }
 }

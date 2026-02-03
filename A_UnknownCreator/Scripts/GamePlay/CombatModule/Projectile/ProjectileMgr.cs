@@ -6,7 +6,7 @@ namespace UnknownCreator.Modules
 {
     public sealed class ProjectileMgr : IProjectileMgr
     {
-        private Dictionary<int, Projectile> projDict = new();
+        private Dictionary<EntityId, Projectile> projDict = new();
 
         private List<Projectile> projList = new();
 
@@ -35,7 +35,7 @@ namespace UnknownCreator.Modules
 
         [JsonIgnore] public Func<Projectile, GameObject, (bool, Unit)> FilterProjectileHit { set; get; }
 
-        public void ReleaseProjectile(int id)
+        public void ReleaseProjectile(EntityId id)
         {
             if (projDict.Remove(id, out var value))
             {
@@ -79,7 +79,7 @@ namespace UnknownCreator.Modules
 
         }
 
-        public Projectile GetProjectile(int id)
+        public Projectile GetProjectile(EntityId id)
         => projDict.TryGetValue(id, out var value) ? value : null;
 
         public bool IsValidProjectile(Projectile pb)
@@ -87,7 +87,7 @@ namespace UnknownCreator.Modules
            projDict.TryGetValue(pb.id, out _) &&
            !pb.isRelease;
 
-        public bool IsValidProjectile(int id)
+        public bool IsValidProjectile(EntityId id)
         => projDict.TryGetValue(id, out var pb) &&
         !pb.isRelease;
 

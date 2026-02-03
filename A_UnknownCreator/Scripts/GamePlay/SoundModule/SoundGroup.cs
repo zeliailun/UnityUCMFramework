@@ -1,12 +1,13 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
     public class SoundGroup : ISoundGroup, IReference
     {
-        private Dictionary<int, ISound> soundDict = new();
+        private Dictionary<EntityId, ISound> soundDict = new();
 
         private List<ISound> soundList = new();
 
@@ -14,9 +15,9 @@ namespace UnknownCreator.Modules
 
         public string groupName { get; set; }
 
-        public bool HasSound(int id) => soundDict.TryGetValue(id, out _);
+        public bool HasSound(EntityId id) => soundDict.TryGetValue(id, out _);
 
-        public void AddSound(int id, ISound sound)
+        public void AddSound(EntityId id, ISound sound)
         {
             if (!soundDict.TryGetValue(id, out _))
             {
@@ -26,7 +27,7 @@ namespace UnknownCreator.Modules
             }
         }
 
-        public void RemoveSound(int id)
+        public void RemoveSound(EntityId id)
         {
             if (soundDict.Remove(id, out var value))
                 value.groupName = string.Empty;

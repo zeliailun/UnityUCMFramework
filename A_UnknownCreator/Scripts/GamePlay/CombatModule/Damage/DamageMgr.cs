@@ -1,11 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
     public sealed class DamageMgr : IDamageMgr
     {
-        private Dictionary<int, IHealth> hurtDict = new();
+        private Dictionary<EntityId, IHealth> hurtDict = new();
 
         //private DamageMGR() { }
 
@@ -36,10 +37,10 @@ namespace UnknownCreator.Modules
             Mgr.RPool.Release(data);
         }
 
-        public void AddHurt<T>(int id, T hurt) where T : class, IHealth
+        public void AddHurt<T>(EntityId id, T hurt) where T : class, IHealth
         => hurtDict.TryAdd(id, hurt);
 
-        public void RemoveHurt(int id)
+        public void RemoveHurt(EntityId id)
         {
             hurtDict.Remove(id);
         }

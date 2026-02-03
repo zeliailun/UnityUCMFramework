@@ -14,7 +14,7 @@ namespace UnknownCreator.Modules
 
         public Transform soundT { private set; get; }
 
-        public int id { private set; get; }
+        public EntityId id { private set; get; }
 
         public string soundName { private set; get; }
 
@@ -46,7 +46,7 @@ namespace UnknownCreator.Modules
             soundName = name;
             soundObj = go;
             soundCfg = Mgr.JD.GetData<Dictionary<string, SoundCfg>>(JsonCfgKeyGlobals.SoundJson)[soundName];
-            id = soundObj.GetInstanceID();
+            id = soundObj.GetEntityId();
             soundT = soundObj.GetComponent<Transform>();
             source = soundObj.GetComponent<AudioSource>();
             source.mute = false;

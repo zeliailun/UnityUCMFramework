@@ -12,17 +12,17 @@ namespace UnknownCreator.Modules
         public const string Model = nameof(Model);
 
 
-        public static Unit GetUnit(this int id)
+        public static Unit GetUnit(this EntityId id)
         => (Mgr.Ent.GetEntity(id) is not null and Unit ent) ? ent : null;
 
         public static Unit GetUnit(this IEntity obj)
         => obj?.entID.GetUnit();
 
         public static Unit GetUnit(this GameObject obj)
-        => obj == null ? null : obj.GetInstanceID().GetUnit();
+        => obj == null ? null : obj.GetEntityId().GetUnit();
 
         public static Unit GetUnitByHitBox(this GameObject obj)
-        => obj == null ? null : Mgr.Unit.GetUnitRoot(obj.GetInstanceID());
+        => obj == null ? null : Mgr.Unit.GetUnitRoot(obj.GetEntityId());
 
         public static bool IsVaild(this Unit obj)
         => obj != null && !Mgr.RPool.HasObject(type, obj);
@@ -30,7 +30,7 @@ namespace UnknownCreator.Modules
         public static bool IsSame(this Unit obj, Unit target)
         => obj?.entID == target?.entID;
 
-        public static bool IsSame(this Unit obj, int targetID)
+        public static bool IsSame(this Unit obj, EntityId targetID)
         => obj?.entID == targetID;
 
         public static bool IsEnemy(this Unit obj, Unit target)

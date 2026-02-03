@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
     public sealed class VfxMgr : IVfxMgr
     {
-        private Dictionary<int, IVfx> vfxDict = new();
+        private Dictionary<EntityId, IVfx> vfxDict = new();
 
         private List<IVfx> vfxList = new();
 
@@ -39,7 +40,7 @@ namespace UnknownCreator.Modules
             return vfx;
         }
 
-        public void DestroyVfx(int id)
+        public void DestroyVfx(EntityId id)
         {
             if (vfxDict.Remove(id, out var vfx))
             {
@@ -49,14 +50,14 @@ namespace UnknownCreator.Modules
 
         }
 
-        public IVfx GetVfx(int id)
+        public IVfx GetVfx(EntityId id)
         => vfxDict.TryGetValue(id, out var result) ? result : null;
 
-        public T GetVfx<T>(int id)
+        public T GetVfx<T>(EntityId id)
         where T : class, IVfx
         => GetVfx(id) as T;
 
-        public bool HasVfx(int id)
+        public bool HasVfx(EntityId id)
         => GetVfx(id) != null;
 
         public void ReleaseAllVfx()

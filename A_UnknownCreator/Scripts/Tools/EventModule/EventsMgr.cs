@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
 using System;
+using UnityEngine;
 namespace UnknownCreator.Modules
 {
     public sealed class EventsMgr : IEventsMgr
     {
-        internal Dictionary<(int, string), List<IEvent>> delegateDict = new();
+        internal Dictionary<(EntityId, string), List<IEvent>> delegateDict = new();
 
         /// <summary>
         /// 是否中断事件发送,默认不中断
@@ -33,14 +34,14 @@ namespace UnknownCreator.Modules
             delegateDict.Clear();
         }
 
-        public void ClearEvent(string key, int id = -1)
+        public void ClearEvent(string key, EntityId id = default)
         {
             if (delegateDict.Remove((id, key), out var list))
                 foreach (var evt in list)
                     Mgr.RPool.Release(evt);
         }
 
-        public void Remove<T>(Delegate del, string key, int id = -1) where T : class, IEvent, new()
+        public void Remove<T>(Delegate del, string key, EntityId id = default) where T : class, IEvent, new()
         {
             var compositeKey = (id, key);
             if (del == null || !delegateDict.TryGetValue(compositeKey, out var list)) return;
@@ -58,7 +59,7 @@ namespace UnknownCreator.Modules
             if (list.Count == 0) delegateDict.Remove(compositeKey);
         }
 
-        private void AddInternal(string key, int id, IEvent evt)
+        private void AddInternal(string key, EntityId id, IEvent evt)
         {
             var compositeKey = (id, key);
             if (!delegateDict.TryGetValue(compositeKey, out var list))
@@ -69,7 +70,7 @@ namespace UnknownCreator.Modules
             list.Insert(i + 1, evt);
         }
 
-        public bool HasEvent(string key, int id = -1)
+        public bool HasEvent(string key, EntityId id = default)
         {
             return delegateDict.TryGetValue((id, key), out _);
         }
@@ -79,14 +80,14 @@ namespace UnknownCreator.Modules
 
         #region 添加无返回事件
 
-        public void Add(Action action, string s, int id = -1, int priority = 0)
+        public void Add(Action action, string s, EntityId id = default, int priority = 0)
         {
             if (action is null) return;
 
             AddInternal(s, id, Mgr.RPool.Load<CAction>().SetDelegate(action, priority));
         }
 
-        public void Add<U>(Action<U> action, string s, int id = -1, int priority = 0)
+        public void Add<U>(Action<U> action, string s, EntityId id = default, int priority = 0)
         {
             if (action is null) return;
 
@@ -94,14 +95,14 @@ namespace UnknownCreator.Modules
         }
 
 
-        public void AddOnce(Action action, string s, int id = -1, int priority = 0)
+        public void AddOnce(Action action, string s, EntityId id = default, int priority = 0)
         {
             if (action is null) return;
 
             AddInternal(s, id, Mgr.RPool.Load<CAction>().SetDelegate(action, priority, true));
         }
 
-        public void AddOnce<T>(Action<T> action, string s, int id = -1, int priority = 0)
+        public void AddOnce<T>(Action<T> action, string s, EntityId id = default, int priority = 0)
         {
             if (action is null) return;
 
@@ -116,12 +117,12 @@ namespace UnknownCreator.Modules
 
 
 
-        public void Remove(Action action, string s, int id = -1)
+        public void Remove(Action action, string s, EntityId id = default)
         {
             Remove<CAction>(action, s, id);
         }
 
-        public void Remove<U>(Action<U> action, string s, int id = -1)
+        public void Remove<U>(Action<U> action, string s, EntityId id = default)
         {
             Remove<CAction<U>>(action, s, id);
         }
@@ -134,7 +135,7 @@ namespace UnknownCreator.Modules
 
         #region 发送无返回值事件
 
-        public void Send(string s, int id = -1)
+        public void Send(string s, EntityId id = default)
         {
 
             var compositeKey = (id, s);
@@ -158,7 +159,7 @@ namespace UnknownCreator.Modules
             if (result.Count == 0) delegateDict.Remove(compositeKey);
         }
 
-        public void Send<U>(U info, string s, int id = -1)
+        public void Send<U>(U info, string s, EntityId id = default)
         {
             var compositeKey = (id, s);
             if (interrupt || !delegateDict.TryGetValue(compositeKey, out var result)) return;
@@ -191,7 +192,7 @@ namespace UnknownCreator.Modules
 
         #region 加有返回值事件
 
-        public void AddR<X>(Func<X> func, string s, int id = -1, int priority = 0)
+        public void AddR<X>(Func<X> func, string s, EntityId id = default, int priority = 0)
         {
             if (func is null) return;
 
@@ -199,7 +200,7 @@ namespace UnknownCreator.Modules
 
         }
 
-        public void AddR<X, X1>(Func<X, X1> func, string s, int id = -1, int priority = 0)
+        public void AddR<X, X1>(Func<X, X1> func, string s, EntityId id = default, int priority = 0)
         {
             if (func is null) return;
 
@@ -211,12 +212,12 @@ namespace UnknownCreator.Modules
 
         #region 移除有返回值事件
 
-        public void RemoveR<X>(Func<X> func, string s, int id = -1)
+        public void RemoveR<X>(Func<X> func, string s, EntityId id = default)
         {
             Remove<CFunc<X>>(func, s, id);
         }
 
-        public void RemoveR<X, X1>(Func<X, X1> func, string s, int id = -1)
+        public void RemoveR<X, X1>(Func<X, X1> func, string s, EntityId id = default)
         {
             Remove<CFunc<X, X1>>(func, s, id);
         }
@@ -226,7 +227,7 @@ namespace UnknownCreator.Modules
 
         #region 发送有返回值事件
 
-        public X SendR<X>(string s, int id = -1)
+        public X SendR<X>(string s, EntityId id = default)
         {
             if (interrupt || !delegateDict.TryGetValue((id, s), out var result) || result.Count == 0)
                 return default(X);
@@ -235,7 +236,7 @@ namespace UnknownCreator.Modules
             return func?.target != null ? func.target() : default(X);
         }
 
-        public X1 SendR<X, X1>(X info, string s, int id = -1)
+        public X1 SendR<X, X1>(X info, string s, EntityId id = default)
         {
             if (interrupt || !delegateDict.TryGetValue((id, s), out var result) || result.Count == 0)
                 return default(X1);
@@ -244,7 +245,7 @@ namespace UnknownCreator.Modules
             return func?.target != null ? func.target(info) : default(X1);
         }
 
-        public List<X> SendAllR<X>(string s, int id = -1)
+        public List<X> SendAllR<X>(string s, EntityId id = default)
         {
             var list = new List<X>();
 
@@ -260,7 +261,7 @@ namespace UnknownCreator.Modules
             return list;
         }
 
-        public List<X1> SendAllR<X, X1>(X info, string s, int id = -1)
+        public List<X1> SendAllR<X, X1>(X info, string s, EntityId id = default)
         {
             var list = new List<X1>();
 

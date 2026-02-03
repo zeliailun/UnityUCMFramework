@@ -12,7 +12,7 @@ namespace UnknownCreator.Modules
 
         public string vfxName { private set; get; }
 
-        public int id { private set; get; }
+        public EntityId id { private set; get; }
 
         public bool isRelease { private set; get; }
 
@@ -38,7 +38,7 @@ namespace UnknownCreator.Modules
 
             rootObj = obj;
             rootT = rootObj.GetComponent<Transform>();
-            id = rootObj.GetInstanceID();
+            id = rootObj.GetEntityId();
         }
 
         public virtual void DestroyVfx(float delay)
@@ -142,7 +142,7 @@ namespace UnknownCreator.Modules
             owner = null;
             vfxName = null;
             type = null;
-            id = -1;
+            id = default;
         }
 
         private void Destroy(TimerCountCycle cycle)

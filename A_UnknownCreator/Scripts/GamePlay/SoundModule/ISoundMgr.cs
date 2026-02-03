@@ -1,4 +1,5 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.Audio;
 
 namespace UnknownCreator.Modules
@@ -16,22 +17,22 @@ namespace UnknownCreator.Modules
         T LoadSound<T>(string soundName, string soundGroupName)
         where T : class, ISound, new();
         void UnloadSound(ISound sound);
-        void UnloadSound(int id);
-        ISound GetSound(int id);
-        void PlaySound(int id, bool isUseOneShot);
-        void PauseSound(int id);
-        void ResumeSound(int id);
-        void StopSound(int id);
-        void MuteSound(int id, bool isMute);
-        void SetSoundGroup(int id, string soundGroupName);
-        void RemoveSoundGroup(int id);
+        void UnloadSound(EntityId id);
+        ISound GetSound(EntityId id);
+        void PlaySound(EntityId id, bool isUseOneShot);
+        void PauseSound(EntityId id);
+        void ResumeSound(EntityId id);
+        void StopSound(EntityId id);
+        void MuteSound(EntityId id, bool isMute);
+        void SetSoundGroup(EntityId id, string soundGroupName);
+        void RemoveSoundGroup(EntityId id);
         void PauseSoundGroup(string soundGroupName);
         void ResumeSoundGroup(string soundGroupName);
         void StopSoundGroup(string soundGroupName);
         void ClearSoundGroup(string soundGroupName);
         void MuteSoundSound(string soundGroupName, bool isMute);
         ISoundGroup GetSoundGroup(string soundGroupName);
-        bool HasSound(int id);
+        bool HasSound(EntityId id);
         bool HasSoundGroup(string soundGroupName);
         void PauseAllSound();
         void ResumeAllSound();

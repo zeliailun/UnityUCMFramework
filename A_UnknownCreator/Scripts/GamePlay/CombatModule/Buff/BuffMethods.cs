@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
@@ -108,7 +109,7 @@ namespace UnknownCreator.Modules
 
         #region 事件
 
-        protected void AddActionEvent<T>(string name, Action<T> action, int id = -1, int priority = 0)
+        protected void AddActionEvent<T>(string name, Action<T> action, EntityId id = default, int priority = 0)
         {
             var key = (name, id);
             if (!evtDict.TryGetValue(key, out _))
@@ -120,7 +121,7 @@ namespace UnknownCreator.Modules
             }
         }
 
-        protected void AddFuncEvent<T>(string name, Func<T> func, int id = -1, int priority = 1000)
+        protected void AddFuncEvent<T>(string name, Func<T> func, EntityId id = default, int priority = 1000)
         {
             var key = (name, id);
             if (!evtDict.TryGetValue(key, out _))
@@ -132,7 +133,7 @@ namespace UnknownCreator.Modules
             }
         }
 
-        protected void AddFuncEvent<T1, T2>(string name, Func<T1, T2> func, int id = -1, int priority = 1000)
+        protected void AddFuncEvent<T1, T2>(string name, Func<T1, T2> func, EntityId id = default, int priority = 1000)
         {
             var key = (name, id);
             if (!evtDict.TryGetValue(key, out _))
@@ -144,7 +145,7 @@ namespace UnknownCreator.Modules
             }
         }
 
-        protected void RemoveEvent(string name, int id = -1)
+        protected void RemoveEvent(string name, EntityId id = default)
         {
             if (evtDict.Remove((name, id), out var obj))
                 ((Action)obj)();

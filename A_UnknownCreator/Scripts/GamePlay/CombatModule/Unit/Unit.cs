@@ -26,7 +26,7 @@ namespace UnknownCreator.Modules
 
         public string entClassName { private set; get; }
 
-        public int entID { private set; get; }
+        public EntityId entID { private set; get; }
 
         public Vector3 entP => entT.position;
 
@@ -134,7 +134,7 @@ namespace UnknownCreator.Modules
 
         #region 私有
 
-        private List<int> hitBoxID = new();
+        private List<EntityId> hitBoxID = new();
         private Dictionary<int, Transform> bodyPartsDict = new();
         private Func<bool> alive;
         private Type selfType;
@@ -154,7 +154,7 @@ namespace UnknownCreator.Modules
             this.ent = ent;
             this.entName = entName;
             entClassName = GetType().Name;
-            entID = ent.GetInstanceID();
+            entID = ent.GetEntityId();
             entT = ent.GetComp<Transform>();
             modelLayerT = entT.Find(UnitGlobals.Model);
             //modelLayerObj.SetActive(true);
@@ -258,7 +258,7 @@ namespace UnknownCreator.Modules
             {
                 foreach (var result in modelCfg.hitBoxList)
                 {
-                    int id = entT.Find(result).gameObject.GetInstanceID();
+                    var id = entT.Find(result).gameObject.GetEntityId();
                     hitBoxID.Add(id);
                     Mgr.Unit.AddUnitRoot(id, this);
                 }
@@ -426,7 +426,7 @@ namespace UnknownCreator.Modules
             return master != null;
         }
 
-        public int GetOwnerID()
+        public EntityId GetOwnerID()
         => !HasMaster() ? master.entID : entID;
 
         #endregion

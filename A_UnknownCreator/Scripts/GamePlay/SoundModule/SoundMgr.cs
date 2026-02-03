@@ -11,7 +11,7 @@ namespace UnknownCreator.Modules
     {
         internal Dictionary<string, int> soundCountDict = new();
 
-        internal Dictionary<int, ISound> soundDict = new();
+        internal Dictionary<EntityId, ISound> soundDict = new();
 
         internal List<ISound> soundList = new();
 
@@ -113,7 +113,7 @@ namespace UnknownCreator.Modules
         }
 
 
-        public void UnloadSound(int id)
+        public void UnloadSound(EntityId id)
         {
             if (!soundDict.Remove(id, out var sound)) return;
             if (sound.HasGroup()) GetSoundGroup(sound.groupName)?.RemoveSound(id);
@@ -121,33 +121,33 @@ namespace UnknownCreator.Modules
             Mgr.RPool.Release(sound);
         }
 
-        public ISound GetSound(int id)
+        public ISound GetSound(EntityId id)
         => soundDict.TryGetValue(id, out var value) ? value : null;
 
-        public bool HasSound(int id)
+        public bool HasSound(EntityId id)
         => soundDict.TryGetValue(id, out _);
 
-        public void PlaySound(int id, bool isUseOneShot)
+        public void PlaySound(EntityId id, bool isUseOneShot)
         {
             GetSound(id)?.PlaySound(isUseOneShot);
         }
 
-        public void PauseSound(int id)
+        public void PauseSound(EntityId id)
         {
             GetSound(id)?.PauseSound();
         }
 
-        public void ResumeSound(int id)
+        public void ResumeSound(EntityId id)
         {
             GetSound(id)?.ResumeSound();
         }
 
-        public void StopSound(int id)
+        public void StopSound(EntityId id)
         {
             GetSound(id)?.StopSound();
         }
 
-        public void MuteSound(int id, bool isMute)
+        public void MuteSound(EntityId id, bool isMute)
         {
             GetSound(id)?.MuteSound(isMute);
         }
@@ -158,7 +158,7 @@ namespace UnknownCreator.Modules
         public bool HasSoundGroup(string soundGroupName)
         => soundGroupDict.TryGetValue(soundGroupName, out _);
 
-        public void SetSoundGroup(int id, string soundGroupName)
+        public void SetSoundGroup(EntityId id, string soundGroupName)
         {
             if (string.IsNullOrWhiteSpace(soundGroupName)) UCMDebug.LogError("无法设置【" + soundGroupName + "】声音组");
 
@@ -176,7 +176,7 @@ namespace UnknownCreator.Modules
             soundGroupList.Add(group);
         }
 
-        public void RemoveSoundGroup(int id)
+        public void RemoveSoundGroup(EntityId id)
         {
             var sound = GetSound(id);
             if (sound is null) return;

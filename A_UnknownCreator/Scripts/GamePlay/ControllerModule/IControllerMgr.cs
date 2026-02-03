@@ -36,7 +36,7 @@ namespace UnknownCreator.Modules
         List<GameObject> GetAllTarget();
         GameObject GetFirstTarget();
         GameObject GetTargetByIndex(int index);
-        GameObject GetTargetByID(int id);
+        GameObject GetTargetByID(EntityId id);
         Vector3 GetControllerDir(string name);
         bool IsControllerTarget(GameObject obj);
     }

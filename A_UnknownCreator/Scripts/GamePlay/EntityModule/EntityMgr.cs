@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 namespace UnknownCreator.Modules
 {
     public sealed partial class EntityMgr : IEntityMgr
     {
-        internal Dictionary<int, IEntity> entityDict = new();
+        internal Dictionary<EntityId, IEntity> entityDict = new();
 
         internal List<IEntity> entityList = new();
 
@@ -15,7 +13,7 @@ namespace UnknownCreator.Modules
 
         internal List<IEntityGroup> groupList = new();
 
-        internal Dictionary<int, IEntityGroup> entityGroupDict = new();
+        internal Dictionary<EntityId, IEntityGroup> entityGroupDict = new();
 
         public int entityCount => entityDict.Count;
 
@@ -73,7 +71,7 @@ namespace UnknownCreator.Modules
         //==================================================================================================================
 
 
-        public bool IsValidEntity(int id)
+        public bool IsValidEntity(EntityId id)
         => GetEntity(id) != null;
 
         public bool IsValidEntity<T>(T ent) where T : IEntity
@@ -85,7 +83,7 @@ namespace UnknownCreator.Modules
             var entity = (IEntity)Mgr.RPool.Load(type);
             entCreated?.Invoke(entity, obj);
             entity.InitEnt(entityName, obj, config);
-            entityDict.Add(obj.GetInstanceID(), entity);
+            entityDict.Add(obj.GetEntityId(), entity);
             entityList.Add(entity);
             if (!string.IsNullOrWhiteSpace(groupName)) SetGroup(groupName, entity);
             return entity;
@@ -94,7 +92,7 @@ namespace UnknownCreator.Modules
         public T CreateEntity<T>(string entityName, string groupName, string config, Action<IEntity, GameObject> entCreated) where T : IEntity, new()
         => (T)CreateEntity(entityName, groupName, typeof(T), config, entCreated);
 
-        public void ReleaseEntity(int id)
+        public void ReleaseEntity(EntityId id)
         {
             var entity = GetEntity(id);
             if (entity is null) return;
@@ -111,12 +109,12 @@ namespace UnknownCreator.Modules
             ReleaseEntity(ent.entID);
         }
 
-        public void ShowEntity(int id)
+        public void ShowEntity(EntityId id)
         {
             GetEntity(id).enable = true;
         }
 
-        public void HideEntity(int id)
+        public void HideEntity(EntityId id)
         {
             GetEntity(id).enable = false;
         }
@@ -158,7 +156,7 @@ namespace UnknownCreator.Modules
             }
         }
 
-        public IEntity GetEntity(int id)
+        public IEntity GetEntity(EntityId id)
         => entityDict.TryGetValue(id, out var entity) ? entity : null;
 
         public List<IEntity> GetAllEntity(bool isCopy)

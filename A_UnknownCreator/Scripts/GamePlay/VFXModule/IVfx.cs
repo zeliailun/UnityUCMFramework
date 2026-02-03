@@ -3,7 +3,7 @@ namespace UnknownCreator.Modules
 {
     public interface IVfx
     {
-        int id { get; }
+        EntityId id { get; }
         IEntity owner { get; }
         GameObject rootObj { get; }
         Transform rootT { get; }

@@ -9,15 +9,15 @@ namespace UnknownCreator.Modules
         int entityGroupDCount { get; }
         IEntity CreateEntity(string entityName, string groupName, Type className, string config = null, Action<IEntity, GameObject> entCreated = null);
         T CreateEntity<T>(string entityName, string groupName, string config = null,Action<IEntity, GameObject> entCreated = null) where T : IEntity, new();
-        void ReleaseEntity(int id);
+        void ReleaseEntity(EntityId id);
         void ReleaseEntity<T>(T ent) where T : IEntity;
         void ReleaseAllEntity();
-        void ShowEntity(int id);
+        void ShowEntity(EntityId id);
         void ShowAllEntity();
-        void HideEntity(int id);
+        void HideEntity(EntityId id);
         void HideAllEntity();
-        IEntity GetEntity(int id);
-        bool IsValidEntity(int id);
+        IEntity GetEntity(EntityId id);
+        bool IsValidEntity(EntityId id);
         bool IsValidEntity<T>(T ent) where T : IEntity;
         void SetGroup(string groupName, IEntity entity);
         bool HasGroup(string groupName);

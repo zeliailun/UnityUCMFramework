@@ -18,7 +18,7 @@ namespace UnknownCreator.Modules
 
         public Vector3 beforePos { private set; get; }
 
-        public int id { private set; get; }
+        public EntityId id { private set; get; }
 
         private bool pause;
         public bool isPause
@@ -46,7 +46,7 @@ namespace UnknownCreator.Modules
             this.mvt = mvt;
             this.data = data;
             this.kv = kv;
-            id = obj.GetInstanceID();
+            id = obj.GetEntityId();
             objT = obj.GetComponent<Transform>();
             objT.localScale = Vector3.one;
             objT.SetPositionAndRotation(this.data.spawnPos, this.data.spawnRot);

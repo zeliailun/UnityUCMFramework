@@ -57,7 +57,7 @@ namespace UnknownCreator.Modules
 
         public void ChangeTarget(GameObject target)
         {
-            if (target != null && this.target != null && target.GetInstanceID() == this.target.GetInstanceID()) return;
+            if (target != null && this.target != null && target.GetEntityId() == this.target.GetEntityId()) return;
             DisableAllCamera();
             SetCameraTarget(target);
             if (target != null) EnableAllCamera();

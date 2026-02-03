@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -28,8 +28,8 @@ namespace UnknownCreator.Modules
         List<double> unitExpList { get; }
 
         void UpdateMaxLevelAndFormula(IUnitExpBuilder expBuilder, int value);
-        void AddUnitRoot(int selfID, Unit unit);
-        void RemoveUnitRoot(int selfID);
-        Unit GetUnitRoot(int selfID);
+        void AddUnitRoot(EntityId selfID, Unit unit);
+        void RemoveUnitRoot(EntityId selfID);
+        Unit GetUnitRoot(EntityId selfID);
     }
 }

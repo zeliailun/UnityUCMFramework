@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using Unity.Mathematics;
+using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
@@ -67,7 +68,7 @@ namespace UnknownCreator.Modules
         private Dictionary<int, bool> stateDict = new();
 
 
-        private Dictionary<(string name, int id), Delegate> evtDict = new();
+        private Dictionary<(string name, EntityId id), Delegate> evtDict = new();
         private Action clearEvt;
 
         private double dur;

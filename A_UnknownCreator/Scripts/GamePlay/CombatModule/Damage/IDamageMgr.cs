@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using UnityEngine;
 namespace UnknownCreator.Modules
 {
     public interface IDamageMgr : IDearMgr
@@ -7,8 +8,8 @@ namespace UnknownCreator.Modules
 
         void ApplyDamage<T>(T newData) where T : DamageData, new();
 
-        void AddHurt<T>(int id, T hurt) where T : class, IHealth;
+        void AddHurt<T>(EntityId id, T hurt) where T : class, IHealth;
 
-        void RemoveHurt(int id);
+        void RemoveHurt(EntityId id);
     }
 }

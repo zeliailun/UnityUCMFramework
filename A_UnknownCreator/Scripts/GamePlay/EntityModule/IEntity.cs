@@ -18,7 +18,7 @@ namespace UnknownCreator.Modules
 
         public string entClassName { get; }
 
-        public int entID { get; }
+        public EntityId entID { get; }
 
         public bool enable { get; set; }
 

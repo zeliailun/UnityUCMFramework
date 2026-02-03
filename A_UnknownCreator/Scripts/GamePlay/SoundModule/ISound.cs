@@ -5,7 +5,7 @@ namespace UnknownCreator.Modules
     public interface ISound
     {
 
-        int id { get; }
+        EntityId id { get; }
         string soundName { get; }
         string groupName { set; get; }
         bool isPlayEndUnload { set; get; }
@@ -31,9 +31,9 @@ namespace UnknownCreator.Modules
     {
         string groupName { get; set; }
         int soundCount { get; }
-        bool HasSound(int id);
-        void AddSound(int id, ISound sound);
-        void RemoveSound(int id);
+        bool HasSound(EntityId id);
+        void AddSound(EntityId id, ISound sound);
+        void RemoveSound(EntityId id);
         void PauseAllSounds();
         void ResumeAllSound();
         void StopAllSound();
