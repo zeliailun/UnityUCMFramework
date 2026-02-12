@@ -69,6 +69,8 @@ namespace UnknownCreator.Modules
             unitMaxLevel = value;
             unitExpList = expBuilder.ExpBuilder(unitMaxLevel);
         }
+
+
     }
 
 

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections.Generic;
 using System;
 
@@ -7,8 +7,13 @@ namespace UnknownCreator.Modules
     [Serializable]
     public class UnitCfg
     {
+        public string cfgName { internal set; get; }
+
         [field: SerializeField]
-        public string defaultModel { internal set; get; }
+        public string root { internal set; get; }
+
+        [field: SerializeField]
+        public string model { internal set; get; }
 
 
         [field: SerializeField]

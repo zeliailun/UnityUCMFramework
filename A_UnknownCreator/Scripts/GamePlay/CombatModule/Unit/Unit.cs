@@ -24,8 +24,6 @@ namespace UnknownCreator.Modules
 
         public string entName { private set; get; }
 
-        public string entClassName { private set; get; }
-
         public EntityId entID { private set; get; }
 
         public Vector3 entP => entT.position;
@@ -54,7 +52,7 @@ namespace UnknownCreator.Modules
         //================================================================================
 
 
-        public string modelName { private set; get; }
+        public string modelCfgName { private set; get; }
         public GameObject model { private set; get; }
         public Transform modelLayerT { private set; get; }
         public Transform modelT { private set; get; }
@@ -138,7 +136,7 @@ namespace UnknownCreator.Modules
         private Dictionary<int, Transform> bodyPartsDict = new();
         private Func<bool> alive;
         private Type selfType;
-        private string modelNewName, modelOldName;
+        private string modelNewCfgName, modelOldCfgName, modelKey;
         private bool isChangeModel, isShow;
 
         #endregion
@@ -147,25 +145,27 @@ namespace UnknownCreator.Modules
         //=================================================================================
 
 
-        public void InitEnt(string entName, GameObject ent, string cfgName)
+        public void Init(UnitCfg cfg)
         {
+            if (cfg is null) return;
+
             selfType = typeof(Unit);
 
-            this.ent = ent;
-            this.entName = entName;
-            entClassName = GetType().Name;
+            unitCfg = cfg;
+            ent = Mgr.GPool.Load(unitCfg.root, true, false);
+            entName = ent.name;
             entID = ent.GetEntityId();
             entT = ent.GetComp<Transform>();
             modelLayerT = entT.Find(UnitGlobals.Model);
-            //modelLayerObj.SetActive(true);
-
-            unitCfg = Mgr.JD.GetData<Dictionary<string, UnitCfg>>(JsonCfgKeyGlobals.UnitJson)[string.IsNullOrWhiteSpace(cfgName) ? entName : cfgName];
-
             hbsm = Mgr.RPool.Load<HBSMController>();
             hbsm.kv.AddValue<Unit>(this);
-            animC = hbsm.AddComp<AnimComp>(true);
-            SetModel(unitCfg.defaultModel, Mgr.GPool.Load(unitCfg.defaultModel, false, false), true);
 
+
+        }
+
+        public void Setup()
+        {
+            animC = hbsm.AddComp<AnimComp>(true);
             statsC = hbsm.AddComp<UStatsComp>(true);
             if (!string.IsNullOrWhiteSpace(unitCfg.statsGroup))
             {
@@ -178,6 +178,8 @@ namespace UnknownCreator.Modules
                 }
             }
 
+            SetModel(unitCfg.model, true);
+
             stateC = hbsm.AddComp<UStateComp>(true);
             lvExpC = hbsm.AddComp<ULevelExpComp>(true);
             talentC = hbsm.AddComp<UTalentComp>(true);
@@ -188,8 +190,6 @@ namespace UnknownCreator.Modules
 
             foreach (var item in unitCfg.builderDict.Values)
                 item?.CreateUnitBuilder(this);
-
-            hbsm.EnableAllHBSM();
         }
 
         public void UpdataEnt()
@@ -219,9 +219,8 @@ namespace UnknownCreator.Modules
             ClearHitBox();
             ClearBodyPart();
             Mgr.RPool.Release(hbsm);
-            Mgr.GPool.Release(modelName, model);
-            Mgr.GPool.Release(entName, ent);
-            //UnityUtils.Release(unitCfg);
+            if (!string.IsNullOrWhiteSpace(modelKey)) Mgr.GPool.Release(modelKey, model);
+            Mgr.GPool.Release(unitCfg.root, ent);
             unitCfg = null;
             master = null;
             brainC = null;
@@ -238,85 +237,96 @@ namespace UnknownCreator.Modules
             model = null;
             modelT = null;
             modelLayerT = null;
-            modelNewName = null;
-            modelOldName = null;
+            modelCfgName = null;
+            modelNewCfgName = null;
+            modelOldCfgName = null;
+            modelKey = null;
             isChangeModel = false;
         }
 
-        internal void SetModel(string name, GameObject obj, bool isShow)
+        internal void SetModel(string cfgName, bool show)
         {
+            if (string.IsNullOrWhiteSpace(cfgName))
+            {
+                UCMDebug.LogError("模型配置文件不能为 null");
+            }
+
             ClearHitBox();
             ClearBodyPart();
-            modelName = name;
-            model = obj;
+
+            var cfg = Mgr.JD.GetData<Dictionary<string, UnitModelCfg>>(JsonCfgKeyGlobals.UnitModelJson)[cfgName];
+
+            if (cfg == null) UCMDebug.LogError($"未找到模型配置文件: {cfgName}");
+
+            model = Mgr.GPool.Load(cfg.model, false, false);
+            modelCfgName = cfgName;
+            modelKey = cfg.model;
             modelT = model.GetComp<Transform>();
             modelT.SetParent(modelLayerT);
             modelT.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
             animC.SetAnimComp(model.GetComp<AnimancerComponent>());
-            var modelCfg = Mgr.JD.GetData<Dictionary<string, UnitModelCfg>>(JsonCfgKeyGlobals.UnitModelJson)[name];
-            if (modelCfg != null)
-            {
-                foreach (var result in modelCfg.hitBoxList)
-                {
-                    var id = entT.Find(result).gameObject.GetEntityId();
-                    hitBoxID.Add(id);
-                    Mgr.Unit.AddUnitRoot(id, this);
-                }
 
-                foreach (var result in modelCfg.bodyPartsList)
-                    AddBodyPart(result.id, result.path);
+            foreach (var result in cfg.hitBoxList)
+            {
+                var id = entT.Find(result).gameObject.GetEntityId();
+                hitBoxID.Add(id);
+                Mgr.Unit.AddUnitRoot(id, this);
             }
-            if (isShow) ShowModel();
-            Mgr.Event.Send<EvtUnitModelChanged>(new(modelOldName, modelName, this), CombatEvtGlobals.OnGetModelName);
+
+            foreach (var result in cfg.bodyPartsList)
+                AddBodyPart(result.id, result.path);
+
+            if (show) ShowModel();
+
+            Mgr.Event.Send<EvtUnitModelChanged>(new(modelOldCfgName, modelCfgName, this), CombatEvtGlobals.OnGetModelName);
 
         }
 
-        private void SetModel()
+        private void SetModel(string cfgName)
         {
-            ReleaseModel(modelOldName);
-            SetModel(modelName, Mgr.GPool.Load(modelName, false, false), isShow = model == null || model.activeSelf);
+            ReleaseModel(modelKey);
+            SetModel(cfgName, isShow = (model == null || model.activeSelf));
         }
 
         private void UpdateModel()
         {
-            modelNewName = Mgr.Event.SendR<string>(CombatEvtGlobals.OnGetModelName, entID);
+            modelNewCfgName = Mgr.Event.SendR<string>(CombatEvtGlobals.OnGetModelName, entID);
 
             if (model == null &&
-                !string.IsNullOrWhiteSpace(modelNewName))
+                !string.IsNullOrWhiteSpace(modelNewCfgName))
             {
                 isChangeModel = true;
-                SetModel(modelNewName, Mgr.GPool.Load(modelNewName, false, false), true);
+                SetModel(modelNewCfgName, true);
                 return;
             }
 
-            if (modelName == modelNewName) return;
+            if (modelCfgName == modelNewCfgName) return;
 
-            if (string.IsNullOrWhiteSpace(modelNewName))
+            if (string.IsNullOrWhiteSpace(modelNewCfgName))
             {
                 if (!isChangeModel) return;
                 isChangeModel = false;
-                if (string.IsNullOrWhiteSpace(modelOldName))
+                if (string.IsNullOrWhiteSpace(modelOldCfgName))
                 {
-                    ReleaseModel(modelName);
+                    ReleaseModel(modelKey);
                 }
                 else
                 {
-                    (modelOldName, modelName) = (modelName, modelOldName);
-                    SetModel();
+                    (modelOldCfgName, modelCfgName) = (modelCfgName, modelOldCfgName);
+                    SetModel(modelCfgName);
                 }
             }
             else
             {
                 isChangeModel = true;
-                modelOldName = modelName;
-                modelName = modelNewName;
-                SetModel();
+                modelOldCfgName = modelCfgName;
+                SetModel(modelCfgName = modelNewCfgName);
             }
         }
 
         private void ReleaseModel(string name)
         {
-            if (model != null)
+            if (model != null && !string.IsNullOrWhiteSpace(name))
             {
                 Mgr.GPool.Release(name, model);
                 Mgr.GPool.SetRoot(model, true);
@@ -403,16 +413,15 @@ namespace UnknownCreator.Modules
             return null;
         }
 
-        public void ChangeModel(string name)
+        public void ChangeModel(string cfgName)
         {
             if (model == null)
             {
-                SetModel(name, Mgr.GPool.Load(name, false, false), true);
+                SetModel(cfgName, true);
                 return;
             }
-            modelOldName = modelName;
-            modelName = name;
-            SetModel();
+            modelOldCfgName = modelCfgName;
+            SetModel(modelCfgName = cfgName);
         }
 
         public void SetAlive(Func<bool> func) => alive = func;
@@ -427,7 +436,7 @@ namespace UnknownCreator.Modules
         }
 
         public EntityId GetOwnerID()
-        => !HasMaster() ? master.entID : entID;
+        => HasMaster() ? master.entID : entID;
 
         #endregion
 

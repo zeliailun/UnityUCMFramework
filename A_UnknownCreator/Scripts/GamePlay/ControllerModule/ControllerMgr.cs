@@ -36,8 +36,8 @@ namespace UnknownCreator.Modules
             targetDict = new();
             if (!string.IsNullOrWhiteSpace(defaultInputClass))
                 SetInput(ObjectGlobals.CreateInstance<IInputActionCollection2>(defaultInputClass));
-            if (!string.IsNullOrWhiteSpace(defaultInputClass))
-                inputAsset = UnityGlobals.LoadSync<InputActionAsset>(defaultInputClass);
+            if (!string.IsNullOrWhiteSpace(defaultInputAsset))
+                inputAsset = UnityGlobals.LoadSync<InputActionAsset>(defaultInputAsset);
         }
 
         void IDearMgr.DoNothing()

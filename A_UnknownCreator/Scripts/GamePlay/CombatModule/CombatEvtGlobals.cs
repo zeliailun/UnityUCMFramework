@@ -190,7 +190,7 @@
 
         /// <summary>
         /// 升级后
-        /// Unit:升级的单位
+        /// Unit
         /// </summary>
         public const string OnUnitUpgraded = nameof(OnUnitUpgraded);
 

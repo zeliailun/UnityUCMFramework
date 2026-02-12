@@ -16,13 +16,9 @@ namespace UnknownCreator.Modules
 
         public string entName { get; }
 
-        public string entClassName { get; }
-
         public EntityId entID { get; }
 
         public bool enable { get; set; }
-
-        void InitEnt(string entName, GameObject ent, string data);
 
         void UpdataEnt();
 

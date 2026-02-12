@@ -21,6 +21,8 @@ namespace UnknownCreator.Modules
                 if (item != null)
                     cfg.builderDict[item.GetType().Name] = item;
             }
+
+            cfg.cfgName = CachedSoName;
         }
     }
 }

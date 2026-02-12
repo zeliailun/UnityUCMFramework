@@ -1,4 +1,4 @@
-namespace UnknownCreator.Modules
+﻿namespace UnknownCreator.Modules
 {
     public static class SoundGlobals
     {

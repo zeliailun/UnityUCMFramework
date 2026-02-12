@@ -5,10 +5,10 @@ namespace UnknownCreator.Modules
 {
     public interface IEntityMgr : IDearMgr
     {
+        Action<IEntity> OnEntityRegistered { set; get; }
         int entityCount { get; }
         int entityGroupDCount { get; }
-        IEntity CreateEntity(string entityName, string groupName, Type className, string config = null, Action<IEntity, GameObject> entCreated = null);
-        T CreateEntity<T>(string entityName, string groupName, string config = null,Action<IEntity, GameObject> entCreated = null) where T : IEntity, new();
+        void RegisterEntity(IEntity entity, string groupName);
         void ReleaseEntity(EntityId id);
         void ReleaseEntity<T>(T ent) where T : IEntity;
         void ReleaseAllEntity();

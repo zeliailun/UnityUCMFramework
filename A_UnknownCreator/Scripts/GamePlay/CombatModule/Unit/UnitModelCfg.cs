@@ -8,10 +8,11 @@ namespace UnknownCreator.Modules
     public class UnitModelCfg
     {
         /// <summary>
-        /// 根据单位模型名称来加载该文件
-        /// "路径从Model开始遍历,注意+(Clone)"
+        /// 根据名称来加载该文件
+        /// "路径从Model开始遍历,生成的模型对象尾名需要+(Clone)"
         /// </summary>
         
+        public string model;
         public List<string> hitBoxList = new();
         public List<BodyPartInfo> bodyPartsList = new();
     }

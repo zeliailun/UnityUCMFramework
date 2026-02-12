@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -77,20 +77,32 @@ namespace UnknownCreator.Modules
         public void LoadNextScene(bool isCyclical)
         {
             int buildIndex = SceneManager.GetActiveScene().buildIndex + 1;
-            if (buildIndex > SceneManager.sceneCountInBuildSettings - 1 && isCyclical)
-                buildIndex = 0;
-            else
-                return;
+            int max = SceneManager.sceneCountInBuildSettings - 1;
+
+            if (buildIndex > max)
+            {
+                if (isCyclical)
+                    buildIndex = 0;
+                else
+                    return;
+            }
+
             SceneManager.LoadScene(buildIndex);
         }
 
         public void LoadPreviousScene(bool isCyslical)
         {
             int buildIndex = SceneManager.GetActiveScene().buildIndex - 1;
-            if (buildIndex < 0 && isCyslical)
-                buildIndex = SceneManager.sceneCountInBuildSettings - 1;
-            else
-                return;
+            int max = SceneManager.sceneCountInBuildSettings - 1;
+
+            if (buildIndex < 0)
+            {
+                if (isCyslical)
+                    buildIndex = max;
+                else
+                    return;
+            }
+
             SceneManager.LoadScene(buildIndex);
         }
     }

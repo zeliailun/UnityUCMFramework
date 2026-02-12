@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine.SceneManagement;
 using UnityEngine;
 
@@ -35,18 +35,20 @@ namespace UnknownCreator.Modules
 
         public void Update()
         {
-            if (operation == null) return;
+            if (operation == null || isLoaded)
+                return;
 
-            if (onSceneProgress?.Invoke(operation.progress) ?? true)
+            var progress = Mathf.Clamp01(operation.progress / 0.9f);
+            var allow = onSceneProgress?.Invoke(progress) ?? true;
+
+            if (allow && operation.progress >= 0.9f)
+                operation.allowSceneActivation = true;
+
+            if (operation.isDone)
             {
-                if (operation.progress >= 0.9F)
-                {
-                    onSceneLoaded?.Invoke();
-                    operation.allowSceneActivation = true;
-                    isLoaded = true;
-                }
+                onSceneLoaded?.Invoke();
+                isLoaded = true;
             }
-
         }
 
 

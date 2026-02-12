@@ -19,6 +19,9 @@ namespace UnknownCreator.Modules
 
         public int entityGroupDCount => groupDict.Count;
 
+
+        public Action<IEntity> OnEntityRegistered { set; get; }
+
         //private EntityMgr() { }
 
         void IDearMgr.WorkWork()
@@ -38,6 +41,7 @@ namespace UnknownCreator.Modules
             groupDict = null;
             groupList = null;
             entityGroupDict = null;
+            OnEntityRegistered = null;
         }
 
         void IDearMgr.UpdateMGR()
@@ -77,20 +81,17 @@ namespace UnknownCreator.Modules
         public bool IsValidEntity<T>(T ent) where T : IEntity
         => ent != null && GetEntity(ent.entID) != null;
 
-        public IEntity CreateEntity(string entityName, string groupName, Type type, string config, Action<IEntity, GameObject> entCreated)
+        public void RegisterEntity(IEntity ent, string groupName)
         {
-            var obj = Mgr.GPool.Load(entityName, true, false);
-            var entity = (IEntity)Mgr.RPool.Load(type);
-            entCreated?.Invoke(entity, obj);
-            entity.InitEnt(entityName, obj, config);
-            entityDict.Add(obj.GetEntityId(), entity);
-            entityList.Add(entity);
-            if (!string.IsNullOrWhiteSpace(groupName)) SetGroup(groupName, entity);
-            return entity;
-        }
+            if (ent is null) return;
 
-        public T CreateEntity<T>(string entityName, string groupName, string config, Action<IEntity, GameObject> entCreated) where T : IEntity, new()
-        => (T)CreateEntity(entityName, groupName, typeof(T), config, entCreated);
+            if (IsValidEntity(ent.entID)) UCMDebug.LogError("重复注册实体");
+
+            entityDict.Add(ent.entID, ent);
+            entityList.Add(ent);
+            if (!string.IsNullOrWhiteSpace(groupName)) SetGroup(groupName, ent);
+            OnEntityRegistered?.Invoke(ent);
+        }
 
         public void ReleaseEntity(EntityId id)
         {

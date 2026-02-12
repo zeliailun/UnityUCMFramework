@@ -28,8 +28,11 @@ namespace UnknownCreator.Modules
         List<double> unitExpList { get; }
 
         void UpdateMaxLevelAndFormula(IUnitExpBuilder expBuilder, int value);
+
         void AddUnitRoot(EntityId selfID, Unit unit);
+
         void RemoveUnitRoot(EntityId selfID);
+
         Unit GetUnitRoot(EntityId selfID);
     }
 }
