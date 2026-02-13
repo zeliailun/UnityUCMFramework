@@ -79,6 +79,7 @@ namespace UnknownCreator.Modules
         private Texture2D icon;
         private AnimPlayer ap;
         private AnimancerState castAnimState;
+        private AvatarMask avatarMask;
         private string castAnimName, newCastAnimName, passiveName;
         private BuffBase passiveBuff;
         private Action<TimerCountCycle> castPointAct, castBackswingAct;
@@ -99,15 +100,20 @@ namespace UnknownCreator.Modules
 
             //加载默认施法动画
             ap = Mgr.RPool.Load<AnimPlayer>();
-            if (abilityCfg.castAnimAsset != null)
+            if (!string.IsNullOrWhiteSpace(abilityCfg.animKey))
             {
-                ap.SetPlayAnim(abilityCfg.castAnimAsset, false);
-                castAnimName = abilityCfg.castAnimAsset.name;
+                ap.SetPlayAnim(abilityCfg.animKey);
+                castAnimName = abilityCfg.animKey;
             }
             else
             {
                 castAnimName = string.Empty;
             }
+
+            if (!string.IsNullOrWhiteSpace(abilityCfg.maskKey))
+                avatarMask = UnityGlobals.LoadSync<AvatarMask>(abilityCfg.maskKey);
+            else
+                avatarMask = null;
 
             //添加统计到组件
             foreach (var kv in abilityCfg.statsKV)
@@ -231,6 +237,12 @@ namespace UnknownCreator.Modules
             {
                 UnityGlobals.Release(icon);
                 icon = null;
+            }
+
+            if (avatarMask != null)
+            {
+                UnityGlobals.Release(avatarMask);
+                avatarMask = null;
             }
 
             Mgr.RPool.Release(ap);

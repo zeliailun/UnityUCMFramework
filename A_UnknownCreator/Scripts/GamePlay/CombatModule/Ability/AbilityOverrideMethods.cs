@@ -111,7 +111,7 @@ namespace UnknownCreator.Modules
 
         public virtual string GetCastAnim() => castAnimName;
 
-        public virtual AvatarMask GetAvatarMask() => abilityCfg.mask;
+        public virtual AvatarMask GetAvatarMask() => avatarMask;
 
         public virtual int GetCastAnimLayers() => abilityCfg.animLayers;
 

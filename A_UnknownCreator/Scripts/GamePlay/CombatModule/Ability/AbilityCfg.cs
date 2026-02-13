@@ -10,7 +10,7 @@ namespace UnknownCreator.Modules
     {
         public string cfgName { internal set; get; }
 
-        [field: OpenInspector]
+        [field: ReadOnly]
         [field: SerializeField]
         public string icon { internal set; get; }
 
@@ -32,13 +32,14 @@ namespace UnknownCreator.Modules
         [field: SerializeField]
         public int[] stateID { internal set; get; } = Array.Empty<int>();
 
-        [field: OpenInspector]
-        [field: SerializeField]
-        public TransitionAsset castAnimAsset { internal set; get; }
 
-        [field: OpenInspector]
+        [field: ReadOnly]
         [field: SerializeField]
-        public AvatarMask mask { internal set; get; }
+        public string animKey { internal set; get; }
+
+        [field: ReadOnly]
+        [field: SerializeField]
+        public string maskKey { internal set; get; }
 
         [field: SerializeField]
         public int animLayers { internal set; get; } = 1;

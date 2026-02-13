@@ -5,6 +5,7 @@ using UnityEditor.AddressableAssets.Settings;
 #endif
 using UnityEngine.AddressableAssets;
 using UnityEngine;
+using Animancer;
 
 
 namespace UnknownCreator.Modules
@@ -21,9 +22,16 @@ namespace UnknownCreator.Modules
         public MonoScript cfgScript;
 
         /// <summary>
-        /// 用于指定的技能图标，会储存其Addressable的key用于运行时加载
+        /// 用于指定的技能图标,动画，骨骼遮罩，会储存其Addressable的key用于运行时加载
         /// </summary>
+
         public AssetReferenceT<Texture2D> icon;
+
+        public AssetReferenceT<TransitionAsset> animClip;
+
+        public AssetReferenceT<AvatarMask> mask;
+
+
 
 #endif
         [field: SerializeField]
@@ -63,12 +71,19 @@ namespace UnknownCreator.Modules
 
 
 #if UNITY_EDITOR
-            if (icon != null && cfg != null)
+
+            if (cfg != null)
             {
                 AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
+
                 if (settings != null)
-                    cfg.icon = settings.FindAssetEntry(icon.AssetGUID, true).address ?? null;
+                {
+                    cfg.icon = settings.FindAssetEntry(icon?.AssetGUID, true)?.address ?? null;
+                    cfg.animKey = settings.FindAssetEntry(animClip?.AssetGUID, true)?.address ?? null;
+                    cfg.maskKey = settings.FindAssetEntry(mask?.AssetGUID, true)?.address ?? null;
+                }
             }
+
 #endif
         }
 
