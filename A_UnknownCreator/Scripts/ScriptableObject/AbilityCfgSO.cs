@@ -1,5 +1,11 @@
-﻿using UnityEditor;
+﻿#if UNITY_EDITOR
+using UnityEditor;
+using UnityEditor.AddressableAssets;
+using UnityEditor.AddressableAssets.Settings;
+#endif
+using UnityEngine.AddressableAssets;
 using UnityEngine;
+
 
 namespace UnknownCreator.Modules
 {
@@ -8,18 +14,20 @@ namespace UnknownCreator.Modules
     {
 #if UNITY_EDITOR
 
+        /// <summary>
+        /// 指定的技能脚本，用于编辑器打开
+        /// </summary>
         [SerializeReference]
         public MonoScript cfgScript;
 
-        internal Texture2D icon;
+        /// <summary>
+        /// 用于指定的技能图标，会储存其Addressable的key用于运行时加载
+        /// </summary>
+        public AssetReferenceT<Texture2D> icon;
 
 #endif
         [field: SerializeField]
         public AbilityCfg cfg { internal set; get; } = new();
-
-
-
-
 
 
 
@@ -32,6 +40,8 @@ namespace UnknownCreator.Modules
         {
             base.OnValidate();
             ChangeValue();
+
+
         }
 
         private void ChangeValue()
@@ -53,16 +63,13 @@ namespace UnknownCreator.Modules
             SetStatsKV(AbilityGlobals.StatCastPoint);
             SetStatsKV(AbilityGlobals.StatCharge);
 
+
 #if UNITY_EDITOR
-
-            if (cfg == null || string.IsNullOrWhiteSpace(cfg.icon))
+            if (icon != null && cfg != null)
             {
-                icon = null;
-                return;
+                AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
+                cfg.icon = settings.FindAssetEntry(icon.AssetGUID, true).address;
             }
-
-            if (icon == null || icon.name != cfg.icon) 
-                icon = UnityEditorGlobals.GetAsset<Texture2D>(cfg.icon);
 #endif
         }
 
@@ -72,6 +79,8 @@ namespace UnknownCreator.Modules
             if (!cfg.statsKV.TryGetValue(soName, out _))
                 cfg.statsKV[soName] = new AbilityKV();
         }
+
+
 
     }
 

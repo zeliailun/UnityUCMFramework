@@ -1,35 +1,35 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
     <Style src="project://database/Assets/A_UnknownCreator/Scripts/Editors/GamePlay/GamePlayEditor.uss?fileID=7433441132597879392&amp;guid=00f546fcc3d5e964a9eea45440d38576&amp;type=3#GamePlayEditor"/>
     <ui:VisualElement style="flex-grow: 1; justify-content: space-evenly; align-self: stretch;">
-        <ui:Label name="ContentName" text="&#37197;&#32622;&#21517;&#31216;" class="BaseText Title Panel" style="display: flex; background-color: rgba(11, 11, 11, 0.2);"/>
+        <ui:Label name="ContentName" text="配置名称" class="BaseText Title Panel" style="display: flex; background-color: rgba(11, 11, 11, 0.2);"/>
         <ui:VisualElement class="Panel" style="display: none;">
-            <ui:TextField label="&#25216;&#33021;&#33050;&#26412;&#20445;&#23384;&#36335;&#24452;" placeholder-text="&#36755;&#20837;&#21517;&#31216;" name="AbilityScriptPath" auto-correction="true" class="BaseText" style="flex-shrink: 1; flex-grow: 1; -unity-text-align: middle-left; flex-direction: row;"/>
-            <ui:Button text="&#36873;&#25321;" name="FindAbilityScriptPath" class="OptionButton BaseText"/>
+            <ui:TextField label="技能脚本保存路径" placeholder-text="输入名称" name="AbilityScriptPath" auto-correction="true" class="BaseText" style="flex-shrink: 1; flex-grow: 1; -unity-text-align: middle-left; flex-direction: row;"/>
+            <ui:Button text="选择" name="FindAbilityScriptPath" class="OptionButton BaseText"/>
         </ui:VisualElement>
         <ui:VisualElement class="Panel" style="display: none;">
-            <ui:TextField label="&#25216;&#33021;&#37197;&#32622;&#20445;&#23384;&#36335;&#24452;" placeholder-text="&#36755;&#20837;&#21517;&#31216;" name="AbilitySOPath" auto-correction="true" class="BaseText" style="flex-shrink: 1; flex-grow: 1; -unity-text-align: middle-left; flex-direction: row;"/>
-            <ui:Button text="&#36873;&#25321;" name="FindAbilitySOPath" class="OptionButton BaseText"/>
+            <ui:TextField label="技能配置保存路径" placeholder-text="输入名称" name="AbilitySOPath" auto-correction="true" class="BaseText" style="flex-shrink: 1; flex-grow: 1; -unity-text-align: middle-left; flex-direction: row;"/>
+            <ui:Button text="选择" name="FindAbilitySOPath" class="OptionButton BaseText"/>
         </ui:VisualElement>
         <ui:VisualElement class="Panel">
-            <ui:TextField label="JSON&#20445;&#23384;&#36335;&#24452;" placeholder-text="&#36755;&#20837;&#25991;&#20214;&#22841;&#36335;&#24452;" name="JsonPath" auto-correction="true" class="BaseText" style="flex-shrink: 1; flex-grow: 1; -unity-text-align: middle-left;"/>
-            <ui:Button text="&#36873;&#25321;" name="FindJsonPath" class="OptionButton BaseText"/>
+            <ui:TextField label="JSON保存路径" placeholder-text="输入文件夹路径" name="JsonPath" auto-correction="true" class="BaseText" style="flex-shrink: 1; flex-grow: 1; -unity-text-align: middle-left;"/>
+            <ui:Button text="选择" name="FindJsonPath" class="OptionButton BaseText"/>
         </ui:VisualElement>
-        <ui:VisualElement class="Panel" style="display: flex;">
+        <ui:VisualElement class="Panel" style="display: flex; flex-direction: row; flex-wrap: wrap;">
             <ui:DropdownField index="0" name="ConfigSelection" class="BaseText" style="flex-grow: 0; flex-shrink: 1; align-content: auto; align-self: stretch; justify-content: space-evenly; align-items: stretch; flex-direction: row; flex-wrap: nowrap; -unity-text-align: middle-center; min-width: 150px; max-width: none;"/>
-            <ui:Button text="&#28155;&#21152;" name="AddAsset" emoji-fallback-support="false" class="BaseText OptionButton"/>
-            <ui:Button text="&#21024;&#38500;" name="RemoveAsset" class="BaseText OptionButton"/>
-            <ui:Button text="&#21333;SO&#36716;Json" name="Export" class="BaseText OptionButton"/>
-            <ui:Button text="&#21516;&#31867;&#25152;&#26377;SO&#36716;Json" name="AllExport" class="BaseText OptionButton"/>
+            <ui:Button text="添加" name="AddAsset" emoji-fallback-support="false" class="BaseText OptionButton"/>
+            <ui:Button text="删除" name="RemoveAsset" class="BaseText OptionButton"/>
+            <ui:Button text="单SO转Json" name="Export" class="BaseText OptionButton"/>
+            <ui:Button text="同类所有SO转Json" name="AllExport" class="BaseText OptionButton"/>
             <ui:Button text="JsonToSO" name="Import" class="BaseText OptionButton"/>
-            <ui:Button text="&#36339;&#36716;&#25351;&#23450;&#25991;&#20214;" name="FocusAsset" class="BaseText OptionButton"/>
-            <ui:Button text="&#22797;&#21046;&#21517;&#31216;" name="CopyName" class="BaseText OptionButton"/>
-            <ui:Button text="&#37325;&#21629;&#21517;" name="Rename" class="BaseText OptionButton"/>
-            <ui:Button text="&#25171;&#24320;&#25216;&#33021;&#33050;&#26412;" name="OpenScript" class="BaseText OptionButton"/>
+            <ui:Button text="跳转指定文件" name="FocusAsset" class="BaseText OptionButton"/>
+            <ui:Button text="复制名称" name="CopyName" class="BaseText OptionButton"/>
+            <ui:Button text="重命名" name="Rename" class="BaseText OptionButton"/>
+            <ui:Button text="打开技能脚本" name="OpenScript" class="BaseText OptionButton"/>
         </ui:VisualElement>
         <ui:VisualElement class="Panel" style="flex-direction: column;">
             <ui:VisualElement class="Panel" style="flex-grow: 1; border-left-color: rgba(0, 0, 0, 0); border-right-color: rgba(0, 0, 0, 0); border-top-color: rgba(0, 0, 0, 0); border-bottom-color: rgba(0, 0, 0, 0); border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0;">
-                <ui:TextField label="&#21517;&#31216;&#26597;&#25214;" placeholder-text="&#36755;&#20837;&#21517;&#31216;" name="FilePath" auto-correction="true" class="BaseText" style="flex-shrink: 1; flex-grow: 1; -unity-text-align: middle-left; flex-direction: row;"/>
-                <ui:Button text="&#26597;&#25214;" name="FindFile" class="OptionButton BaseText"/>
+                <ui:TextField label="名称查找" placeholder-text="输入名称" name="FilePath" auto-correction="true" class="BaseText" style="flex-shrink: 1; flex-grow: 1; -unity-text-align: middle-left; flex-direction: row;"/>
+                <ui:Button text="查找" name="FindFile" class="OptionButton BaseText"/>
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement style="flex-grow: 1; flex-direction: row; margin-top: 10px; margin-right: 5px; margin-bottom: 10px; margin-left: 5px; display: flex; border-left-color: rgba(0, 0, 0, 0.2); border-right-color: rgba(0, 0, 0, 0.2); border-top-color: rgba(0, 0, 0, 0.2); border-bottom-color: rgba(0, 0, 0, 0.2); border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px;">

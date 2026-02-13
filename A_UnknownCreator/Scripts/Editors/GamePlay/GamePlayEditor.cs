@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
+using UnityEditor.AddressableAssets;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -328,7 +329,7 @@ namespace UnknownCreator.Modules
             var hideMark = e.Q<VisualElement>("Hide");
 
             // 设置图标
-            icon.style.backgroundImage = currentSO is AbilityCfgSO abilitySO ? abilitySO.icon : null;
+            icon.style.backgroundImage = currentSO is AbilityCfgSO abilitySO ? abilitySO.icon?.editorAsset : null;
 
             // 设置名称
             nameLabel.text = currentSO.name;
