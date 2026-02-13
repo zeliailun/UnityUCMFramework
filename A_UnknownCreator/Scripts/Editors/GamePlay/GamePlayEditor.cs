@@ -163,7 +163,9 @@ namespace UnknownCreator.Modules
             if (activeItem == null) return;
             content.Clear();
             contentName.text = activeItem.name;
-            content.Add(new InspectorElement(activeItem));
+            var inspector = new InspectorElement();
+            content.Add(inspector);
+            inspector.Bind(new SerializedObject(activeItem));
 
             int index = soList.IndexOf(activeItem);
             if (index >= 0)

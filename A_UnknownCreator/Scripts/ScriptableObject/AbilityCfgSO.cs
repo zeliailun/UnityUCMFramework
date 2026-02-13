@@ -40,8 +40,6 @@ namespace UnknownCreator.Modules
         {
             base.OnValidate();
             ChangeValue();
-
-
         }
 
         private void ChangeValue()
@@ -68,7 +66,8 @@ namespace UnknownCreator.Modules
             if (icon != null && cfg != null)
             {
                 AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
-                cfg.icon = settings.FindAssetEntry(icon.AssetGUID, true).address;
+                if (settings != null)
+                    cfg.icon = settings.FindAssetEntry(icon.AssetGUID, true).address ?? null;
             }
 #endif
         }
