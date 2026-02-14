@@ -113,17 +113,18 @@ namespace UnknownCreator.Modules
             ap.isRandom = cfg.isRandom;
             if (ap.isRandom)
             {
-                ap.SetAnimList(cfg.assets, false);
+                ap.SetAnimAsset(cfg.assets);
                 ap.SetRandomPlayAnim();
             }
             else
             {
                 var result = cfg.assets[0];
-                ap.SetPlayAnim(result.asset, false, result.baseSpeed);
+                ap.SetAnimAsset(result.animKey, result.baseSpeed);
             }
         }
     }
 
 
- 
+
+
 }

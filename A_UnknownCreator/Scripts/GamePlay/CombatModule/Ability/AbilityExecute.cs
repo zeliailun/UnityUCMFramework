@@ -97,7 +97,7 @@ namespace UnknownCreator.Modules
             {
                 if (!newCastAnimName.Equals(castAnimName))
                 {
-                    ap.SetPlayAnim(newCastAnimName);
+                    ap.SetAnimAsset(newCastAnimName);
                     castAnimName = newCastAnimName;
                 }
 

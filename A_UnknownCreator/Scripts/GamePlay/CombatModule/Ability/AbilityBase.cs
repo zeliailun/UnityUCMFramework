@@ -102,7 +102,7 @@ namespace UnknownCreator.Modules
             ap = Mgr.RPool.Load<AnimPlayer>();
             if (!string.IsNullOrWhiteSpace(abilityCfg.animKey))
             {
-                ap.SetPlayAnim(abilityCfg.animKey);
+                ap.SetAnimAsset(abilityCfg.animKey);
                 castAnimName = abilityCfg.animKey;
             }
             else

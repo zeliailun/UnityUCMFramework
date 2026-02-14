@@ -1,17 +1,17 @@
-﻿using Animancer;
-using UnknownCreator.Modules;
-using UnityEngine;
+﻿using System;
 using System.Collections.Generic;
-using System;
+using Animancer;
+using UnityEngine;
+using UnknownCreator.Modules;
+
 namespace UnknownCreator.Modules
 {
     public class AnimPlayer : IReference
     {
         public AnimancerComponent anim { get; private set; }
-        public TransitionAsset clip { get; private set; }
+        public AnimTransitionAsset currentClip { get; private set; }
         public AnimancerLayer animLayer { get; private set; }
         public AnimancerState state { get; private set; }
-        public float baseSpeed { get; private set; }
         public bool isInitialized { get; private set; }
         public bool isFadeOutLayer { get; private set; }
         public bool isRandom { get; set; }
@@ -19,7 +19,7 @@ namespace UnknownCreator.Modules
         public Action onEnd { get; set; }
 
         public bool isPlaying
-        => anim == null ? false : state.IsValid() ? anim.IsPlaying(state.Key) : anim.IsPlaying(clip.Key);
+        => anim == null ? false : state.IsValid() ? anim.IsPlaying(state.Key) : anim.IsPlaying(currentClip.asset);
 
         public bool isLayerPlaying
          => animLayer.IsValid() && animLayer.IsAnyStatePlaying() && animLayer.IsPlayingAndNotEnding();
@@ -27,8 +27,7 @@ namespace UnknownCreator.Modules
         public bool isFadedOut
         => isFadeOutLayer && animLayer != null && animLayer.Weight == 0;
 
-        private List<AnimAsset> clipAssets;
-        private bool canReleaseAsset, canReleaseAssets;
+        private List<AnimTransitionAsset> clipAssets;
         private int endWeight;
         private float endFade;
 
@@ -42,54 +41,57 @@ namespace UnknownCreator.Modules
 
         void IReference.ObjRelease()
         {
-            ClearAnimAsset();
-            ClearAnimAssets();
+            ClearAllAnimAssets();
             ClearState();
 
             onStart = null;
             onEnd = null;
-            clip = null;
+            currentClip = null;
             anim = null;
         }
 
-        public void SetPlayAnim(string name, float baseSpeed = 1)
+        public void SetPlayAnim(int index = -1)
         {
+            if (!clipAssets.IsValid())
+                return;
 
-            if (string.IsNullOrWhiteSpace(name)) return;
-            ClearAnimAsset();
-            canReleaseAsset = true;
-            clip = UnityGlobals.LoadSync<TransitionAsset>(name);
-            this.baseSpeed = baseSpeed;
-        }
+            int targetIndex = index < 0
+                ? clipAssets.Count - 1
+                : Mathf.Clamp(index, 0, clipAssets.Count - 1);
 
-        public void SetPlayAnim(TransitionAsset value, bool canRelease, float baseSpeed = 1)
-        {
-            if (value == null) return;
-            ClearAnimAsset();
-            canReleaseAsset = canRelease;
-            clip = value;
-            this.baseSpeed = baseSpeed;
-        }
-
-        public void SetAnimList(List<AnimAsset> list, bool canRelease)
-        {
-            if (list == null) return;
-            ClearAnimAssets();
-            this.canReleaseAssets = canRelease;
-            clipAssets = list;
+            currentClip = clipAssets[targetIndex];
         }
 
         public void SetRandomPlayAnim()
         {
-            if (!isRandom || clipAssets.Count < 2) return;
-            ClearAnimAsset();
-            canReleaseAsset = canReleaseAssets;
-            state = null;
-            var result = RVGlobals.RandomElement(clipAssets);
-            clip = result.asset;
-            baseSpeed = result.baseSpeed;
+            if (!isRandom || !clipAssets.IsValid()) return;
+
+            currentClip = RVGlobals.RandomElement(clipAssets);
         }
 
+        public void SetAnimAsset(string key, float baseSpeed = 1, bool isSetPlayAnim = true)
+        {
+            if (string.IsNullOrWhiteSpace(key)) return;
+
+            var obj = Mgr.RPool.Load<AnimTransitionAsset>();
+            obj.asset = UnityGlobals.LoadSync<TransitionAsset>(key);
+            obj.baseSpeed = baseSpeed;
+            clipAssets.Add(obj);
+            if (isSetPlayAnim) currentClip = obj;
+        }
+
+        public void SetAnimAsset(List<AnimAsset> list)
+        {
+            if (!list.IsValid()) return;
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                var obj = Mgr.RPool.Load<AnimTransitionAsset>();
+                obj.asset = UnityGlobals.LoadSync<TransitionAsset>(list[i].animKey);
+                obj.baseSpeed = list[i].baseSpeed;
+                clipAssets.Add(obj);
+            }
+        }
 
 
         public AnimancerState PlayByDefaultLayer(
@@ -100,8 +102,8 @@ namespace UnknownCreator.Modules
             Easing.Function fadeGroup = Easing.Function.Linear)
         {
             this.anim = anim;
-            state = anim.Play(clip, fade, fadeMode);
-            state.Speed = sp / baseSpeed;
+            state = anim.Play(currentClip.asset, fade, fadeMode);
+            state.Speed = sp / currentClip.baseSpeed;
             state.FadeGroup.SetEasing(fadeGroup);
             return state;
         }
@@ -121,7 +123,7 @@ namespace UnknownCreator.Modules
             animLayer.Mask = info.mask;
             animLayer.ApplyAnimatorIK = true;
             animLayer.ApplyFootIK = true;
-            state = animLayer.Play(clip, info.startFade, info.fadeMode);
+            state = animLayer.Play(currentClip.asset, info.startFade, info.fadeMode);
             if (state.Events(this, out AnimancerEvent.Sequence evt))
             {
                 onStart?.Invoke(evt);
@@ -130,7 +132,7 @@ namespace UnknownCreator.Modules
                 evt.OnEnd += onEnd;
             }
             state.FadeGroup.SetEasing(info.fadeGroup);
-            state.Speed = info.sp / baseSpeed;
+            state.Speed = info.sp / currentClip.baseSpeed;
             return state;
         }
 
@@ -143,32 +145,29 @@ namespace UnknownCreator.Modules
             isFadeOutLayer = true;
         }
 
-        public void ClearAnimAsset()
+        public void ClearCurrentAnimAssets()
         {
-            if (canReleaseAsset && clip != null)
+            if (currentClip == null) return;
+
+            if (clipAssets.Contains(currentClip))
             {
-                UnityGlobals.Release(clip);
-                canReleaseAsset = false;
+                clipAssets.Remove(currentClip);
+                Mgr.RPool.Release(currentClip);
+                ClearState();
+                currentClip = null;
             }
-            state = null;
-            clip = null;
         }
 
-        public void ClearAnimAssets()
+        public void ClearAllAnimAssets()
         {
-            if (clipAssets?.Count < 1) return;
+            if (!clipAssets.IsValid()) return;
 
-            if (canReleaseAssets)
-            {
+            for (int i = 0; i < clipAssets.Count; i++)
+                Mgr.RPool.Release(clipAssets[i]);
 
-                for (int i = 0; i < clipAssets.Count; i++)
-                {
-                    UnityGlobals.Release(clipAssets[i].asset);
-                }
-                canReleaseAssets = false;
-            }
-
-            clipAssets = null;
+            clipAssets.Clear();
+            ClearState();
+            currentClip = null;
         }
 
         public void ClearState()
@@ -187,6 +186,8 @@ namespace UnknownCreator.Modules
                 state = null;
             }
         }
+
+
     }
 
 
@@ -202,5 +203,21 @@ namespace UnknownCreator.Modules
         public FadeMode fadeMode;
         public Easing.Function fadeGroup;
         public bool skipFadeOutLayer;
+    }
+
+
+    public class AnimTransitionAsset : IReference
+    {
+        public TransitionAsset asset;
+        public float baseSpeed;
+
+        public void ObjRelease()
+        {
+            if (asset != null)
+            {
+                UnityGlobals.Release(asset);
+                asset = null;
+            }
+        }
     }
 }

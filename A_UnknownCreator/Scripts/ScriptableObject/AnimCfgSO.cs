@@ -16,8 +16,8 @@ namespace UnknownCreator.Modules
     public class AnimCfgInfo
     {
         public bool isRandom;
-        //public bool isUseLayer;
         public string animName;
+
         [SerializeField]
         public List<AnimAsset> assets = new();
     }
@@ -25,9 +25,6 @@ namespace UnknownCreator.Modules
     [Serializable]
     public class AnimAsset
     {
-        [OpenInspector]
-        public TransitionAsset asset;
-
         public string animKey;
         public float baseSpeed = 1;
     }
