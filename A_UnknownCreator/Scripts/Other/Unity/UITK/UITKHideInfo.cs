@@ -1,4 +1,4 @@
-using UnityEngine.UIElements;
+﻿using UnityEngine.UIElements;
 using System;
 namespace UnknownCreator.Modules
 {
@@ -10,5 +10,19 @@ namespace UnknownCreator.Modules
         public float hideDuration;
         public bool isTimeScale;
         public Action<VisualElement> onHide;
+
+        public UITKHideInfo(
+        string uidName,
+        string uiName,
+        float hideDuration = 0,
+        bool isTimeScale = false,
+        Action<VisualElement> onHide = null)
+        {
+            this.uidName = uidName;
+            this.uiName = uiName;
+            this.hideDuration = hideDuration;
+            this.isTimeScale = isTimeScale;
+            this.onHide = onHide;
+        }
     }
 }

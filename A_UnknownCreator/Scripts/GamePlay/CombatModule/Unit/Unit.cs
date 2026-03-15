@@ -14,6 +14,8 @@ namespace UnknownCreator.Modules
 
         public UnitCfg unitCfg { private set; get; }
 
+        public UnitModelCfg unitModelCfg { private set; get; }
+
         public IHBSMController hbsm { private set; get; }
 
         public Unit master { get; set; }
@@ -136,7 +138,7 @@ namespace UnknownCreator.Modules
         private Dictionary<int, Transform> bodyPartsDict = new();
         private Func<bool> alive;
         private Type selfType;
-        private string modelNewCfgName, modelOldCfgName, modelKey;
+        private string modelNewCfgName, modelOldCfgName;
         private bool isChangeModel, isShow;
 
         #endregion
@@ -219,9 +221,10 @@ namespace UnknownCreator.Modules
             ClearHitBox();
             ClearBodyPart();
             Mgr.RPool.Release(hbsm);
-            if (!string.IsNullOrWhiteSpace(modelKey)) Mgr.GPool.Release(modelKey, model);
+            if (!string.IsNullOrWhiteSpace(unitModelCfg.model)) Mgr.GPool.Release(unitModelCfg.model, model);
             Mgr.GPool.Release(unitCfg.root, ent);
             unitCfg = null;
+            unitModelCfg = null;
             master = null;
             brainC = null;
             lvExpC = null;
@@ -240,7 +243,6 @@ namespace UnknownCreator.Modules
             modelCfgName = null;
             modelNewCfgName = null;
             modelOldCfgName = null;
-            modelKey = null;
             isChangeModel = false;
         }
 
@@ -254,26 +256,25 @@ namespace UnknownCreator.Modules
             ClearHitBox();
             ClearBodyPart();
 
-            var cfg = Mgr.JD.GetData<Dictionary<string, UnitModelCfg>>(JsonCfgKeyGlobals.UnitModelJson)[cfgName];
+            unitModelCfg = Mgr.JD.GetData<Dictionary<string, UnitModelCfg>>(JsonCfgKeyGlobals.UnitModelJson)[cfgName];
 
-            if (cfg == null) UCMDebug.LogError($"未找到模型配置文件: {cfgName}");
+            if (unitModelCfg == null) UCMDebug.LogError($"未找到模型配置文件: {cfgName}");
 
-            model = Mgr.GPool.Load(cfg.model, false, false);
+            model = Mgr.GPool.Load(unitModelCfg.model, false, false);
             modelCfgName = cfgName;
-            modelKey = cfg.model;
             modelT = model.GetComp<Transform>();
             modelT.SetParent(modelLayerT);
             modelT.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
             animC.SetAnimComp(model.GetComp<AnimancerComponent>());
 
-            foreach (var result in cfg.hitBoxList)
+            foreach (var result in unitModelCfg.hitBoxList)
             {
                 var id = entT.Find(result).gameObject.GetEntityId();
                 hitBoxID.Add(id);
                 Mgr.Unit.AddUnitRoot(id, this);
             }
 
-            foreach (var result in cfg.bodyPartsList)
+            foreach (var result in unitModelCfg.bodyPartsList)
                 AddBodyPart(result.id, result.path);
 
             if (show) ShowModel();
@@ -284,7 +285,7 @@ namespace UnknownCreator.Modules
 
         private void SetModel(string cfgName)
         {
-            ReleaseModel(modelKey);
+            ReleaseModel(unitModelCfg.model);
             SetModel(cfgName, isShow = (model == null || model.activeSelf));
         }
 
@@ -308,7 +309,7 @@ namespace UnknownCreator.Modules
                 isChangeModel = false;
                 if (string.IsNullOrWhiteSpace(modelOldCfgName))
                 {
-                    ReleaseModel(modelKey);
+                    ReleaseModel(unitModelCfg.model);
                 }
                 else
                 {

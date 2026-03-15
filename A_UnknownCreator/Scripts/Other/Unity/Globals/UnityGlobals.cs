@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 namespace UnknownCreator.Modules
 {
     public static partial class UnityGlobals
@@ -250,5 +251,11 @@ namespace UnknownCreator.Modules
 
         public static bool IsZero(this Vector3 vector)
         => vector.sqrMagnitude < MathGlobals.Epsilon;
+
+
+        public static bool IsInLevel(int buildIndex)
+        {
+            return SceneManager.GetActiveScene().buildIndex == buildIndex;
+        }
     }
 }

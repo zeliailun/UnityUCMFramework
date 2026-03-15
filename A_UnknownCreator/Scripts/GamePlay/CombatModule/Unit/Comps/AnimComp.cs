@@ -29,9 +29,6 @@ namespace UnknownCreator.Modules
                     groupCfgDict.TryAdd(item.Key, Mgr.JD.GetData<Dictionary<string, List<AnimCfgInfo>>>(JsonCfgKeyGlobals.AnimJson)[item.Value]);
                 }
             }
-
-
-
             ChangeAnimGroup(self.unitCfg.defaultAnimGroup);
         }
 
@@ -39,15 +36,13 @@ namespace UnknownCreator.Modules
         {
             groupCfgDict.Clear();
             apDict.Clear();
-            AnimPlayer ctp;
-            for (int i = apList.Count - 1; i >= 0; i--)
-            {
-                ctp = apList[i];
-                if (ctp is null) continue;
-                apList.RemoveAt(i);
-                Mgr.RPool.Release(ctp);
-            }
+
+            for (int i = 0; i < apList.Count; i++)
+                Mgr.RPool.Release(apList[i]);
+            apList.Clear();
+
             currentGroup = string.Empty;
+            anim = null;
             self = null;
         }
 

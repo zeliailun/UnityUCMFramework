@@ -20,7 +20,7 @@ namespace UnknownCreator.Modules
         private GameObject cameraRootCache;
         private GameObject cameraCache;
         private string mainCameraName;
-        private string cameraRootName = "CustomCmaeraRoot";
+        private string cameraRootName = "CustomCameraRoot";
 
         //private CameraMgr() { }
 

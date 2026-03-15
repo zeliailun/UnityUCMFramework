@@ -12,7 +12,6 @@ namespace UnknownCreator.Modules
         public AnimTransitionAsset currentClip { get; private set; }
         public AnimancerLayer animLayer { get; private set; }
         public AnimancerState state { get; private set; }
-        public bool isInitialized { get; private set; }
         public bool isFadeOutLayer { get; private set; }
         public bool isRandom { get; set; }
         public Action<AnimancerEvent.Sequence> onStart { get; set; }
@@ -36,18 +35,16 @@ namespace UnknownCreator.Modules
             clipAssets = new();
             isRandom = false;
             isFadeOutLayer = false;
-            isInitialized = false;
         }
 
         void IReference.ObjRelease()
         {
             ClearAllAnimAssets();
-            ClearState();
-
             onStart = null;
             onEnd = null;
             currentClip = null;
             anim = null;
+            clipAssets = null;
         }
 
         public void SetPlayAnim(int index = -1)
@@ -127,8 +124,7 @@ namespace UnknownCreator.Modules
             if (state.Events(this, out AnimancerEvent.Sequence evt))
             {
                 onStart?.Invoke(evt);
-                if (!info.skipFadeOutLayer)
-                    evt.OnEnd += FadeOutLayer;
+                if (!info.skipFadeOutLayer) evt.OnEnd += FadeOutLayer;
                 evt.OnEnd += onEnd;
             }
             state.FadeGroup.SetEasing(info.fadeGroup);
@@ -153,25 +149,34 @@ namespace UnknownCreator.Modules
             {
                 clipAssets.Remove(currentClip);
                 Mgr.RPool.Release(currentClip);
-                ClearState();
                 currentClip = null;
+                ClearState();
             }
         }
 
         public void ClearAllAnimAssets()
         {
-            if (!clipAssets.IsValid()) return;
+            if (clipAssets.IsValid())
+            {
+                for (int i = 0; i < clipAssets.Count; i++)
+                    Mgr.RPool.Release(clipAssets[i]);
+                clipAssets.Clear();
+            }
 
-            for (int i = 0; i < clipAssets.Count; i++)
-                Mgr.RPool.Release(clipAssets[i]);
-
-            clipAssets.Clear();
             ClearState();
             currentClip = null;
         }
 
         public void ClearState()
         {
+
+            if (state != null)
+            {
+                state.Events(this).Clear();
+                state.Destroy();
+                state = null;
+            }
+
 
             if (animLayer != null)
             {
@@ -180,11 +185,6 @@ namespace UnknownCreator.Modules
                 animLayer = null;
             }
 
-            if (state != null)
-            {
-                state.Events(this).Clear();
-                state = null;
-            }
         }
 
 
