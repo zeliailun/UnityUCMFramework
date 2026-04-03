@@ -1,24 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Xml.Linq;
 using Unity.Properties;
-using UnityEngine;
 using UnityEngine.UIElements;
-
 
 namespace UnknownCreator.Modules
 {
+
     public sealed class StatData : IReference, INotifyBindablePropertyChanged
     {
         public object holder { private set; get; }
-
         public string idName { private set; get; }
-
         public bool canCalcValue { private set; get; }
-
         public bool canChangeValue { private set; get; }
-
         public double defaultValue { private set; get; }
 
         [CreateProperty]
@@ -34,6 +28,9 @@ namespace UnknownCreator.Modules
                 }
 
                 var v = Math.Round(Math.Clamp(value, minValue, maxValue), 2, MidpointRounding.AwayFromZero);
+
+                if (Math.Abs(baseV - v) < 0.0001) return;
+
                 baseV = v;
                 CalcStatsValue();
                 Notify();
@@ -46,7 +43,7 @@ namespace UnknownCreator.Modules
             get => bonusV;
             private set
             {
-                if (bonusV != value)
+                if (Math.Abs(bonusV - value) > 0.0001)
                 {
                     bonusV = value;
                     Notify();
@@ -60,7 +57,7 @@ namespace UnknownCreator.Modules
             get => finalV;
             private set
             {
-                if (finalV != value)
+                if (Math.Abs(finalV - value) > 0.0001)
                 {
                     finalV = value;
                     Notify();
@@ -69,54 +66,63 @@ namespace UnknownCreator.Modules
         }
 
         public double minValue => customMinStats ? cntlr.GetStats(minName).finalValue : minV;
-
         public double maxValue => customMaxStats ? cntlr.GetStats(maxName).finalValue : maxV;
 
         private double baseV, bonusV, finalV, minV, maxV;
         private string minName, maxName;
-        private bool customMinStats, customMaxStats;
+        private bool customMinStats, customMaxStats, isLinking;
+
         private UStatsComp cntlr;
         private Unit self;
+
+        private List<string> linkNames = new();
         private List<StatsCalc> calcList = new();
         private List<BuffBase> buffList = new();
+
         private readonly Dictionary<StatsKeyByBuff, StatsCalc> buffKeys = new();
         private readonly Dictionary<StatsKeyByName, StatsCalc> nameKeys = new();
 
+
         public event EventHandler<BindablePropertyChangedEventArgs> propertyChanged;
+
         void Notify([CallerMemberName] string property = "")
         {
             propertyChanged?.Invoke(this, new BindablePropertyChangedEventArgs(property));
         }
-
 
         internal void Init(StatsCfg cfg, double newV, UStatsComp cntlr, Unit self, object holder)
         {
             this.cntlr = cntlr;
             this.self = self;
             this.holder = holder;
+
             idName = cfg.idName;
             canCalcValue = cfg.canCalcValue;
             canChangeValue = cfg.canChangeValue;
+
             minName = cfg.minStatsName;
             maxName = cfg.maxStatsName;
+
             minV = cfg.minValue;
             maxV = cfg.maxValue;
+
+            linkNames.Clear();
+            linkNames.AddRange(cfg.linkNames);
+
             customMinStats = !string.IsNullOrWhiteSpace(minName);
             customMaxStats = !string.IsNullOrWhiteSpace(maxName);
+
             defaultValue = finalV = baseV = newV;
         }
 
-        /// <summary>
-        /// 添加或更新BUFF统计
-        /// </summary>
-        /// <param name="buff">BUFF对象</param>
-        /// <param name="calcType">计算类型</param>
-        /// <param name="value">数值</param>
-        /// <param name="isStatsStacked">按名称处理(可堆叠BUFF)，按对象处理(不可堆叠BUFF)</param>
+        // ========================= BUFF =========================
+
         public void AddOrUpdateBuff(BuffBase buff, CalcType calcType, double value, bool isStatsStacked)
         {
             StatsCalc sc = null;
+
             var keyName = new StatsKeyByName(buff.buffName, calcType);
+
             if (!isStatsStacked && nameKeys.TryGetValue(keyName, out var result1))
             {
                 sc = result1;
@@ -124,6 +130,7 @@ namespace UnknownCreator.Modules
             else
             {
                 var keyBuff = new StatsKeyByBuff(buff, calcType);
+
                 if (!buffKeys.TryGetValue(keyBuff, out var result2))
                 {
                     var newCalc = Mgr.RPool.Load<StatsCalc>();
@@ -131,10 +138,13 @@ namespace UnknownCreator.Modules
                     newCalc.name = buff.buffName;
                     newCalc.calcType = calcType;
                     newCalc.value = value;
+
                     calcList.Add(newCalc);
                     buffList.Add(buff);
+
                     nameKeys[keyName] = newCalc;
                     buffKeys[keyBuff] = newCalc;
+
                     CalcStatsValue();
                 }
                 else
@@ -143,7 +153,7 @@ namespace UnknownCreator.Modules
                 }
             }
 
-            if (sc != null && sc.value != value)
+            if (sc != null && Math.Abs(sc.value - value) > 0.0001)
             {
                 sc.value = value;
                 CalcStatsValue();
@@ -153,28 +163,30 @@ namespace UnknownCreator.Modules
         public void AddByName(string name, CalcType calcType, double value)
         {
             var key = new StatsKeyByName(name, calcType);
-            if (!nameKeys.TryGetValue(key, out var ressult))
+
+            if (!nameKeys.TryGetValue(key, out var result))
             {
                 var sd = Mgr.RPool.Load<StatsCalc>();
-                sd.buff = null;
                 sd.name = name;
                 sd.calcType = calcType;
                 sd.value = value;
+
                 calcList.Add(sd);
                 nameKeys.Add(key, sd);
-                CalcStatsValue();
             }
             else
             {
-                ressult.value = value;
-                ressult.calcType = calcType;
-                CalcStatsValue();
+                result.value = value;
+                result.calcType = calcType;
             }
+
+            CalcStatsValue();
         }
 
         public bool Remove(BuffBase buff, CalcType calcType, bool isStatsStacked)
         {
             var key = new StatsKeyByBuff(buff, calcType);
+
             if (buffKeys.Remove(key, out var result))
             {
                 buffList.Remove(buff);
@@ -184,19 +196,7 @@ namespace UnknownCreator.Modules
 
                 calcList.Remove(result);
                 Mgr.RPool.Release(result);
-                CalcStatsValue();
-                return true;
-            }
-            return false;
-        }
 
-        public bool Remove(string name, CalcType calcType)
-        {
-            var key = new StatsKeyByName(name, calcType);
-            if (nameKeys.Remove(key, out var result))
-            {
-                calcList.Remove(result);
-                Mgr.RPool.Release(result);
                 CalcStatsValue();
                 return true;
             }
@@ -209,10 +209,9 @@ namespace UnknownCreator.Modules
             nameKeys.Clear();
             buffList.Clear();
 
-            StatsCalc sc;
             for (int i = calcList.Count - 1; i >= 0; i--)
             {
-                sc = calcList[i];
+                var sc = calcList[i];
                 calcList.RemoveAt(i);
                 if (sc != null) Mgr.RPool.Release(sc);
             }
@@ -221,81 +220,117 @@ namespace UnknownCreator.Modules
             finalValue = baseValue;
         }
 
+        // ========================= 核心计算 =========================
+
         private void CalcStatsValue()
         {
             if (!canCalcValue)
             {
                 finalValue = baseValue;
+                bonusValue = 0;
                 return;
             }
 
-            calcList.Sort(SortOrder);
+            calcList.Sort((a, b) => a.order.CompareTo(b.order));
 
-            double oldValue = finalValue;
+            double oldFinalValue = finalValue;
+
+            // ===== 记录联动目标状态 =====
+            int linkCount = linkNames.Count;
+            double[] oldLinkedValues = null;
+            bool[] canChangeLinked = null;
+            StatData[] linkedStats = null;
+
+            if (linkCount > 0)
+            {
+                oldLinkedValues = new double[linkCount];
+                canChangeLinked = new bool[linkCount];
+                linkedStats = new StatData[linkCount];
+
+                for (int i = 0; i < linkCount; i++)
+                {
+                    var target = cntlr.GetStats(linkNames[i]);
+                    linkedStats[i] = target;
+                    if (target != null)
+                    {
+                        oldLinkedValues[i] = target.baseValue;
+                        canChangeLinked[i] = target.canChangeValue;
+                    }
+                }
+            }
+
+            // ===== 数值计算 =====
             double value = baseValue;
             double linearAdd = 0;
             double percLinearSum = 0;
             double percNonlinearSum = 0;
             double constantValue = double.NaN;
 
-            StatsCalc calc;
-            for (int i = 0; i < calcList.Count; i++)
+            foreach (var calc in calcList)
             {
-                calc = calcList[i];
                 switch (calc.calcType)
                 {
-                    case CalcType.Constant:
-                        constantValue = calc.value;
-                        break;
-
-                    case CalcType.LinearAdd:
-                        linearAdd += calc.value;
-                        break;
-
-                    case CalcType.PercLinearAdd:
-                        percLinearSum += calc.value;
-                        break;
-
-                    case CalcType.PercNonlinearAdd:
-                        percNonlinearSum += calc.value;
-                        break;
+                    case CalcType.Constant: constantValue = calc.value; break;
+                    case CalcType.LinearAdd: linearAdd += calc.value; break;
+                    case CalcType.PercLinearAdd: percLinearSum += calc.value; break;
+                    case CalcType.PercNonlinearAdd: percNonlinearSum += calc.value; break;
                 }
             }
 
             if (!double.IsNaN(constantValue))
-            {
                 value = constantValue;
-            }
             else
             {
-                // 先加线性加成
                 value += linearAdd;
-
-                // 再乘线性百分比
                 value *= (100 + percLinearSum) / 100;
-
-                // 再加非线性百分比
                 value += (100 - value) * percNonlinearSum / 100;
             }
 
-            // 保留2位小数，限制范围
-            finalValue = Math.Round(Math.Clamp(value, minValue, maxValue), 2, MidpointRounding.AwayFromZero);
+            double newFinalValue = Math.Round(
+                Math.Clamp(value, minValue, maxValue),
+                2,
+                MidpointRounding.AwayFromZero
+            );
 
+            // ===== 更新自身 =====
+            finalValue = newFinalValue;
             bonusValue = finalValue - baseValue;
 
-            Mgr.Event.Send<EvtStatChanged>(new(self, oldValue, this), idName);
+            Mgr.Event.Send<EvtStatChanged>(new(self, oldFinalValue, this), idName);
 
+            // ===== 联动修改统计 =====
+            if (linkCount > 0 && !isLinking)
+            {
+                double delta = newFinalValue - oldFinalValue;
+                if (Math.Abs(delta) > 0.0001)
+                {
+                    isLinking = true;
 
-        }
+                    for (int i = 0; i < linkCount; i++)
+                    {
+                        var target = linkedStats[i];
+                        if (target == null) continue;
+                        if (!canChangeLinked[i])
+                        {
+                            UCMDebug.LogWarning($"{idName} 联动目标 {target.idName} 不允许修改");
+                            continue;
+                        }
 
-        private int SortOrder(StatsCalc sc1, StatsCalc sc2)
-        {
+                        double oldVal = oldLinkedValues[i];
+                        double newVal = oldVal;
 
-            if (sc1.order < sc2.order) return -1;
+                        if (Math.Abs(oldFinalValue) > 0.0001)
+                            newVal = oldVal * (newFinalValue / oldFinalValue);
+                        else
+                            newVal = oldVal + delta;
 
-            if (sc1.order > sc2.order) return 1;
+                        if (Math.Abs(newVal - oldVal) > 0.0001)
+                            target.baseValue = newVal;
+                    }
 
-            return 0;
+                    isLinking = false;
+                }
+            }
         }
 
         void IReference.ObjRelease()
@@ -307,8 +342,7 @@ namespace UnknownCreator.Modules
         }
     }
 
-
-    #region Key Structures
+    // ========================= KEY =========================
 
     public readonly struct StatsKeyByBuff : IEquatable<StatsKeyByBuff>
     {
@@ -320,9 +354,6 @@ namespace UnknownCreator.Modules
 
         public bool Equals(StatsKeyByBuff other)
             => ReferenceEquals(buff, other.buff) && type == other.type;
-
-        public override bool Equals(object obj)
-            => obj is StatsKeyByBuff other && Equals(other);
 
         public override int GetHashCode()
             => HashCode.Combine(RuntimeHelpers.GetHashCode(buff), (int)type);
@@ -339,16 +370,7 @@ namespace UnknownCreator.Modules
         public bool Equals(StatsKeyByName other)
             => name == other.name && type == other.type;
 
-        public override bool Equals(object obj)
-            => obj is StatsKeyByName other && Equals(other);
-
         public override int GetHashCode()
             => HashCode.Combine(name, (int)type);
     }
-
-    public interface IStatsKey { }
-
-    #endregion
 }
-
-

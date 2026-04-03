@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace UnknownCreator.Modules
 {
@@ -19,5 +20,7 @@ namespace UnknownCreator.Modules
         public double minValue;
         public string maxStatsName;
         public double maxValue;
+
+        public List<string> linkNames = new();
     }
 }
