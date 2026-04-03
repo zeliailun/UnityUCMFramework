@@ -104,9 +104,13 @@ namespace UnknownCreator.Modules
                         (bool isOK, Unit target) = Mgr.Proj.FilterProjectileHit(this, result.target);
                         if (isOK)
                         {
-                            data.ability?.OnProjectileHit(this, target, result.target, result.raycastHit);
+                            var evt = new EvtProjectileHitAfter(
+                                this, target, result.target, result.raycastHit, result.isMultiTarget, result.targetIndex);
+
+                            data.ability?.OnProjectileHit(evt);
+
                             if (!isRelease)
-                                Mgr.Event.Send<EvtProjectileHitAfter>(new(this, target, result.target, objT.position), CombatEvtGlobals.OnProjectileHitAfter);
+                                Mgr.Event.Send<EvtProjectileHitAfter>(evt, CombatEvtGlobals.OnProjectileHitAfter);
                         }
                     }
                 }
@@ -165,6 +169,8 @@ namespace UnknownCreator.Modules
     public struct ProjCheckInfo
     {
         public bool isHit;
+        public bool isMultiTarget;
+        public int targetIndex;
         public GameObject target;
         public RaycastHit raycastHit;
     }

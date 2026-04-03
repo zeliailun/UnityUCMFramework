@@ -27,6 +27,7 @@ namespace UnknownCreator.Modules
             castAnimState = null;
             owner.abilityC.SetCastAbility(null);
             ApplyState(-1);
+            Mgr.Event.Send(this, CombatEvtGlobals.OnAbilityFullyCast);
         }
 
         internal void ExecuteAbilityOnImmediate()
@@ -69,10 +70,10 @@ namespace UnknownCreator.Modules
         {
             if (HasOnlyBehavior(AbBehavior.None)) return;
 
+            InevitableCastReleased();
+
             if (modeCache == AbTriggerMode.Released)
                 Executing();
-
-            InevitableCastReleased();
         }
 
         private void Executing()
@@ -80,11 +81,10 @@ namespace UnknownCreator.Modules
 
             if (!CastFilter()) return;
 
-            owner.abilityC.InterruptAbility(false);
 
             Mgr.Event.Send<AbilityBase>(this, CombatEvtGlobals.OnAbilityStart);
 
-            if (isFaceTargetPoint)
+            if (IsForceCastDir())
             {
                 var newPos = selectedPos;
                 newPos.y = owner.entT.position.y;
@@ -139,13 +139,7 @@ namespace UnknownCreator.Modules
             TriggerAbility();
             if (HasFlags(AbFlags.IgnoreBackswing) || !castAnimState.IsValid() || castAnimState.RemainingDuration <= 0)
             {
-                Mgr.Event.Send(this, CombatEvtGlobals.OnAbilityFullyCast);
-                if (isCastAnimPlaying)
-                    ap.FadeOutLayer();
-                selectedTarget = null;
-                castAnimState = null;
-                owner.abilityC.SetCastAbility(null);
-                ApplyState(-1);
+                EndCastBackswing(null);
             }
             else
             {
@@ -157,13 +151,13 @@ namespace UnknownCreator.Modules
 
         private void EndCastBackswing(TimerCountCycle cycle)
         {
-            Mgr.Event.Send(this, CombatEvtGlobals.OnAbilityFullyCast);
+            if (isCastAnimPlaying) ap.FadeOutLayer();
             owner.abilityC.SetCastBackswing(false);
             owner.abilityC.SetCastAbility(null);
             selectedTarget = null;
             castAnimState = null;
             ApplyState(-1);
-
+            Mgr.Event.Send(this, CombatEvtGlobals.OnAbilityFullyCast);
         }
 
         private void TriggerAbility()
@@ -173,27 +167,28 @@ namespace UnknownCreator.Modules
             Mgr.Event.Send<AbilityBase>(this, CombatEvtGlobals.OnAbilityExecuted);
         }
 
+
+        //施法过滤
+
         private bool CastFilter()
         {
             bool isGamePaused = !IsGamePauseCast() && CustomTime.IsPause;
-            bool isCasting = owner.abilityC.isCastPoint;
-            bool isInvalid = !GetCustomCastFilter();
+            bool isCastPoint = owner.abilityC.isCastPoint;
+            bool isCastBackswing = owner.abilityC.isCastBackswing && !HasFlags(AbFlags.InterruptOtherCastBackswing);
+            bool isCustomFilter = !GetCustomCastFilter();
 
-            if (isGamePaused || isCasting || isInvalid)
+            if (isGamePaused || isCastPoint || isCastBackswing ||  isCustomFilter)
             {
-                if (isInvalid)
+                if (isCustomFilter && IsEnableCharge())
                 {
                     int id = GetCustomCastFilterID();
                     if (id == -1)
                         id = AbilityGlobals.InvalidCast;
-
                     Mgr.Event.Send(new EvtAbilityCastError(this, owner, id), CombatEvtGlobals.OnAbilityInvalidSpellCast);
                 }
 
                 return false;
             }
-
-
 
             if (!isLevelReady)
             {
@@ -241,6 +236,9 @@ namespace UnknownCreator.Modules
                 Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidSilenced), CombatEvtGlobals.OnAbilityInvalidSpellCast);
                 return false;
             }
+
+            if (HasFlags(AbFlags.InterruptOtherCastBackswing))
+                ExecuteAbilityInterrupt(false);
 
             return (!HasBehavior(AbBehavior.Target) || HasBehavior(AbBehavior.Immediate) || HasBehavior(AbBehavior.NotTarget) || TargetFilter()) && OnCastStart();
         }

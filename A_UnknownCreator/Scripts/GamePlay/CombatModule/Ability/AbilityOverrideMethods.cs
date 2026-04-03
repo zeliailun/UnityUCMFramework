@@ -12,6 +12,8 @@ namespace UnknownCreator.Modules
         /// <returns></returns>
         public virtual bool GetCustomCastFilter() => true;
 
+        public virtual bool IsEnableCustomCastFilterTip() => true;
+
         public virtual int GetCustomCastFilterID() => -1;
 
         /// <summary>
@@ -52,7 +54,7 @@ namespace UnknownCreator.Modules
 
         public virtual void OnProjectileSpawn(Projectile proj) { }
 
-        public virtual void OnProjectileHit(Projectile proj, Unit target, GameObject obj, RaycastHit hit) { }
+        public virtual void OnProjectileHit(EvtProjectileHitAfter evt) { }
 
         public virtual void OnProjectileMotion(Projectile proj) { }
 
@@ -130,6 +132,7 @@ namespace UnknownCreator.Modules
         public virtual LayerMask GetSelectedPosLayerMask() => ~(1 << 2);
 
         public virtual bool IsGamePauseCast() => abilityCfg.isGamePauseCast;
+
         public virtual bool IsEnableCharge() => abilityCfg.isEnableCharge;
     }
 }

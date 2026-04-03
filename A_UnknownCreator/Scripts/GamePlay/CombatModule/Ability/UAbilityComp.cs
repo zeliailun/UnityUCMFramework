@@ -45,6 +45,7 @@ namespace UnknownCreator.Modules
                 abList[i]?.UpdateAbility();
         }
 
+
         public void AbilityPressed(string abName)
         {
             if (!Mgr.Cntlr.IsControllerTarget(self.ent)) return;
@@ -54,7 +55,7 @@ namespace UnknownCreator.Modules
         public void AbilityPressed(int id)
         {
             if (!Mgr.Cntlr.IsControllerTarget(self.ent) || !HasNonAbilityNullByIndex(id)) return;
-            abList[id]?.ExecuteAbilityPressed();
+            abList[id].ExecuteAbilityPressed();
         }
 
         public void AbilityReleased(string abName)
@@ -69,7 +70,7 @@ namespace UnknownCreator.Modules
 
             if (!Mgr.Cntlr.IsControllerTarget(self.ent) || !HasNonAbilityNullByIndex(id)) return;
 
-            abList[id]?.ExecuteAbilityReleased();
+            abList[id].ExecuteAbilityReleased();
         }
 
         public void TriggerAbilityOnImmediate(string abName)

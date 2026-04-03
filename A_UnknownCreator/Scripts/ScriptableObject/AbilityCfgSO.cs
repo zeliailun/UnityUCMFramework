@@ -38,7 +38,7 @@ namespace UnknownCreator.Modules
         public AbilityCfg cfg { internal set; get; } = new();
 
 
-
+#if UNITY_EDITOR
         public override void OnEnable()
         {
             ChangeValue();
@@ -70,7 +70,7 @@ namespace UnknownCreator.Modules
             SetStatsKV(AbilityGlobals.StatCharge);
 
 
-#if UNITY_EDITOR
+
 
             if (cfg != null)
             {
@@ -78,13 +78,26 @@ namespace UnknownCreator.Modules
 
                 if (settings != null)
                 {
-                    cfg.icon = settings.FindAssetEntry(icon?.AssetGUID, true)?.address ?? null;
-                    cfg.animKey = settings.FindAssetEntry(animClip?.AssetGUID, true)?.address ?? null;
-                    cfg.maskKey = settings.FindAssetEntry(mask?.AssetGUID, true)?.address ?? null;
+                    cfg.icon = GetAddress(settings, icon);
+                    cfg.animKey = GetAddress(settings, animClip);
+                    cfg.maskKey = GetAddress(settings, mask);
                 }
             }
 
-#endif
+
+        }
+
+        private string GetAddress(AddressableAssetSettings settings, AssetReference reference)
+        {
+            if (reference == null)
+                return null;
+
+            var guid = reference.AssetGUID;
+            if (string.IsNullOrEmpty(guid))
+                return null;
+
+            var entry = settings.FindAssetEntry(guid, true);
+            return entry != null ? entry.address : null;
         }
 
 
@@ -94,7 +107,7 @@ namespace UnknownCreator.Modules
                 cfg.statsKV[soName] = new AbilityKV();
         }
 
-
+#endif
 
     }
 

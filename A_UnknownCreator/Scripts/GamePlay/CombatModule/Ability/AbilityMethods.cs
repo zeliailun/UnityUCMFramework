@@ -217,6 +217,9 @@
         => !isFrozenCooldown && (!isCooldownReady || (IsEnableCharge() && currentCharge < 1));
 
 
+
+
+
         public bool isIgnoreCastRange
         => HasBehavior(AbBehavior.Immediate) || HasBehavior(AbBehavior.NotTarget) ||
            (!HasBehavior(AbBehavior.Target) && !HasBehavior(AbBehavior.Point));
@@ -245,12 +248,6 @@
         public bool isFullyCastable
         => owner.isAlive && isLevelReady && (IsEnableCharge() ? currentCharge > 0 : isCooldownReady);
 
-
-        public bool isFaceTargetPoint
-        => IsForceCastDir() &&
-           !HasBehavior(AbBehavior.Immediate) &&
-           !HasBehavior(AbBehavior.NotTarget) &&
-           (HasBehavior(AbBehavior.Target) || HasBehavior(AbBehavior.Point));
 
         public bool isCastAnimPlaying
         => ap.isPlaying;
