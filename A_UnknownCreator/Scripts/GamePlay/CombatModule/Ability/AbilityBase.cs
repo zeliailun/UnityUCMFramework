@@ -10,7 +10,6 @@ namespace UnknownCreator.Modules
 
         public AbilityCfg abilityCfg { get; private set; }
 
-
         public Unit owner { get; private set; }
 
         public Unit selectedTarget { get; private set; }
@@ -18,6 +17,8 @@ namespace UnknownCreator.Modules
         public Vector3 selectedPos { get; private set; }
 
         public AbTriggerMode modeCache { get; private set; }
+
+        public long abilityID { get; private set; }
 
         public string abName { get; private set; }
 
@@ -90,6 +91,8 @@ namespace UnknownCreator.Modules
 
         internal void InitAbility(Unit owner, int index, string abName, string cfgName)
         {
+            abilityID = GlobalID.GetUniqueID();
+            
             this.owner = owner;
             this.abName = abName;
             this.index = index;

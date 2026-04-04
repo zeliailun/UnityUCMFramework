@@ -1,75 +1,26 @@
-using System.Collections.Generic;
+using System.Threading;
 
 namespace UnknownCreator.Modules
 {
     public static class GlobalID
     {
-        private static HashSet<long> idHashSet = new();
+        // 使用 long，避免溢出问题
+        private static long currentId = 0;
 
-        private static Stack<long> idStack = new();
-
-        private static long currentId = 1;
-
-        private static readonly object idLock = new();
-
-        public static int idCount
-        {
-            get
-            {
-                lock (idLock)
-                {
-                    return idStack.Count;
-                }
-            }
-        }
-
+        /// <summary>
+        /// 获取全局唯一ID（线程安全）
+        /// </summary>
         public static long GetUniqueID()
         {
-            lock (idLock)
-            {
-                long id;
-                if (idCount > 0)
-                {
-                    id = idStack.Pop();
-                    idHashSet.Remove(id);
-                }
-                else
-                {
-                    if (currentId == long.MaxValue)
-                    {
-                        throw new CustomException("ID超出最大值");
-                    }
-                    id = currentId;
-                    ++currentId;
-                }
-                return id;
-            }
+            return Interlocked.Increment(ref currentId);
         }
 
-        public static void RecycleID(long id)
-        {
-            lock (idLock)
-            {
-                if (idHashSet.Contains(id))
-                {
-                    throw new CustomException("尝试回收重复ID");
-                }
-                else
-                {
-                    idStack.Push(id);
-                    idHashSet.Add(id);
-                }
-            }
-        }
-
+        /// <summary>
+        /// 重置ID（仅用于重新开局/清档）
+        /// </summary>
         public static void ResetID()
         {
-            lock (idLock)
-            {
-                idStack.Clear();
-                idHashSet.Clear();
-                currentId = 1;
-            }
+            Interlocked.Exchange(ref currentId, 0);
         }
     }
 }

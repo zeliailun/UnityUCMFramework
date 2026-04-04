@@ -310,6 +310,11 @@ namespace UnknownCreator.Modules
                     {
                         var target = linkedStats[i];
                         if (target == null) continue;
+                        if (target == this)
+                        {
+                            UCMDebug.LogWarning($"{idName} 不能联动自己");
+                            continue;
+                        }
                         if (!canChangeLinked[i])
                         {
                             UCMDebug.LogWarning($"{idName} 联动目标 {target.idName} 不允许修改");

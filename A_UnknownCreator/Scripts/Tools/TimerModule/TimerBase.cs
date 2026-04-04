@@ -62,8 +62,7 @@ namespace UnknownCreator.Modules
             OnClearTimer();
             onUpdate = null;
             onRelease = null;
-            GlobalID.RecycleID(id);
-            id = 0;
+            id = -1;
         }
 
         protected virtual void OnInitTimer() { }

@@ -6,9 +6,11 @@ namespace UnknownCreator.Modules
 {
     public sealed class UAbilityComp : StateComp
     {
-        private List<AbilityBase> abList = new();
+        private List<AbilityBase> abilityList = new();
 
-        public int abilityCount => abList.Count;
+        private Dictionary<long, AbilityBase> abilityById = new();
+
+        public int abilityCount => abilityList.Count;
 
         public bool hasAbility
         => abilityCount > 0;
@@ -41,8 +43,8 @@ namespace UnknownCreator.Modules
 
         public override void UpdateComp()
         {
-            for (int i = 0; i < abList.Count; i++)
-                abList[i]?.UpdateAbility();
+            for (int i = 0; i < abilityList.Count; i++)
+                abilityList[i]?.UpdateAbility();
         }
 
 
@@ -55,7 +57,7 @@ namespace UnknownCreator.Modules
         public void AbilityPressed(int id)
         {
             if (!Mgr.Cntlr.IsControllerTarget(self.ent) || !HasNonAbilityNullByIndex(id)) return;
-            abList[id].ExecuteAbilityPressed();
+            abilityList[id].ExecuteAbilityPressed();
         }
 
         public void AbilityReleased(string abName)
@@ -70,7 +72,7 @@ namespace UnknownCreator.Modules
 
             if (!Mgr.Cntlr.IsControllerTarget(self.ent) || !HasNonAbilityNullByIndex(id)) return;
 
-            abList[id].ExecuteAbilityReleased();
+            abilityList[id].ExecuteAbilityReleased();
         }
 
         public void TriggerAbilityOnImmediate(string abName)
@@ -81,7 +83,7 @@ namespace UnknownCreator.Modules
         public void TriggerAbilityOnImmediate(int id)
         {
             if (HasNonAbilityNullByIndex(id))
-                abList[id]?.ExecuteAbilityOnImmediate();
+                abilityList[id]?.ExecuteAbilityOnImmediate();
         }
 
         public void TriggerAbilityOnPosition(string abName, Vector3 pos)
@@ -92,7 +94,7 @@ namespace UnknownCreator.Modules
         public void TriggerAbilityOnPosition(int id, Vector3 pos)
         {
             if (HasNonAbilityNullByIndex(id))
-                abList[id]?.ExecuteAbilityOnPosition(pos);
+                abilityList[id]?.ExecuteAbilityOnPosition(pos);
         }
 
         public void TriggerAbilityOnTarget(string abName, Unit target)
@@ -108,7 +110,7 @@ namespace UnknownCreator.Modules
         public void TriggerAbilityOnTarget(int id, Unit target)
         {
             if (HasNonAbilityNullByIndex(id))
-                abList[id]?.ExecuteAbilityOnTarget(target);
+                abilityList[id]?.ExecuteAbilityOnTarget(target);
         }
 
         public void InterruptAbility()
@@ -144,7 +146,7 @@ namespace UnknownCreator.Modules
             AbilityBase oldAb;
             for (int i = 0; i < abilityCount; i++)
             {
-                oldAb = abList[i];
+                oldAb = abilityList[i];
                 if (oldAb != null && oldAb.isNullAbility)
                     return ReplaceAbility(abName, cfgName, i);
             }
@@ -159,13 +161,32 @@ namespace UnknownCreator.Modules
             AbilityBase oldAb;
             for (int i = 0; i < abilityCount; i++)
             {
-                oldAb = abList[i];
+                oldAb = abilityList[i];
                 if (oldAb != null && oldAb.abName == targetAbility)
                 {
                     ReplaceAbility(abName, cfgName, oldAb.index);
                     return;
                 }
             }
+        }
+
+
+        public AbilityBase ReplaceAbility(string abName, string cfgName, int index)
+        {
+            var nullAb = abilityList[index];
+            Mgr.Event.Send<AbilityBase>(nullAb, CombatEvtGlobals.OnRemoveAbility);
+            Mgr.RPool.Release(nullAb);
+            abilityById.Remove(nullAb.abilityID);
+            AbilityBase newAb = (AbilityBase)Mgr.RPool.Load(Type.GetType(abName));
+            newAb.InitAbility(self, index, abName, cfgName);
+            abilityList[index] = newAb;
+            abilityById.Add(newAb.abilityID, newAb);
+            newAb.OnCreated();
+            if (newAb.isRelease) return null;
+            newAb.UpdateAbility();
+            Mgr.Event.Send<AbilityBase>(newAb, CombatEvtGlobals.OnAbilityAdded);
+
+            return newAb;
         }
 
         public AbilityBase AddAbility(string abName, string cfgName)
@@ -175,7 +196,8 @@ namespace UnknownCreator.Modules
 
             AbilityBase newAb = (AbilityBase)Mgr.RPool.Load(Type.GetType(abName));
             newAb.InitAbility(self, abilityCount, abName, cfgName);
-            abList.Add(newAb);
+            abilityList.Add(newAb);
+            abilityById.Add(newAb.abilityID, newAb);
             newAb.OnCreated();
             if (!newAb.isRelease)
             {
@@ -200,14 +222,17 @@ namespace UnknownCreator.Modules
         public void RemoveAbility(int index)
         {
             if (!IsRemoveAbility(index)) return;
-            InterruptAbility(abList[index]);
-            Mgr.Event.Send<AbilityBase>(abList[index], CombatEvtGlobals.OnRemoveAbility);
-            Mgr.RPool.Release(abList[index]);
+            var old = abilityList[index];
+            InterruptAbility(old);
+            Mgr.Event.Send<AbilityBase>(old, CombatEvtGlobals.OnRemoveAbility);
+            Mgr.RPool.Release(old);
+            abilityById.Remove(old.abilityID);
             AbilityBase generic = (AbilityBase)Mgr.RPool.Load(Type.GetType(AbilityGlobals.AbilityNull));
             generic.InitAbility(self, index, AbilityGlobals.AbilityNull, nameof(AbilityNull));
-            abList[index] = generic;
+            abilityList[index] = generic;
+            abilityById.Add(generic.abilityID, generic);
             generic.OnCreated();
-            generic?.UpdateAbility();
+            generic.UpdateAbility();
         }
 
         public void RemoveAbility(string abName)
@@ -215,7 +240,7 @@ namespace UnknownCreator.Modules
             AbilityBase ab;
             for (int i = abilityCount - 1; i >= 0; i--)
             {
-                ab = abList[i];
+                ab = abilityList[i];
                 if (ab != null && ab.abName == abName)
                 {
                     RemoveAbility(i);
@@ -225,20 +250,20 @@ namespace UnknownCreator.Modules
         }
 
         public AbilityBase GetAbility(int index)
-        => HasNonAbilityNullByIndex(index) ? abList[index] : null;
+        => HasNonAbilityNullByIndex(index) ? abilityList[index] : null;
 
         public AbilityBase GetAbility(string abName)
         {
-            for (int i = 0; i < abList.Count; i++)
+            for (int i = 0; i < abilityList.Count; i++)
             {
-                if (abList[i] is not null && abList[i].abName == abName) return abList[i];
+                if (abilityList[i] is not null && abilityList[i].abName == abName) return abilityList[i];
             }
             return null;
         }
 
         public void GetAllAbility(Action<AbilityBase> ab)
         {
-            foreach (var value in abList)
+            foreach (var value in abilityList)
             {
                 if (value != null)
                     ab?.Invoke(value);
@@ -248,16 +273,26 @@ namespace UnknownCreator.Modules
 
         public int GetAbilityIndex(string abName)
         {
-            for (int i = 0; i < abList.Count; i++)
+            for (int i = 0; i < abilityList.Count; i++)
             {
-                if (abList[i] != null && abList[i].abName == abName) return i;
+                if (abilityList[i] != null && abilityList[i].abName == abName) return i;
             }
             return -1;
         }
 
         public int GetAbilityIndex(AbilityBase ability)
         {
-            return abList.IndexOf(ability);
+            return abilityList.IndexOf(ability);
+        }
+
+        public AbilityBase GetAbilityByID(long id)
+        {
+            return abilityById.TryGetValue(id, out var ab) ? ab : null;
+        }
+
+        public bool HasAbilityByID(long id)
+        {
+            return abilityById.TryGetValue(id, out var ab) ? true : false;
         }
 
         public bool HasAbility(string abName)
@@ -266,20 +301,20 @@ namespace UnknownCreator.Modules
         }
 
         public bool HasAbilityNullByIndex(int id)
-        => HasAbilityByIndex(id) && abList[id].isNullAbility;
+        => HasAbilityByIndex(id) && abilityList[id].isNullAbility;
 
         public bool HasNonAbilityNullByIndex(int id)
-        => HasAbilityByIndex(id) && !abList[id].isNullAbility;
+        => HasAbilityByIndex(id) && !abilityList[id].isNullAbility;
 
         private bool HasAbilityByIndex(int id)
         => hasAbility &&
            id < abilityCount &&
-           abList[id] != null;
+           abilityList[id] != null;
 
         private bool IsRemoveAbility(int id)
         => HasNonAbilityNullByIndex(id) &&
-            !abList[id].isRelease &&
-           !abList[id].isNullAbility;
+            !abilityList[id].isRelease &&
+           !abilityList[id].isNullAbility;
 
         public bool IsValid(AbilityBase ability)
         {
@@ -306,26 +341,12 @@ namespace UnknownCreator.Modules
             }
         }
 
-        public AbilityBase ReplaceAbility(string abName, string cfgName, int index)
-        {
-            var nullAb = abList[index];
-            Mgr.Event.Send<AbilityBase>(nullAb, CombatEvtGlobals.OnRemoveAbility);
-            Mgr.RPool.Release(nullAb);
 
-            AbilityBase newAb = (AbilityBase)Mgr.RPool.Load(Type.GetType(abName));
-            newAb.InitAbility(self, index, abName, cfgName);
-            abList[index] = newAb;
-            newAb.OnCreated();
-            if (newAb.isRelease) return null;
-            newAb.UpdateAbility();
-            Mgr.Event.Send<AbilityBase>(newAb, CombatEvtGlobals.OnAbilityAdded);
-
-            return newAb;
-        }
 
         private void ClearAbility()
         {
             int attemptCount = 0;
+            abilityById.Clear();
             AbilityBase ab;
             while (abilityCount > 0)
             {
@@ -333,11 +354,11 @@ namespace UnknownCreator.Modules
 
                 for (int i = abilityCount - 1; i >= 0; i--)
                 {
-                    ab = abList[i];
+                    ab = abilityList[i];
                     if (ab != null)
                     {
                         InterruptAbility(ab);
-                        if (abList.Remove(ab))
+                        if (abilityList.Remove(ab))
                             Mgr.RPool.Release(ab);
                     }
                 }
