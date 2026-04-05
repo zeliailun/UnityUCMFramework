@@ -172,7 +172,7 @@ namespace UnknownCreator.Modules
 
             if (state != null)
             {
-                state.Events(this).Clear();
+                state.Events(this)?.Clear();
                 state.Destroy();
                 state = null;
             }
