@@ -145,6 +145,7 @@ namespace UnknownCreator.Modules
             {
                 StopThink();
                 duration = 0;
+                OnDurationEnd();
                 owner.buffC.RemoveBuff(this);
             }
         }

@@ -79,6 +79,9 @@ namespace UnknownCreator.Modules
         /// </summary>
         public virtual void OnRemove(bool isClear) { }
 
+
+        protected virtual void OnDurationEnd() { }
+
         /// <summary>
         /// 进入对象池前调用
         /// </summary>

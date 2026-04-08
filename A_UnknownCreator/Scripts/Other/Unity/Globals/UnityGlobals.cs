@@ -5,6 +5,23 @@ namespace UnknownCreator.Modules
     public static partial class UnityGlobals
     {
 
+        public static float GetGroundY(Vector3 pos, RaycastHit[] hits,int groundLayer, float checkDistance = 0.5f)
+        {
+            if (Physics.RaycastNonAlloc(
+                    pos,
+                    Vector3.down,
+                    hits,
+                    checkDistance,
+                    groundLayer,
+                    QueryTriggerInteraction.Ignore) > 0)
+            {
+                return hits[0].point.y;
+            }
+
+            return pos.y; 
+        }
+
+
         /// <summary>
         /// 判断目标是否在地面
         /// </summary>
