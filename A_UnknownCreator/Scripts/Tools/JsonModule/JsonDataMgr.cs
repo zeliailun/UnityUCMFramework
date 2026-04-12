@@ -35,7 +35,6 @@ namespace UnknownCreator.Modules
         void IDearMgr.DoNothing()
         {
             ClearAllData();
-            _jsonData.Clear();
         }
 
         // 保存数据（支持覆盖）

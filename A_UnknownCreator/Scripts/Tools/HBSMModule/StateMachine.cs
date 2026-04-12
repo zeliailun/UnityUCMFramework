@@ -120,7 +120,9 @@ namespace UnknownCreator.Modules
             currentState.Exit();
             previousState = currentState;
 
-            if (isAddSeq && HasState(previousState.stateName))
+            if (isAddSeq && 
+                HasState(previousState.stateName) && 
+                !seqStateList.Contains(previousState))
                 seqStateList.Add(previousState);
 
             currentState = toState;
@@ -165,7 +167,8 @@ namespace UnknownCreator.Modules
 
         public void ChangeDefaultState(bool isAddSeq)
         {
-            ChangeState(defaultState.stateName, isAddSeq);
+            if (defaultState != null)
+                ChangeState(defaultState.stateName, isAddSeq);
         }
 
         public void ChangeNullState()
@@ -180,19 +183,32 @@ namespace UnknownCreator.Modules
 
         public void BackBeforeSeqState()
         {
-            if (!seqStateList.IsValid()) return;
+            if (!seqStateList.IsValid())
+            {
+                ChangeNullState(); 
+                return;
+            }
 
             var st = seqStateList[^1];
-            if (st != null)
+
+            if (st == null)
             {
-                isTransition = true;
-                currentState.Exit();
-                previousState = currentState;
-                currentState = st;
-                currentState.Enter();
-                seqStateList.Remove(currentState);
-                isTransition = false;
+                ChangeNullState();
+                return;
             }
+
+            isTransition = true;
+
+            currentState?.Exit();
+
+            previousState = currentState;
+            currentState = st;
+
+            seqStateList.RemoveAt(seqStateList.Count - 1);
+
+            currentState.Enter();
+
+            isTransition = false;
         }
 
         public void ClearSeqState()
@@ -246,6 +262,14 @@ namespace UnknownCreator.Modules
         public bool HasState(string name)
         {
             return stDict.TryGetValue(name, out _);
+        }
+
+        public void Refresh()
+        {
+            for (int i = 0; i < allStateList.Count; i++)
+            {
+                allStateList[i].Refresh();
+            }
         }
 
         public void Enter()
@@ -304,13 +328,9 @@ namespace UnknownCreator.Modules
             isActivated = false;
             seqStateList.Clear();
             stDict.Clear();
-            IState st;
             for (int i = allStateList.Count - 1; i >= 0; i--)
-            {
-                st = allStateList[i];
-                if (allStateList.Remove(st))
-                    Mgr.RPool.Release(st);
-            }
+                Mgr.RPool.Release(allStateList[i]);
+            allStateList.Clear();
             toState = null;
             defaultState = null;
             currentState = null;

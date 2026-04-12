@@ -84,11 +84,11 @@ namespace UnknownCreator.Modules
 
         public IVariable AddValue<T>(T t)
         {
-          return  AddValue<T>(typeof(T).Name, t);
+            return AddValue<T>(typeof(T).Name, t);
         }
 
         public T GetValue<T>(string key)
-        => varDict.TryGetValue(key, out var result) ? ((Variable<T>)result).value : default;
+        => (varDict != null && varDict.TryGetValue(key, out var result)) ? ((Variable<T>)result).value : default;
 
         public T GetValue<T>()
         => GetValue<T>(typeof(T).Name);

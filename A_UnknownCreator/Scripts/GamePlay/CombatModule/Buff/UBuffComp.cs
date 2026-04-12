@@ -34,7 +34,7 @@ namespace UnknownCreator.Modules
 
         public BuffBase AddBuff(string buffName, AbilityBase ability, Unit inflicter, double duration, IVariableMgr kv = null, bool isKVRecyclePool = false)
         {
-            if (duration <= 0) return null;
+            if (duration < 0) return null;
 
             BuffBase newBuff = null;
             if (!buffDict.TryGetValue(buffName, out var list))

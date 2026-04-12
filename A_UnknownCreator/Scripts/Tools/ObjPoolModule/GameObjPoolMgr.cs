@@ -54,14 +54,17 @@ namespace UnknownCreator.Modules
             poolList = null;
         }
 
-        public void SetRoot(GameObject obj,bool worldPositionStays)
+        public void SetRoot(GameObject obj, bool worldPositionStays)
         {
-            obj.transform.SetParent(root.transform, worldPositionStays);
+            if (obj != null && root != null)
+                obj.transform.SetParent(root.transform, worldPositionStays);
         }
 
         public void SetRoot(Transform obj, bool worldPositionStays)
         {
-            obj.SetParent(root.transform, worldPositionStays);
+
+            if (obj != null && root != null)
+                obj.SetParent(root.transform, worldPositionStays);
         }
 
         public ObjPoolBase<GameObject> CreatePool(string prefabName, bool isSetRoot, bool isActive, ObjPoolInfo info)
@@ -89,7 +92,7 @@ namespace UnknownCreator.Modules
             }
         }
 
-        public void Release(string prefabName, GameObject go)
+        public void Release(string prefabName, GameObject go, bool createIfNone = true)
         {
             if (go == null)
             {
@@ -99,7 +102,7 @@ namespace UnknownCreator.Modules
 
             if (gameObjPool.TryGetValue(prefabName, out var pool))
                 ((ObjPoolBase<GameObject>)pool).Hate(go);
-            else
+            else if (createIfNone)
                 CreatePool(prefabName, true, false, ObjPoolInfo.defaultInfo).Hate(go);
         }
 
@@ -117,7 +120,7 @@ namespace UnknownCreator.Modules
                 go = new GameObject(name);
                 isNew = true;
             }
-            SetRoot(go,true);
+            SetRoot(go, true);
             go.SetActive(true);
             return (go, isNew);
         }

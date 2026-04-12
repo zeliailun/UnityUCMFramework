@@ -20,12 +20,13 @@ namespace UnknownCreator.Modules
         private GameObject cameraRootCache;
         private GameObject cameraCache;
         private string mainCameraName;
-        private string cameraRootName = "CustomCameraRoot";
+        private string cameraRootName;
 
         //private CameraMgr() { }
 
         void IDearMgr.WorkWork()
         {
+            cameraRootName = "CustomCameraRoot";
             hfsm ??= new HBSMController();
         }
 
@@ -112,7 +113,7 @@ namespace UnknownCreator.Modules
             if (cameraCache != null)
             {
                 hfsm.ReleaseAllHBSM();
-                Mgr.GPool.Release(mainCameraName, cameraCache);
+                Mgr.GPool.Release(mainCameraName, cameraCache, false);
                 hfsm = null;
                 brain = null;
                 target = null;
@@ -123,7 +124,7 @@ namespace UnknownCreator.Modules
 
             if (cameraRootCache != null)
             {
-                Mgr.GPool.Release(cameraRootName, cameraRootCache);
+                Mgr.GPool.Release(cameraRootName, cameraRootCache,false);
                 cameraRootT = null;
                 cameraRootCache = null;
             }

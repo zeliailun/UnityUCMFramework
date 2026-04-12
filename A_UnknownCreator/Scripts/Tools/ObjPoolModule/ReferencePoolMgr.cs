@@ -54,17 +54,21 @@ namespace UnknownCreator.Modules
 
         public void Release(object obj)
         {
+            if (referencePool is null) return;
+
             if (obj is null)
             {
-                UCMDebug.LogWarning("无法释放空对象！");
+                UCMDebug.LogWarning("无法释放null对象");
                 return;
             }
             var typeCache = obj.GetType();
 
+            if (typeCache is null) return;
+
             if (referencePool.TryGetValue(typeCache, out var pool))
                 ((ObjPoolBase<object>)pool).Hate(obj);
             else
-                UCMDebug.LogWarning("该对象不是由对象池创建，无法释放！");
+                UCMDebug.LogWarning("该对象不是由对象池创建或者已被提前释放");
             //GetPool(typeCache, ObjPoolInfo.defaultInfo).Hate(obj);
         }
 
@@ -116,8 +120,8 @@ namespace UnknownCreator.Modules
             for (int i = poolList.Count - 1; i >= 0; i--)
             {
                 poolList[i].DestroyPool();
-                poolList.RemoveAt(i);
             }
+            poolList.Clear();
         }
     }
 }

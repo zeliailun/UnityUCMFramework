@@ -10,7 +10,7 @@ namespace UnknownCreator.Modules
         int sameSoundCount { get; }
         int soundCount { get; }
         int soundGroupCount { get; }
-        void SetSoundMixer(AudioMixer am);
+        void SetSoundMixer(string am);
         void AddSoundPlayCount(string name);
         void RemoveSoundPlayCount(string name);
         int CurrentSoundPlayCount(string name);

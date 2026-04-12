@@ -37,6 +37,10 @@ namespace UnknownCreator.Modules
         {
 
         }
+        public virtual void RefreshComp()
+        {
+
+        }
         public virtual void UpdateComp() { }
         public virtual void FixedUpdateComp() { }
         public virtual void LateUpdateComp() { }

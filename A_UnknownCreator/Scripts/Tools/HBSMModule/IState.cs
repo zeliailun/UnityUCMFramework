@@ -16,6 +16,8 @@
         /// <param name="parent"></param>
         void Init(string stateName, IHBSMController cntlr, IStateMachine parent);
 
+        void Refresh();
+
         void Enter();
 
         void Exit();

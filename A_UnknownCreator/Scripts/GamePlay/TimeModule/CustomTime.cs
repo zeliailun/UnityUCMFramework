@@ -1,6 +1,8 @@
 using System;
+using Unity.Scripting.LifecycleManagement;
 namespace UnknownCreator.Modules
 {
+    [AutoStaticsCleanup]
     public static class CustomTime
     {
         public static Action OnPause { set => customTime.OnPause = value; get => customTime.OnPause; }

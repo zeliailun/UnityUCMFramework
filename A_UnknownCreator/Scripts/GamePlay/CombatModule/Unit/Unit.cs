@@ -221,7 +221,7 @@ namespace UnknownCreator.Modules
             ClearHitBox();
             ClearBodyPart();
             Mgr.RPool.Release(hbsm);
-            if (!string.IsNullOrWhiteSpace(unitModelCfg.model)) Mgr.GPool.Release(unitModelCfg.model, model);
+            Mgr.GPool.Release(unitModelCfg?.model, model);
             Mgr.GPool.Release(unitCfg.root, ent);
             unitCfg = null;
             unitModelCfg = null;
@@ -250,7 +250,8 @@ namespace UnknownCreator.Modules
         {
             if (string.IsNullOrWhiteSpace(cfgName))
             {
-                UCMDebug.LogError("模型配置文件不能为 null");
+                UCMDebug.LogWarning("没有模型配置文件");
+                return;
             }
 
             ClearHitBox();
@@ -285,12 +286,16 @@ namespace UnknownCreator.Modules
 
         private void SetModel(string cfgName)
         {
+            if (unitModelCfg is null) return;
+
             ReleaseModel(unitModelCfg.model);
             SetModel(cfgName, isShow = (model == null || model.activeSelf));
         }
 
         private void UpdateModel()
         {
+            if (unitModelCfg is null) return;
+
             modelNewCfgName = Mgr.Event.SendR<string>(CombatEvtGlobals.OnGetModelName, entID);
 
             if (model == null &&
@@ -327,6 +332,8 @@ namespace UnknownCreator.Modules
 
         private void ReleaseModel(string name)
         {
+            if (unitModelCfg is null) return;
+
             if (model != null && !string.IsNullOrWhiteSpace(name))
             {
                 Mgr.GPool.Release(name, model);

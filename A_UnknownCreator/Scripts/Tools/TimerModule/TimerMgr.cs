@@ -20,8 +20,6 @@ namespace UnknownCreator.Modules
         void IDearMgr.DoNothing()
         {
             ClearAllTimer();
-            timerList = null;
-            dict = null;
         }
 
         void IDearMgr.UpdateMGR()
@@ -51,7 +49,7 @@ namespace UnknownCreator.Modules
 
         public void RemoveTimer(ITimer timer)
         {
-            if (timer != null && dict.Remove(timer.id))
+            if (timer != null && dict != null && dict.Remove(timer.id))
             {
                 timerList.Remove(timer);
                 Mgr.RPool.Release(timer);

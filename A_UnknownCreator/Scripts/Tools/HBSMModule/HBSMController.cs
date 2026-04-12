@@ -155,8 +155,21 @@ namespace UnknownCreator.Modules
             }
         }
 
+        public void RefreshAllHBSM()
+        {
+            for (int i = 0; i < compListBefore.Count; i++)
+                compListBefore[i].RefreshComp();
+
+            for (int i = 0; i < hfsmList.Count; i++)
+                hfsmList[i].Refresh();
+
+            for (int i = 0; i < compListAfter.Count; i++)
+                compListAfter[i].RefreshComp();
+        }
+
         public void ReleaseAllHBSM()
         {
+           
             RemoveBeforeComp();
             RemoveAllHBSM();
             RemoveAfterComp();
@@ -196,13 +209,9 @@ namespace UnknownCreator.Modules
         public void RemoveAllHBSM()
         {
             hfsmDict.Clear();
-            IStateMachine hfsm;
             for (int i = hfsmList.Count - 1; i >= 0; i--)
-            {
-                hfsm = hfsmList[i];
-                hfsmList.RemoveAt(i);
-                Mgr.RPool.Release(hfsm);
-            }
+                Mgr.RPool.Release(hfsmList[i]);
+            hfsmList.Clear();
         }
 
         public void EnableHBSM(string name)

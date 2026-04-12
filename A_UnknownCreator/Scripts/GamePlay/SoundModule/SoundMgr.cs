@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Xml.Linq;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -19,8 +18,9 @@ namespace UnknownCreator.Modules
 
         internal List<ISoundGroup> soundGroupList = new();
 
-
         [field: SerializeField]
+        private string mixerName;
+
         public AudioMixer mixer { internal set; get; }
 
         public int soundCount => soundDict.Count;
@@ -38,18 +38,15 @@ namespace UnknownCreator.Modules
             soundDict ??= new();
             soundGroupList ??= new();
             soundList ??= new();
-
+            mixer = UnityGlobals.LoadSync<AudioMixer>(mixerName);
         }
 
         void IDearMgr.DoNothing()
         {
             ClearAllSound();
             UnityGlobals.Release(mixer);
-            soundGroupDict = null;
-            soundGroupList = null;
-            soundDict = null;
-            soundList = null;
             mixer = null;
+
         }
 
         void IDearMgr.UpdateMGR()
@@ -60,12 +57,15 @@ namespace UnknownCreator.Modules
             }
         }
 
-        public void SetSoundMixer(AudioMixer am)
+        public void SetSoundMixer(string am)
         {
-            if (am == null) return;
             UnityGlobals.Release(mixer);
-            mixer = am;
+            mixer = null;
+
+            if (!string.IsNullOrWhiteSpace(am))
+                mixer = UnityGlobals.LoadSync<AudioMixer>(am);
         }
+
 
         public void AddSoundPlayCount(string name)
         {

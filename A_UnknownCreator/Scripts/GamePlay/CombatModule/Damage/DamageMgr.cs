@@ -38,11 +38,11 @@ namespace UnknownCreator.Modules
         }
 
         public void AddHurt<T>(EntityId id, T hurt) where T : class, IHealth
-        => hurtDict.TryAdd(id, hurt);
+        => hurtDict?.TryAdd(id, hurt);
 
         public void RemoveHurt(EntityId id)
         {
-            hurtDict.Remove(id);
+            hurtDict?.Remove(id);
         }
     }
 }

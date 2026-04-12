@@ -1,5 +1,6 @@
 ﻿namespace UnknownCreator.Modules
 {
+
     public static class Mgr
     {
         #region 管理器引用
@@ -42,16 +43,10 @@
 
         #endregion
 
-        public static bool isCreated { private set; get; } = false;
-
-
         private static GameCfg cfg;
-
 
         public static void Create(GameCfg _cfg)
         {
-            if (isCreated) return;
-            isCreated = true;
             cfg = _cfg;
             UCMDebug.isEnableDebug = cfg.enableDebug;
             God.AddMgr(cfg.refPoolMgr, true);
@@ -73,7 +68,9 @@
             God.AddMgr(cfg.dmgMgr, true);
             God.AddMgr(cfg.projMgr, true);
             foreach (CustomMgrCreateInfo kvp in cfg.customMgr)
+            {
                 God.AddMgr(kvp.mgr, kvp.notRemove);
+            }
         }
     }
 }

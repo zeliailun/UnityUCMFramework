@@ -49,11 +49,8 @@ namespace UnknownCreator.Modules
         public bool isRelease { get; private set; }
 
         private bool shouldRemoveBuff
-        => !isRelease &&
-            !isPassive &&
-            (duration <= 0 ||
-            Mgr.RPool.HasObject(inflicterType, inflicter) ||
-            (owner != null && owner.HasAlive() && !owner.isAlive && IsDeathRemove()));
+        => !isRelease && !isPassive &&
+            ( duration <= 0 || Mgr.RPool.HasObject(inflicterType, inflicter) || (owner.HasAlive() && !owner.isAlive && IsDeathRemove()) );
 
         private bool isUpdateTimer
         => isEnableTimer && timer >= delay;
@@ -137,7 +134,6 @@ namespace UnknownCreator.Modules
 
             OnUpdate();
 
-
             if (isRelease) return;
 
 
@@ -146,6 +142,9 @@ namespace UnknownCreator.Modules
                 StopThink();
                 duration = 0;
                 OnDurationEnd();
+
+                if (isRelease) return;
+
                 owner.buffC.RemoveBuff(this);
             }
         }

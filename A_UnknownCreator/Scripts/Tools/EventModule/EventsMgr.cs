@@ -23,7 +23,6 @@ namespace UnknownCreator.Modules
         {
             ClearAllEvent();
             interrupt = false;
-            delegateDict = null;
         }
 
         public void ClearAllEvent()
@@ -44,7 +43,7 @@ namespace UnknownCreator.Modules
         public void Remove<T>(Delegate del, string key, EntityId id = default) where T : class, IEvent, new()
         {
             var compositeKey = (id, key);
-            if (del == null || !delegateDict.TryGetValue(compositeKey, out var list)) return;
+            if (del == null || delegateDict is null ||!delegateDict.TryGetValue(compositeKey, out var list)) return;
 
             for (int i = list.Count - 1; i >= 0; i--)
             {
