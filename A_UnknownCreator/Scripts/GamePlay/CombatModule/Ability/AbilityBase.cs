@@ -33,7 +33,7 @@ namespace UnknownCreator.Modules
                 if (newLv != lv)
                 {
                     lv = newLv;
-                    Mgr.Event.Send<EvtAbilityLevelChanged>(new EvtAbilityLevelChanged(this, owner, oldLv, lv), CombatEvtGlobals.OnAbilityLevelChanged);
+                    Mgr.Event.Send<EvtAbilityLevelChanged>(new EvtAbilityLevelChanged(this, owner, oldLv, lv), UCMGameEvents.OnAbilityLevelChanged);
                 }
             }
         }
@@ -58,7 +58,7 @@ namespace UnknownCreator.Modules
                 if (newCharge != oldCharge)
                 {
                     currCharge = value;
-                    Mgr.Event.Send<EvtAbilityChargeChanged>(new EvtAbilityChargeChanged(this, owner, currCharge), CombatEvtGlobals.OnAbilityChargeChanged);
+                    Mgr.Event.Send<EvtAbilityChargeChanged>(new EvtAbilityChargeChanged(this, owner, currCharge), UCMGameEvents.OnAbilityChargeChanged);
                 }
             }
         }
@@ -168,7 +168,7 @@ namespace UnknownCreator.Modules
             if (canCalcCooldown)
             {
                 currentCd = Math.Max(0, currentCd - CustomTime.DeltaTime());
-                Mgr.Event.Send<AbilityBase>(this, CombatEvtGlobals.OnAbilityCooldownCalc);
+                Mgr.Event.Send<AbilityBase>(this, UCMGameEvents.OnAbilityCooldownCalc);
                 var count = GetCharge(level);
                 if (IsEnableCharge() && currentCd <= 0 && currentCharge < count)
                 {
@@ -176,7 +176,7 @@ namespace UnknownCreator.Modules
                     if (++currentCharge != count)
                     {
                         currentCd = GetCooldown(level);
-                        Mgr.Event.Send<EvtAbilityCooldownStart>(new EvtAbilityCooldownStart(this, owner, 0, currentCd), CombatEvtGlobals.OnAbilityCooldownStart);
+                        Mgr.Event.Send<EvtAbilityCooldownStart>(new EvtAbilityCooldownStart(this, owner, 0, currentCd), UCMGameEvents.OnAbilityCooldownStart);
                     }
                     else
                     {

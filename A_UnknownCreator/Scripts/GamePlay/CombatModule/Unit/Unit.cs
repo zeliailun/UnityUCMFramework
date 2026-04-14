@@ -101,7 +101,7 @@ namespace UnknownCreator.Modules
                 {
                     var oldTeam = team;
                     team = value;
-                    Mgr.Event.Send<EvtUnitTeamChanged>(new(this, oldTeam, team), CombatEvtGlobals.OnUnitTeamChanged);
+                    Mgr.Event.Send<EvtUnitTeamChanged>(new(this, oldTeam, team), UCMGameEvents.OnUnitTeamChanged);
                 }
             }
         }
@@ -280,7 +280,7 @@ namespace UnknownCreator.Modules
 
             if (show) ShowModel();
 
-            Mgr.Event.Send<EvtUnitModelChanged>(new(modelOldCfgName, modelCfgName, this), CombatEvtGlobals.OnGetModelName);
+            Mgr.Event.Send<EvtUnitModelChanged>(new(modelOldCfgName, modelCfgName, this), UCMGameEvents.OnGetModelName);
 
         }
 
@@ -296,7 +296,7 @@ namespace UnknownCreator.Modules
         {
             if (unitModelCfg is null) return;
 
-            modelNewCfgName = Mgr.Event.SendR<string>(CombatEvtGlobals.OnGetModelName, entID);
+            modelNewCfgName = Mgr.Event.SendR<string>(UCMGameEvents.OnGetModelName, entID);
 
             if (model == null &&
                 !string.IsNullOrWhiteSpace(modelNewCfgName))

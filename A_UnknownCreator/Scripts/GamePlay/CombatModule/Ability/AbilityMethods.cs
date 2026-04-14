@@ -166,7 +166,7 @@
             if (!isCooldownReady)
             {
                 currentCd = 0;
-                Mgr.Event.Send<AbilityBase>(this, CombatEvtGlobals.OnAbilityCooldownCalc);
+                Mgr.Event.Send<AbilityBase>(this, UCMGameEvents.OnAbilityCooldownCalc);
             }
 
             var charge = GetCharge();
@@ -279,7 +279,7 @@
         {
             var oldCooldown = currentCd;
             currentCd = cooldown;
-            Mgr.Event.Send<EvtAbilityCooldownStart>(new EvtAbilityCooldownStart(this, owner, oldCooldown, currentCd), CombatEvtGlobals.OnAbilityCooldownStart);
+            Mgr.Event.Send<EvtAbilityCooldownStart>(new EvtAbilityCooldownStart(this, owner, oldCooldown, currentCd), UCMGameEvents.OnAbilityCooldownStart);
         }
     }
 }

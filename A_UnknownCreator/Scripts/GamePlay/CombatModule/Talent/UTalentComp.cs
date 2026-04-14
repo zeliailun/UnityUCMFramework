@@ -40,7 +40,7 @@ namespace UnknownCreator.Modules
             if (!newAb.isRelease)
             {
                 newAb.UpdateAbility();
-                Mgr.Event.Send<EvtTalentChanged>(new(self, newAb), CombatEvtGlobals.OnTalentAdded);
+                Mgr.Event.Send<EvtTalentChanged>(new(self, newAb), UCMGameEvents.OnTalentAdded);
             }
         }
 
@@ -49,7 +49,7 @@ namespace UnknownCreator.Modules
             if (!talentDict.Remove(talentName, out var result))
                 return;
             talentList.Remove(result);
-            Mgr.Event.Send<EvtTalentChanged>(new(self, result), CombatEvtGlobals.OnTalentRemove);
+            Mgr.Event.Send<EvtTalentChanged>(new(self, result), UCMGameEvents.OnTalentRemove);
             Mgr.RPool.Release(result);
         }
 

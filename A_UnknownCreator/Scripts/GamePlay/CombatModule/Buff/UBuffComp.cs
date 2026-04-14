@@ -48,7 +48,7 @@ namespace UnknownCreator.Modules
                 if (!newBuff.isRelease)
                 {
                     newBuff.UpdateBuff();
-                    Mgr.Event.Send<BuffBase>(newBuff, CombatEvtGlobals.OnBuffAdded);
+                    Mgr.Event.Send<BuffBase>(newBuff, UCMGameEvents.OnBuffAdded);
                 }
                 return newBuff;
             }
@@ -64,7 +64,7 @@ namespace UnknownCreator.Modules
                     if (!newBuff.isRelease)
                     {
                         newBuff.UpdateBuff();
-                        Mgr.Event.Send<BuffBase>(newBuff, CombatEvtGlobals.OnBuffAdded);
+                        Mgr.Event.Send<BuffBase>(newBuff, UCMGameEvents.OnBuffAdded);
                     }
                     return newBuff;
                 }
@@ -88,21 +88,9 @@ namespace UnknownCreator.Modules
                 buff.isRelease ||
                 !buffDict.TryGetValue(buff.buffName, out var list) ||
                 !list.IsValid() ||
-                !list.Contains(buff))
-            {
-              
-                return;
-            }
+                !list.Contains(buff)) return;
 
-            buff.OnRemove(false);
-            list.Remove(buff);
-            buffList.Remove(buff);
-            if (list.Count < 1)
-            {
-                buffDict.Remove(buff.buffName);
-                ListPool<BuffBase>.Release(list);
-            }
-            Mgr.RPool.Release(buff);
+            RemoveBuff(buff, ref list);
         }
 
         public void RemoveBuff(string buffName)
@@ -116,15 +104,7 @@ namespace UnknownCreator.Modules
                 buff.isRelease ||
                 !list.Contains(buff)) return;
 
-            buff.OnRemove(false);
-            list.Remove(buff);
-            buffList.Remove(buff);
-            if (list.Count < 1)
-            {
-                buffDict.Remove(buff.buffName);
-                ListPool<BuffBase>.Release(list);
-            }
-            Mgr.RPool.Release(buff);
+            RemoveBuff(buff, ref list);
         }
 
         public void RemoveSameBuff(string buffName)
@@ -146,6 +126,9 @@ namespace UnknownCreator.Modules
                 list.RemoveAt(i);
                 buffList.Remove(buff);
                 Mgr.RPool.Release(buff);
+
+                Mgr.Event.Send<string>(buffName, UCMGameEvents.OnBuffRemoved);
+
             }
             buffDict.Remove(buffName);
             ListPool<BuffBase>.Release(list);
@@ -215,6 +198,22 @@ namespace UnknownCreator.Modules
             var newBuff = (BuffBase)Mgr.RPool.Load(Type.GetType(buffName));
             newBuff.InitBuff(buffName, ability, self, inflicter, duration, kv, isKVRecyclePool);
             return newBuff;
+        }
+
+        private void RemoveBuff(BuffBase buff, ref List<BuffBase> list)
+        {
+            string buffName = buff.buffName;
+            buff.OnRemove(false);
+            list.Remove(buff);
+            buffList.Remove(buff);
+            if (list.Count < 1)
+            {
+                buffDict.Remove(buff.buffName);
+                ListPool<BuffBase>.Release(list);
+            }
+            Mgr.RPool.Release(buff);
+
+            Mgr.Event.Send<string>(buffName, UCMGameEvents.OnBuffRemoved);
         }
     }
 }

@@ -48,7 +48,7 @@ namespace UnknownCreator.Modules
             double oldExp = currentExp;
             currentExp += value;
 
-            Mgr.Event.Send(new EvtUnitExpAdded(self, oldExp, currentExp), CombatEvtGlobals.OnUnitExpAdded);
+            Mgr.Event.Send(new EvtUnitExpAdded(self, oldExp, currentExp), UCMGameEvents.OnUnitExpAdded);
 
 
             while (currentLevel < maxLevel)
@@ -63,7 +63,7 @@ namespace UnknownCreator.Modules
                     int oldLevel = currentLevel;
                     currentExp -= requiredExp;
                     currentLevel++;
-                    Mgr.Event.Send(new EvtUnitUpgraded(self, oldLevel, currentLevel, currentExp,false), CombatEvtGlobals.OnUnitUpgraded);
+                    Mgr.Event.Send(new EvtUnitUpgraded(self, oldLevel, currentLevel, currentExp,false), UCMGameEvents.OnUnitUpgraded);
                 }
                 else
                 {
@@ -86,7 +86,7 @@ namespace UnknownCreator.Modules
             currentLevel = targetLevel;
             currentExp = 0;
 
-            Mgr.Event.Send(new EvtUnitUpgraded(self, oldLevel, currentLevel, currentExp,true), CombatEvtGlobals.OnUnitUpgraded);
+            Mgr.Event.Send(new EvtUnitUpgraded(self, oldLevel, currentLevel, currentExp,true), UCMGameEvents.OnUnitUpgraded);
         }
 
         public void AddLevel(int value)

@@ -16,7 +16,7 @@ namespace UnknownCreator.Modules
         public bool isTimeScale;
         public Action<VisualElement> onShow;
         public Action<VisualElement> onAutoHide;
-        public Action<Scene, Scene, VisualElement> onChangeScene;
+        public Action<Scene, VisualElement> onChangeScene;
 
         public UITKOpenInfo(
             string uidName,
@@ -29,7 +29,7 @@ namespace UnknownCreator.Modules
             bool isTimeScale = false,
             Action<VisualElement> onShow = null,
             Action<VisualElement> onAutoHide = null,
-            Action<Scene, Scene, VisualElement> onChangeScene = null)
+            Action<Scene, VisualElement> onChangeScene = null)
         {
             this.prName = uidName;
             this.uiName = uiName;

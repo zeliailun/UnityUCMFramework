@@ -1,11 +1,11 @@
 using System;
-using Unity.Scripting.LifecycleManagement;
 namespace UnknownCreator.Modules
 {
-    [AutoStaticsCleanup]
+
     public static class CustomTime
     {
         public static Action OnPause { set => customTime.OnPause = value; get => customTime.OnPause; }
+
         public static Action OnResume { set => customTime.OnResume = value; get => customTime.OnResume; }
 
         public static float LocalTimeScale { set => customTime.LocalTimeScale = value; get => customTime.LocalTimeScale; }

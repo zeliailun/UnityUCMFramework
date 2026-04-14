@@ -112,9 +112,9 @@ namespace UnknownCreator.Modules
             var typeNameLabel = element.Q<Label>(name: TypeNameLabel);
             typeNameLabel.text = typeNameGroup.Success ? typeNameGroup.Value : string.Empty;
 
-            var typeNamespaceGroup = groups["namespace"];
+            var typeNamespaUCMGameEventsroup = groups["namespace"];
             var typeNamespaceLabel = element.Q<Label>(name: TypeNamespaceLabel);
-            typeNamespaceLabel.text = typeNamespaceGroup.Success ? typeNamespaceGroup.Value : string.Empty;
+            typeNamespaceLabel.text = typeNamespaUCMGameEventsroup.Success ? typeNamespaUCMGameEventsroup.Value : string.Empty;
 
             var typeIcon = element.Q<VisualElement>(name: TypeIcon);
             typeIcon.style.backgroundImage = (Texture2D)TypeField.GetLabelImage();

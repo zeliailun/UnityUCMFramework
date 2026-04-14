@@ -174,7 +174,7 @@ namespace UnknownCreator.Modules
         public AbilityBase ReplaceAbility(string abName, string cfgName, int index)
         {
             var nullAb = abilityList[index];
-            Mgr.Event.Send<AbilityBase>(nullAb, CombatEvtGlobals.OnRemoveAbility);
+            Mgr.Event.Send<AbilityBase>(nullAb, UCMGameEvents.OnRemoveAbility);
             Mgr.RPool.Release(nullAb);
             abilityById.Remove(nullAb.abilityID);
             AbilityBase newAb = (AbilityBase)Mgr.RPool.Load(Type.GetType(abName));
@@ -184,7 +184,7 @@ namespace UnknownCreator.Modules
             newAb.OnCreated();
             if (newAb.isRelease) return null;
             newAb.UpdateAbility();
-            Mgr.Event.Send<AbilityBase>(newAb, CombatEvtGlobals.OnAbilityAdded);
+            Mgr.Event.Send<AbilityBase>(newAb, UCMGameEvents.OnAbilityAdded);
 
             return newAb;
         }
@@ -202,7 +202,7 @@ namespace UnknownCreator.Modules
             if (!newAb.isRelease)
             {
                 newAb.UpdateAbility();
-                Mgr.Event.Send<AbilityBase>(newAb, CombatEvtGlobals.OnAbilityAdded);
+                Mgr.Event.Send<AbilityBase>(newAb, UCMGameEvents.OnAbilityAdded);
                 return newAb;
             }
             return null;
@@ -224,7 +224,7 @@ namespace UnknownCreator.Modules
             if (!IsRemoveAbility(index)) return;
             var old = abilityList[index];
             InterruptAbility(old);
-            Mgr.Event.Send<AbilityBase>(old, CombatEvtGlobals.OnRemoveAbility);
+            Mgr.Event.Send<AbilityBase>(old, UCMGameEvents.OnRemoveAbility);
             Mgr.RPool.Release(old);
             abilityById.Remove(old.abilityID);
             AbilityBase generic = (AbilityBase)Mgr.RPool.Load(Type.GetType(AbilityGlobals.AbilityNull));

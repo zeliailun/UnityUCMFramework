@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Unity.Scripting.LifecycleManagement;
 using UnityEngine.UIElements;
-using static RootMotion.FinalIK.GrounderQuadruped;
 
 namespace UnknownCreator.Modules
 {
@@ -14,14 +12,23 @@ namespace UnknownCreator.Modules
         private static Dictionary<string, UITKBuilder> prDict = new();
         private static List<UITKBuilder> builders = new();
 
-        [AutoStaticsCleanup]
         public static Action<string, string> OnUIOpen;
 
-        [AutoStaticsCleanup]
         public static Action<string, string> OnUIHide;
 
-        [AutoStaticsCleanup]
         public static Action<UITKBuilder> OnUIReload;
+
+        public static void Clear()
+        {
+            foreach (var item in uiDict)
+            {
+                Mgr.RPool.Release(item);
+            }
+            uiDict.Clear(); 
+            prDict.Clear();
+            uiNameDict.Clear();
+            builders.Clear();
+        }
 
         public static UITKBuilder GetBuilder(string idName)
         {

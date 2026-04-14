@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
@@ -28,18 +27,18 @@ namespace UnknownCreator.Modules
             finalOpacity = ApplyFinalOpacity;
             hideView = HideView;
             autoHideView = AutoHideHandle;
-            Mgr.Event.Add(Reset, CGE.OnBackMainMenu, default, CustomEvtOrder.order1);
-            SceneManager.activeSceneChanged += OnSceneChanged;
+            SceneManager.sceneLoaded += OnSceneChanged;
             UITKMgr.OnUIReload += Refresh;
         }
 
 
         public void ObjRelease()
         {
+            DestroyTween();
             UITKMgr.OnUIReload -= Refresh;
-            SceneManager.activeSceneChanged -= OnSceneChanged;
-            Mgr.Event.Remove(Reset, CGE.OnBackMainMenu, default);
-            Reset();
+            SceneManager.sceneLoaded -= OnSceneChanged;
+            showInfo = default;
+            hideInfo = default;
             changeOpacity = null;
             finalOpacity = null;
             hideView = null;
@@ -51,7 +50,7 @@ namespace UnknownCreator.Modules
 
         private void Refresh(UITKBuilder ub)
         {
-            if(builder.idName== ub.idName)
+            if (builder.idName == ub.idName)
             {
                 if (showOrHide)
                     view = ub.root.Q<VisualElement>(showInfo.uiName);
@@ -65,11 +64,11 @@ namespace UnknownCreator.Modules
             //  if (EqualityComparer<UITKOpenInfo>.Default.Equals(info, default)) return;
 
             DestroyTween();
-            
+
             showOrHide = true;
             showInfo = info;
             view = builder.root.Q<VisualElement>(showInfo.uiName);
-   
+
             SetOpacity(0);
             view.style.display = DisplayStyle.Flex;
 
@@ -133,12 +132,15 @@ namespace UnknownCreator.Modules
             hideInfo = default;
         }
 
-        private void OnSceneChanged(Scene oldScene, Scene newScene)
+        private void OnSceneChanged(Scene scene,LoadSceneMode mode)
         {
             if (showInfo.isChangeSceneHide)
             {
-                showInfo.onChangeScene?.Invoke(oldScene, newScene, view);
-                Reset();
+                showInfo.onChangeScene?.Invoke(scene, view);
+                DestroyTween();
+                SetOpacity(0);
+                showInfo = default;
+                hideInfo = default;
             }
         }
 
@@ -152,18 +154,11 @@ namespace UnknownCreator.Modules
             endTween = null;
         }
 
-        private void Reset()
-        {
-            DestroyTween();
-            SetOpacity(0);
-            view.style.display = DisplayStyle.None;
-            showInfo = default;
-            hideInfo = default;
-        }
-
         private void SetOpacity(float value)
         {
-            view.style.opacity = value;
+            
+            if (view != null && view.panel != null)
+                view.style.opacity = value;
         }
 
         private void SetOpacity(bool b, float v, TimerTween<bool> tt)

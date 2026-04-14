@@ -51,7 +51,7 @@ namespace UnknownCreator.Modules
             if (newValue != stateValue)
             {
                 stateDict[typeID] = newValue;
-                Mgr.Event.Send<EvtStateUpdate>(new(self, typeID, newValue > 0), CombatEvtGlobals.OnStateUpdated);
+                Mgr.Event.Send<EvtStateUpdate>(new(self, typeID, newValue > 0), UCMGameEvents.OnStateUpdated);
             }
         }
 
