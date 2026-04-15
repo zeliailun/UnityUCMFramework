@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UnityEditor.Localization.Plugins.XLIFF.V12;
 namespace UnknownCreator.Modules
 {
     public sealed class TimerMgr : ITimerMgr
@@ -24,7 +25,7 @@ namespace UnknownCreator.Modules
 
         void IDearMgr.UpdateMGR()
         {
-            for (int i = 0; i < timerList.Count; i++)
+            for (int i = timerList.Count - 1; i >= 0; i--)
             {
                 timerList[i]?.Update();
             }

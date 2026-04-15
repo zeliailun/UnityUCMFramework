@@ -67,21 +67,17 @@ namespace UnknownCreator.Modules
         }
 
 
-        public void AddSoundPlayCount(string name)
+        public void IncreaseSoundPlayCount(string name)
         {
-            if (!soundCountDict.TryAdd(name, 1))
-                soundCountDict[name] += 1;
+            soundCountDict.TryGetValue(name, out var count);
+            soundCountDict[name] = count + 1;
         }
 
-        public void RemoveSoundPlayCount(string name)
+        public void DecreaseSoundPlayCount(string name)
         {
-            if (soundCountDict.TryGetValue(name, out var count))
-            {
-                if (count < 1)
-                    soundCountDict.Remove(name);
-                else
-                    soundCountDict[name] -= 1;
-            }
+            if (!soundCountDict.TryGetValue(name, out var count)) return;
+
+            soundCountDict[name] = --count;
         }
 
         public int CurrentSoundPlayCount(string name)
@@ -203,6 +199,7 @@ namespace UnknownCreator.Modules
             var group = GetSoundGroup(soundGroupName);
             if (group is null) return;
             soundGroupDict.Remove(soundGroupName);
+            soundGroupList.Remove(group);
             Mgr.RPool.Release(group);
         }
 

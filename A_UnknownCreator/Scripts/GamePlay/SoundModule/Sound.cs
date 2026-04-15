@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using NUnit;
 using UnityEngine;
 namespace UnknownCreator.Modules
 {
@@ -37,8 +36,6 @@ namespace UnknownCreator.Modules
         private List<long> ids = new();
         private EvtSoundPlayEnd soundEvt;
         private ITimer soundEndTimer;
-        private Action<TimerCountCycle> soundEnd;
-        private Action<TimerCountCycle> soundCompleted;
 
 
         public void Init(string name, GameObject go)
@@ -79,8 +76,6 @@ namespace UnknownCreator.Modules
                 clips[i] = UnityGlobals.LoadSync<AudioClip>(soundCfg.soundArray[i].clip);
 
             currentSoundNum = 0;
-            soundCompleted = SoundCompleted;
-            soundEnd = SoundEndEvt;
             soundEvt = new();
             isRelease = isFadingOut = false;
         }
@@ -92,7 +87,7 @@ namespace UnknownCreator.Modules
                 Mgr.Sound.CurrentSoundPlayCount(soundName) >= soundCfg.playCount)
                 return;
 
-            Mgr.Sound.AddSoundPlayCount(soundName);
+            Mgr.Sound.IncreaseSoundPlayCount(soundName);
 
             if (!soundObj.activeSelf) soundObj.SetActive(true);
 
@@ -114,22 +109,20 @@ namespace UnknownCreator.Modules
 
             var clip = clips[index];
             var info = soundCfg.soundArray[index];
-            source.clip = clip;
             source.volume = playVolume = info.isUseCustomVolume ? info.volume : soundCfg.volume;
-
+            source.clip = clip;
 
             if (isOneShot)
             {
-
-                source.PlayOneShot(clip, source.volume);
-                ids.Add(Mgr.Timer.CycleCount(1, clip.length, false, soundEnd, soundCompleted, soundCfg.isApplyTimeScale).id);
+                source.PlayOneShot(clip, 1);
+                ids.Add(Mgr.Timer.CycleCount(1, clip.length, false, SoundEndEvt, SoundCompleted, soundCfg.isApplyTimeScale).id);
             }
             else
             {
                 source.Play();
                 if (soundEndTimer == null)
                 {
-                    soundEndTimer = Mgr.Timer.CycleCount(1, clip.length, false, soundEnd, null, soundCfg.isApplyTimeScale);
+                    soundEndTimer = Mgr.Timer.CycleCount(1, clip.length, false, SoundEndEvt, null, soundCfg.isApplyTimeScale);
                 }
                 else
                 {
@@ -173,6 +166,7 @@ namespace UnknownCreator.Modules
             isFadingOut = true;
             currentVolume = source.volume;
             this.fadeDuration = fadeDuration;
+            time = 0;
         }
 
         public void MuteSound(bool isMute)
@@ -209,7 +203,7 @@ namespace UnknownCreator.Modules
         {
             if (isRelease) return;
 
-            Mgr.Sound.RemoveSoundPlayCount(soundName);
+            Mgr.Sound.DecreaseSoundPlayCount(soundName);
 
             soundEvt.volume = playVolume;
             soundEvt.name = soundName;
@@ -223,9 +217,7 @@ namespace UnknownCreator.Modules
         private void SoundCompleted(TimerCountCycle countCycle)
         {
             if (ids.Remove(countCycle.id))
-            {
                 Mgr.Timer.RemoveTimer(countCycle.id);
-            }
         }
 
         void IReference.ObjRelease()
@@ -239,10 +231,11 @@ namespace UnknownCreator.Modules
             soundEndTimer = null;
 
             for (int i = ids.Count - 1; i >= 0; i--)
+            {
                 Mgr.Timer.RemoveTimer(ids[i]);
+                Mgr.Sound.DecreaseSoundPlayCount(soundName);
+            }
             ids.Clear();
-
-            Mgr.Sound.RemoveSoundPlayCount(soundName);
 
             if (source != null)
             {
@@ -263,8 +256,6 @@ namespace UnknownCreator.Modules
                 UnityGlobals.Release(clips[i]);
 
             clips = null;
-            soundCompleted = null;
-            soundEnd = null;
             soundCfg = null;
         }
     }

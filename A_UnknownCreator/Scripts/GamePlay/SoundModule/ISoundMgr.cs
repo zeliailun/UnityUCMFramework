@@ -11,8 +11,8 @@ namespace UnknownCreator.Modules
         int soundCount { get; }
         int soundGroupCount { get; }
         void SetSoundMixer(string am);
-        void AddSoundPlayCount(string name);
-        void RemoveSoundPlayCount(string name);
+        void IncreaseSoundPlayCount(string name);
+        void DecreaseSoundPlayCount(string name);
         int CurrentSoundPlayCount(string name);
         T LoadSound<T>(string soundName, string soundGroupName)
         where T : class, ISound, new();
