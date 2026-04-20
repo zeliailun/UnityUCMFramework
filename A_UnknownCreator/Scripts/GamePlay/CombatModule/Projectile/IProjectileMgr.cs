@@ -13,11 +13,11 @@ namespace UnknownCreator.Modules
         where Data : ProjectileData, new();
 
         void ReleaseProjectile(Projectile proj);
-        void ReleaseProjectile(EntityId id);
+        void ReleaseProjectile(long id);
         void ReleaseAllProjectile();
-        Projectile GetProjectile(EntityId id);
+        Projectile GetProjectile(long id);
 
         bool IsValidProjectile(Projectile proj);
-        bool IsValidProjectile(EntityId id);
+        bool IsValidProjectile(long id);
     }
 }

@@ -70,7 +70,7 @@ namespace UnknownCreator.Modules
 
         private double baseV, bonusV, finalV, minV, maxV;
         private string minName, maxName;
-        private bool customMinStats, customMaxStats, isLinking;
+        private bool customMinStats, customMaxStats, isLinking, isRoundToInt;
 
         private UStatsComp cntlr;
         private Unit self;
@@ -96,9 +96,11 @@ namespace UnknownCreator.Modules
             this.self = self;
             this.holder = holder;
 
+
             idName = cfg.idName;
             canCalcValue = cfg.canCalcValue;
             canChangeValue = cfg.canChangeValue;
+            isRoundToInt = cfg.isRoundToInt;
 
             minName = cfg.minStatsName;
             maxName = cfg.maxStatsName;
@@ -274,11 +276,14 @@ namespace UnknownCreator.Modules
                     case CalcType.LinearAdd: linearAdd += calc.value; break;
                     case CalcType.PercLinearAdd: percLinearSum += calc.value; break;
                     case CalcType.PercNonlinearAdd: percNonlinearSum += calc.value; break;
+
                 }
             }
 
             if (!double.IsNaN(constantValue))
+            {
                 value = constantValue;
+            }
             else
             {
                 value += linearAdd;
@@ -286,17 +291,16 @@ namespace UnknownCreator.Modules
                 value += (100 - value) * percNonlinearSum / 100;
             }
 
-            double newFinalValue = Math.Round(
-                Math.Clamp(value, minValue, maxValue),
-                2,
-                MidpointRounding.AwayFromZero
-            );
+            double clamped = Math.Clamp(value, minValue, maxValue);
+            double newFinalValue = isRoundToInt
+                ? Math.Round(clamped, 0, MidpointRounding.AwayFromZero)
+                : Math.Round(clamped, 2, MidpointRounding.AwayFromZero);
 
             // ===== 更新自身 =====
             finalValue = newFinalValue;
             bonusValue = finalValue - baseValue;
 
-            Mgr.Event.Send<EvtStatChanged>(new(self, oldFinalValue, this), idName);
+            Mgr.Event.Send<EvtStatChanged>(new(self, oldFinalValue, this), UCMGameEvents.OnStatChanged);
 
             // ===== 联动修改统计 =====
             if (linkCount > 0 && !isLinking)

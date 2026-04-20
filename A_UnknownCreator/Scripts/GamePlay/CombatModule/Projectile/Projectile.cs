@@ -18,7 +18,7 @@ namespace UnknownCreator.Modules
 
         public Vector3 beforePos { private set; get; }
 
-        public EntityId id { private set; get; }
+        public long id { private set; get; }
 
         private bool pause;
         public bool isPause
@@ -39,14 +39,14 @@ namespace UnknownCreator.Modules
 
         private float timeCount;
 
-        internal void InitProjectile(GameObject obj, ProjectileData data, IProjMvt mvt, IProjCheck check, IVariableMgr kv)
+        internal void InitProjectile(ProjectileData data, IProjMvt mvt, IProjCheck check, IVariableMgr kv)
         {
-            this.obj = obj;
+            this.obj = Mgr.GPool.Load(data.projName, true, false); ;
             this.check = check;
             this.mvt = mvt;
             this.data = data;
             this.kv = kv;
-            id = obj.GetEntityId();
+            id = GlobalID.GetUniqueID();
             objT = obj.GetComponent<Transform>();
             objT.localScale = Vector3.one;
             objT.SetPositionAndRotation(this.data.spawnPos, this.data.spawnRot);

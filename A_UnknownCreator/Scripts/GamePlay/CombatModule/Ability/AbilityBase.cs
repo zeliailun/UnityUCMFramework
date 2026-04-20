@@ -63,6 +63,7 @@ namespace UnknownCreator.Modules
             }
         }
 
+
         public int index { private set; get; }
 
         public double currentCd
@@ -92,7 +93,7 @@ namespace UnknownCreator.Modules
         internal void InitAbility(Unit owner, int index, string abName, string cfgName)
         {
             abilityID = GlobalID.GetUniqueID();
-            
+
             this.owner = owner;
             this.abName = abName;
             this.index = index;
@@ -164,19 +165,36 @@ namespace UnknownCreator.Modules
         {
             if (isRelease) return;
 
-            //能力点和CD计算
-            if (canCalcCooldown)
+            UpdateCooldown();
+            UpdatePassive();
+            OnUpdate();
+            UpdateDeathState();
+        }
+
+        private void UpdateCooldown()
+        {
+            if (isFrozenCooldown)
+                return;
+
+            var chargeLimit = GetCharge(level);
+            var enableCharge = IsEnableCharge();
+            var hasChargeLogic = enableCharge && currentCharge < chargeLimit;
+
+            if (!isCooldownReady || hasChargeLogic)
             {
                 currentCd = Math.Max(0, currentCd - CustomTime.DeltaTime());
                 Mgr.Event.Send<AbilityBase>(this, UCMGameEvents.OnAbilityCooldownCalc);
-                var count = GetCharge(level);
-                if (IsEnableCharge() && currentCd <= 0 && currentCharge < count)
+                if (currentCd <= 0 && hasChargeLogic)
                 {
+                    ++currentCharge;
 
-                    if (++currentCharge != count)
+                    if (currentCharge != chargeLimit)
                     {
                         currentCd = GetCooldown(level);
-                        Mgr.Event.Send<EvtAbilityCooldownStart>(new EvtAbilityCooldownStart(this, owner, 0, currentCd), UCMGameEvents.OnAbilityCooldownStart);
+
+                        Mgr.Event.Send<EvtAbilityCooldownStart>(
+                            new EvtAbilityCooldownStart(this, owner, 0, currentCd),
+                            UCMGameEvents.OnAbilityCooldownStart);
                     }
                     else
                     {
@@ -184,38 +202,45 @@ namespace UnknownCreator.Modules
                     }
                 }
             }
+        }
 
-            //被动检查设置
+
+        private void UpdatePassive()
+        {
             passiveName = GetCurrentPassiveName();
+
             if (string.IsNullOrWhiteSpace(passiveName))
             {
                 RemovePassiveBuff();
-            }
-            else if (passiveBuff == null || passiveBuff.buffName != passiveName)
-            {
-                RemovePassiveBuff();
-                passiveBuff = owner.buffC.AddPermanentBuff(passiveName, this, owner);
-                if (passiveBuff != null)
-                    passiveBuff.isPassive = true;
+                return;
             }
 
+            if (passiveBuff != null && passiveBuff.buffName == passiveName)
+                return;
 
-            OnUpdate();
+            RemovePassiveBuff();
 
-            //死亡判断
+            passiveBuff = owner.buffC.AddPermanentBuff(passiveName, this, owner);
+
+            if (passiveBuff != null)
+                passiveBuff.isPassive = true;
+        }
+
+        private void UpdateDeathState()
+        {
             if (!owner.isAlive && !isDie)
             {
                 isDie = true;
                 owner.abilityC?.InterruptAbility(this);
                 OnOwnerDead();
-
+                return;
             }
-            else if (owner.isAlive && isDie)
+
+            if (owner.isAlive && isDie)
             {
                 isDie = false;
                 OnOwnerRespawn();
             }
-
         }
 
         void IReference.ObjRelease()

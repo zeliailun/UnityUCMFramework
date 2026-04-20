@@ -16,6 +16,7 @@ namespace UnknownCreator.Modules
         [ReadOnly] public string idName;
         public bool canCalcValue = true;
         public bool canChangeValue = true;
+        public bool isRoundToInt = false;
         public string minStatsName;
         public double minValue;
         public string maxStatsName;

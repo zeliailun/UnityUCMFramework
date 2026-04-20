@@ -1,4 +1,6 @@
-﻿namespace UnknownCreator.Modules
+﻿using static TMPro.SpriteAssetUtilities.TexturePacker_JsonArray;
+
+namespace UnknownCreator.Modules
 {
     public abstract partial class AbilityBase
     {
@@ -18,6 +20,7 @@
         public double GetValue(string name, int lv)
         {
             if (lv <= 0 ||
+                string.IsNullOrWhiteSpace(name) ||
                 !abilityCfg.baseKV.TryGetValue(name, out var akv) ||
                 akv.baseValue == null ||
                 lv > akv.baseValue.Count)
@@ -63,10 +66,9 @@
                 !statsKVDict.TryGetValue(valueName, out var stats) ||
                 lv > stats.Count) return 0F;
 
-            var askv = abilityCfg.statsKV[valueName];
             var baseValue = stats[lv - 1].finalValue;
 
-            if (string.IsNullOrWhiteSpace(askv.talentName))
+            if (!abilityCfg.statsKV.TryGetValue(valueName, out var askv))
                 return baseValue;
 
             var talent = owner.talentC.GetTalent(askv.talentName);
@@ -95,7 +97,7 @@
             };
         }
 
-        public void ChangeStatValue(string statsName, double value, bool isReplace)
+        public void ChangeStatBaseValue(string statsName, double value, bool isReplace)
         {
             if (statsKVDict.TryGetValue(statsName, out var akv))
             {
@@ -212,11 +214,6 @@
         {
             return distance < GetCastRange(level);
         }
-
-        public bool canCalcCooldown
-        => !isFrozenCooldown && (!isCooldownReady || (IsEnableCharge() && currentCharge < 1));
-
-
 
 
 

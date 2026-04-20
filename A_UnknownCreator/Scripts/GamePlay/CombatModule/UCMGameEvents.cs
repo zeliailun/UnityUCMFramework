@@ -1,5 +1,8 @@
-﻿namespace UnknownCreator.Modules
+﻿using System;
+
+namespace UnknownCreator.Modules
 {
+
     public static partial class UCMGameEvents
     {
         #region 技能
@@ -152,6 +155,17 @@
         public const string OnStateUpdated = nameof(OnStateUpdated);
 
         #endregion
+
+
+
+        /// <summary>
+        /// 统计更新后
+        /// </summary>
+        public const string OnStatChanged = nameof(OnStatChanged);
+
+        public const string OnStatUpdated = nameof(OnStatUpdated);
+
+
 
 
 

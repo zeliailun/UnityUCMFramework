@@ -290,6 +290,7 @@ namespace UnknownCreator.Modules
 
             ReleaseModel(unitModelCfg.model);
             SetModel(cfgName, isShow = (model == null || model.activeSelf));
+
         }
 
         private void UpdateModel()

@@ -98,9 +98,8 @@ namespace UnknownCreator.Modules
                 sd = data[i];
                 if (sd is null || !sd.canCalcValue) continue;
                 sd.AddOrUpdateBuff(buff, calcType, value, isStatsStacked);
-
             }
-
+            Mgr.Event.Send<EvtStatUpdated>(new(self.As<Unit>(), buff, statsName, calcType, value, isStatsStacked), UCMGameEvents.OnStatUpdated);
         }
 
         public void ClearStatsCalc(BuffBase buff, CalcType calcType, string statsName, bool isStatsStacked)
