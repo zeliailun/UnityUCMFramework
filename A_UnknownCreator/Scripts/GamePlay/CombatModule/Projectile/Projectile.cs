@@ -66,7 +66,7 @@ namespace UnknownCreator.Modules
                 data.ability?.OnProjectileSpawn(this);
                 if (isRelease) return;
 
-                Mgr.Event.Send<Projectile>(this, UCMGameEvents.OnProjectileSpawned);
+                Mgr.Event.Send<Projectile>(this, UCMGE.OnProjectileSpawned);
             }
 
             timeCount += CustomTime.DeltaTime();
@@ -89,7 +89,7 @@ namespace UnknownCreator.Modules
             data.ability?.OnProjectileMotion(this);
             if (isRelease) return;
 
-            Mgr.Event.Send<Projectile>(this, UCMGameEvents.OnProjectileMotion);
+            Mgr.Event.Send<Projectile>(this, UCMGE.OnProjectileMotion);
             if (isRelease) return;
 
             var hitResults = check?.OnProjCheck(this);
@@ -110,7 +110,7 @@ namespace UnknownCreator.Modules
                             data.ability?.OnProjectileHit(evt);
 
                             if (!isRelease)
-                                Mgr.Event.Send<EvtProjectileHitAfter>(evt, UCMGameEvents.OnProjectileHitAfter);
+                                Mgr.Event.Send<EvtProjectileHitAfter>(evt, UCMGE.OnProjectileHitAfter);
                         }
                     }
                 }
@@ -129,7 +129,7 @@ namespace UnknownCreator.Modules
                 mvt = null;
             }
             mvt = newMvt;
-            Mgr.Event.Send<Projectile>(this, UCMGameEvents.OnProjectileMvtReplaced);
+            Mgr.Event.Send<Projectile>(this, UCMGE.OnProjectileMvtReplaced);
         }
 
         public void ReplaceCheck(IProjCheck newCheck)
@@ -142,7 +142,7 @@ namespace UnknownCreator.Modules
                 check = null;
             }
             check = newCheck;
-            Mgr.Event.Send<Projectile>(this, UCMGameEvents.OnProjectileCheckReplaced);
+            Mgr.Event.Send<Projectile>(this, UCMGE.OnProjectileCheckReplaced);
         }
 
         void IReference.ObjRelease()
@@ -151,7 +151,7 @@ namespace UnknownCreator.Modules
 
             isRelease = true;
             data.ability?.OnProjectileDestroy(this);
-            Mgr.Event.Send<Projectile>(this, UCMGameEvents.OnProjectileDestroy);
+            Mgr.Event.Send<Projectile>(this, UCMGE.OnProjectileDestroy);
             Mgr.RPool.Release(check);
             Mgr.RPool.Release(mvt);
             Mgr.GPool.Release(data.projName, obj);

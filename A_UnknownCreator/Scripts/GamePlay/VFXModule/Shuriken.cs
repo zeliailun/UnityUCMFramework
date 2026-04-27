@@ -38,16 +38,21 @@ namespace UnknownCreator.Modules
 
         public void SetScale(float radius, bool isChangeSub)
         {
+            SetScale(new Vector3(radius, radius, radius), isChangeSub);
+        }
+
+        public void SetScale(Vector3 radius, bool isChangeSub)
+        {
             if (isRelease || rootT == null) return;
-            var rd = new Vector3(radius, radius, radius);
-            rootT.localScale = rd;
+            rootT.localScale = radius;
             if (isChangeSub)
             {
                 this.isChangeSub = isChangeSub;
                 foreach (var ps in vfxSubs)
-                    ps.localScale = rd;
+                    ps.localScale = radius;
             }
         }
+
 
         public override void OnRelease()
         {

@@ -8,7 +8,7 @@ namespace UnknownCreator.Modules
     {
         internal void ExecuteAbilityInterrupt(bool isPointOrBackswing)
         {
-            Mgr.Event.Send<EvtAbilityInterrupt>(new(this, owner, isPointOrBackswing), UCMGameEvents.OnAbilityCastPointInterrupt);
+            Mgr.Event.Send<EvtAbilityInterrupt>(new(this, owner, isPointOrBackswing), UCMGE.OnAbilityCastPointInterrupt);
             if (isPointOrBackswing)
             {
                 timerCastPoint.DestroySelf();
@@ -27,7 +27,7 @@ namespace UnknownCreator.Modules
             castAnimState = null;
             owner.abilityC.SetCastAbility(null);
             ApplyState(-1);
-            Mgr.Event.Send(this, UCMGameEvents.OnAbilityFullyCast);
+            Mgr.Event.Send(this, UCMGE.OnAbilityFullyCast);
         }
 
         internal void ExecuteAbilityOnImmediate()
@@ -82,7 +82,7 @@ namespace UnknownCreator.Modules
             if (!CastFilter()) return;
 
 
-            Mgr.Event.Send<AbilityBase>(this, UCMGameEvents.OnAbilityStart);
+            Mgr.Event.Send<AbilityBase>(this, UCMGE.OnAbilityStart);
 
             if (IsForceCastDir())
             {
@@ -157,14 +157,14 @@ namespace UnknownCreator.Modules
             selectedTarget = null;
             castAnimState = null;
             ApplyState(-1);
-            Mgr.Event.Send(this, UCMGameEvents.OnAbilityFullyCast);
+            Mgr.Event.Send(this, UCMGE.OnAbilityFullyCast);
         }
 
         private void TriggerAbility()
         {
             StartCooldown(GetCooldown(level));
             OnCastTrigger();
-            Mgr.Event.Send<AbilityBase>(this, UCMGameEvents.OnAbilityExecuted);
+            Mgr.Event.Send<AbilityBase>(this, UCMGE.OnAbilityExecuted);
         }
 
 
@@ -184,7 +184,7 @@ namespace UnknownCreator.Modules
                     int id = GetCustomCastFilterID();
                     if (id == -1)
                         id = AbilityGlobals.InvalidCast;
-                    Mgr.Event.Send(new EvtAbilityCastError(this, owner, id), UCMGameEvents.OnAbilityInvalidSpellCast);
+                    Mgr.Event.Send(new EvtAbilityCastError(this, owner, id), UCMGE.OnAbilityInvalidSpellCast);
                 }
 
                 return false;
@@ -192,7 +192,7 @@ namespace UnknownCreator.Modules
 
             if (!isLevelReady)
             {
-                Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidLevel), UCMGameEvents.OnAbilityInvalidSpellCast);
+                Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidLevel), UCMGE.OnAbilityInvalidSpellCast);
                 return false;
             }
 
@@ -200,13 +200,13 @@ namespace UnknownCreator.Modules
             {
                 if (currentCharge < 1)
                 {
-                    Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidCharge), UCMGameEvents.OnAbilityInvalidSpellCast);
+                    Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidCharge), UCMGE.OnAbilityInvalidSpellCast);
                     return false;
                 }
             }
             else if (!isCooldownReady)
             {
-                Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidCooldown), UCMGameEvents.OnAbilityInvalidSpellCast);
+                Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidCooldown), UCMGE.OnAbilityInvalidSpellCast);
                 return false;
             }
 
@@ -220,20 +220,20 @@ namespace UnknownCreator.Modules
 
                 if (!IsEnoughCastRange(UnityGlobals.DistanceH(owner.entP, selectedPos)))
                 {
-                    Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidCastRange), UCMGameEvents.OnAbilityInvalidSpellCast);
+                    Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidCastRange), UCMGE.OnAbilityInvalidSpellCast);
                     return false;
                 }
             }
 
             if (!isStunnedCast)
             {
-                Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidStunned), UCMGameEvents.OnAbilityInvalidSpellCast);
+                Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidStunned), UCMGE.OnAbilityInvalidSpellCast);
                 return false;
             }
 
             if (!isSilencedCast)
             {
-                Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidSilenced), UCMGameEvents.OnAbilityInvalidSpellCast);
+                Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidSilenced), UCMGE.OnAbilityInvalidSpellCast);
                 return false;
             }
 
@@ -254,14 +254,14 @@ namespace UnknownCreator.Modules
             if (selectedTarget is null)
             {
                 if (HasBehavior(AbBehavior.Point)) return true;
-                Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.NotTarget), UCMGameEvents.OnAbilityInvalidSpellCast);
+                Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.NotTarget), UCMGE.OnAbilityInvalidSpellCast);
                 return false;
             }
 
             if (!selectedTarget.isAlive && !HasFlags(AbFlags.CanDeathTarget))
             {
                 if (HasBehavior(AbBehavior.Point)) return true;
-                Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.DeadTarget), UCMGameEvents.OnAbilityInvalidSpellCast);
+                Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.DeadTarget), UCMGE.OnAbilityInvalidSpellCast);
                 return false;
             }
 
@@ -270,7 +270,7 @@ namespace UnknownCreator.Modules
                 HasTargetTeam(AbTargetTeam.Friendly) && owner.unitTeam == selectedTarget.unitTeam)
                 return true;
 
-            Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidTeam), UCMGameEvents.OnAbilityInvalidSpellCast);
+            Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidTeam), UCMGE.OnAbilityInvalidSpellCast);
             return false;
         }
     }

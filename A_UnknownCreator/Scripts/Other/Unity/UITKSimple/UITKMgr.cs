@@ -128,7 +128,7 @@ namespace UnknownCreator.Modules
 
         public static void ChangeUI<T>(UITKChangeInfo info) where T : UITKStateBase, new()
         {
-            var sm = GetBuilder(info.uidName).hbsm.GetHBSM(info.uiSM);
+            var sm = GetBuilder(info.prName).hbsm.GetHBSM(info.uiSM);
             if (info.isNull)
                 sm.ChangeNullState();
             else
@@ -151,7 +151,7 @@ namespace UnknownCreator.Modules
     [Serializable]
     public struct UITKChangeInfo
     {
-        public string uidName;
+        public string prName;
         public string uiSM;
         public bool isNull;
         public bool isAddSeq;

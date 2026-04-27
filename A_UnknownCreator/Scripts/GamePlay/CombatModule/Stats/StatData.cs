@@ -300,7 +300,7 @@ namespace UnknownCreator.Modules
             finalValue = newFinalValue;
             bonusValue = finalValue - baseValue;
 
-            Mgr.Event.Send<EvtStatChanged>(new(self, oldFinalValue, this), UCMGameEvents.OnStatChanged);
+            Mgr.Event.Send<EvtStatChanged>(new(self, oldFinalValue, this), UCMGE.OnStatChanged);
 
             // ===== 联动修改统计 =====
             if (linkCount > 0 && !isLinking)

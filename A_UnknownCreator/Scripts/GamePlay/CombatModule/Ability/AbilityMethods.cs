@@ -1,4 +1,5 @@
-﻿using static TMPro.SpriteAssetUtilities.TexturePacker_JsonArray;
+﻿
+using System;
 
 namespace UnknownCreator.Modules
 {
@@ -168,13 +169,60 @@ namespace UnknownCreator.Modules
             if (!isCooldownReady)
             {
                 currentCd = 0;
-                Mgr.Event.Send<AbilityBase>(this, UCMGameEvents.OnAbilityCooldownCalc);
+                Mgr.Event.Send<AbilityBase>(this, UCMGE.OnAbilityCooldownCalc);
             }
 
             var charge = GetCharge();
             if (IsEnableCharge() && currentCharge < charge)
                 currentCharge = (int)charge;
 
+        }
+
+        public void ModifyCurrentCooldown(double value)
+        {
+            if (value == 0)
+                return;
+
+            var chargeLimit = GetCharge(level);
+            var enableCharge = IsEnableCharge();
+            var hasChargeLogic = enableCharge && currentCharge < chargeLimit;
+
+            if (enableCharge)
+            {
+                // 充能满了，没有正在恢复的 currentCd，不修改
+                if (!hasChargeLogic)
+                    return;
+
+                currentCd = Math.Max(0, currentCd + value);
+            }
+            else
+            {
+                // 非充能技能已经冷却好了
+                if (isCooldownReady)
+                {
+                    // 减少冷却没有意义
+                    if (value < 0)
+                        return;
+
+                    // 增加冷却时，需要重新启动冷却
+                    ResetCooldown(value);
+                    return;
+                }
+
+                // 非充能技能正在冷却中，直接修改当前冷却
+                currentCd = Math.Max(0, currentCd + value);
+            }
+
+            Mgr.Event.Send<AbilityBase>(this, UCMGE.OnAbilityCooldownCalc);
+        }
+        public void ReduceCurrentCooldown(double value)
+        {
+            ModifyCurrentCooldown(-Math.Abs(value));
+        }
+
+        public void AddCurrentCooldown(double value)
+        {
+            ModifyCurrentCooldown(Math.Abs(value));
         }
 
         public void AddFrozenCooldown()
@@ -276,7 +324,7 @@ namespace UnknownCreator.Modules
         {
             var oldCooldown = currentCd;
             currentCd = cooldown;
-            Mgr.Event.Send<EvtAbilityCooldownStart>(new EvtAbilityCooldownStart(this, owner, oldCooldown, currentCd), UCMGameEvents.OnAbilityCooldownStart);
+            Mgr.Event.Send<EvtAbilityCooldownStart>(new EvtAbilityCooldownStart(this, owner, oldCooldown, currentCd), UCMGE.OnAbilityCooldownStart);
         }
     }
 }

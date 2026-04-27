@@ -101,7 +101,7 @@ namespace UnknownCreator.Modules
                 {
                     var oldTeam = team;
                     team = value;
-                    Mgr.Event.Send<EvtUnitTeamChanged>(new(this, oldTeam, team), UCMGameEvents.OnUnitTeamChanged);
+                    Mgr.Event.Send<EvtUnitTeamChanged>(new(this, oldTeam, team), UCMGE.OnUnitTeamChanged);
                 }
             }
         }
@@ -218,11 +218,11 @@ namespace UnknownCreator.Modules
         void IReference.ObjRelease()
         {
             _enable = false;
-            ClearHitBox();
-            ClearBodyPart();
             Mgr.RPool.Release(hbsm);
             Mgr.GPool.Release(unitModelCfg?.model, model);
             Mgr.GPool.Release(unitCfg.root, ent);
+            ClearHitBox();
+            ClearBodyPart();
             unitCfg = null;
             unitModelCfg = null;
             master = null;
@@ -280,7 +280,7 @@ namespace UnknownCreator.Modules
 
             if (show) ShowModel();
 
-            Mgr.Event.Send<EvtUnitModelChanged>(new(modelOldCfgName, modelCfgName, this), UCMGameEvents.OnGetModelName);
+            Mgr.Event.Send<EvtUnitModelChanged>(new(modelOldCfgName, modelCfgName, this), UCMGE.OnGetModelName);
 
         }
 
@@ -297,7 +297,7 @@ namespace UnknownCreator.Modules
         {
             if (unitModelCfg is null) return;
 
-            modelNewCfgName = Mgr.Event.SendR<string>(UCMGameEvents.OnGetModelName, entID);
+            modelNewCfgName = Mgr.Event.SendR<string>(UCMGE.OnGetModelName, entID);
 
             if (model == null &&
                 !string.IsNullOrWhiteSpace(modelNewCfgName))

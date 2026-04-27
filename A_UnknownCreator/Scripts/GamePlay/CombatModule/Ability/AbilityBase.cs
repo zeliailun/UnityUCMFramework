@@ -33,7 +33,7 @@ namespace UnknownCreator.Modules
                 if (newLv != lv)
                 {
                     lv = newLv;
-                    Mgr.Event.Send<EvtAbilityLevelChanged>(new EvtAbilityLevelChanged(this, owner, oldLv, lv), UCMGameEvents.OnAbilityLevelChanged);
+                    Mgr.Event.Send<EvtAbilityLevelChanged>(new EvtAbilityLevelChanged(this, owner, oldLv, lv), UCMGE.OnAbilityLevelChanged);
                 }
             }
         }
@@ -51,14 +51,14 @@ namespace UnknownCreator.Modules
         public int currentCharge
         {
             get => currCharge;
-            private set
+            set
             {
                 var oldCharge = currCharge;
                 var newCharge = value;
                 if (newCharge != oldCharge)
                 {
                     currCharge = value;
-                    Mgr.Event.Send<EvtAbilityChargeChanged>(new EvtAbilityChargeChanged(this, owner, currCharge), UCMGameEvents.OnAbilityChargeChanged);
+                    Mgr.Event.Send<EvtAbilityChargeChanged>(new EvtAbilityChargeChanged(this, owner, currCharge), UCMGE.OnAbilityChargeChanged);
                 }
             }
         }
@@ -66,11 +66,7 @@ namespace UnknownCreator.Modules
 
         public int index { private set; get; }
 
-        public double currentCd
-        {
-            get;
-            private set;
-        }
+        public double currentCd { private set; get; }
 
         public bool isFirstChargeCooldown { private set; get; }
 
@@ -183,7 +179,7 @@ namespace UnknownCreator.Modules
             if (!isCooldownReady || hasChargeLogic)
             {
                 currentCd = Math.Max(0, currentCd - CustomTime.DeltaTime());
-                Mgr.Event.Send<AbilityBase>(this, UCMGameEvents.OnAbilityCooldownCalc);
+                Mgr.Event.Send<AbilityBase>(this, UCMGE.OnAbilityCooldownCalc);
                 if (currentCd <= 0 && hasChargeLogic)
                 {
                     ++currentCharge;
@@ -194,7 +190,7 @@ namespace UnknownCreator.Modules
 
                         Mgr.Event.Send<EvtAbilityCooldownStart>(
                             new EvtAbilityCooldownStart(this, owner, 0, currentCd),
-                            UCMGameEvents.OnAbilityCooldownStart);
+                            UCMGE.OnAbilityCooldownStart);
                     }
                     else
                     {

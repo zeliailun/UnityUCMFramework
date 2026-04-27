@@ -41,7 +41,7 @@ namespace UnknownCreator.Modules
         {
             if (!isInterruptMotion) return;
 
-            var allBuffs = Mgr.Event.SendAllR<BuffBase>(UCMGameEvents.MotionInterrupted, owner.entID); 
+            var allBuffs = Mgr.Event.SendAllR<BuffBase>(UCMGE.MotionInterrupted, owner.entID); 
 
             bool hasHigherPriority = false;
 
@@ -86,7 +86,7 @@ namespace UnknownCreator.Modules
 
                 // 注册自己
                 isInterruptMotion = false;
-                Mgr.Event.AddR<BuffBase>(GetSelf, UCMGameEvents.MotionInterrupted, owner.entID);
+                Mgr.Event.AddR<BuffBase>(GetSelf, UCMGE.MotionInterrupted, owner.entID);
             }
         }
 
@@ -94,7 +94,7 @@ namespace UnknownCreator.Modules
         {
             if (isInterruptMotion) return;
             isInterruptMotion = true;
-            Mgr.Event.RemoveR<BuffBase>(GetSelf, UCMGameEvents.MotionInterrupted, owner.entID);
+            Mgr.Event.RemoveR<BuffBase>(GetSelf, UCMGE.MotionInterrupted, owner.entID);
             OnMotionControllerInterrupted();
         }
 

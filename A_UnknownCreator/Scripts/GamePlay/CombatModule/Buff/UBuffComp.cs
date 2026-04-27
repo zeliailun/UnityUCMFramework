@@ -48,7 +48,7 @@ namespace UnknownCreator.Modules
                 if (!newBuff.isRelease)
                 {
                     newBuff.UpdateBuff();
-                    Mgr.Event.Send<BuffBase>(newBuff, UCMGameEvents.OnBuffAdded);
+                    Mgr.Event.Send<BuffBase>(newBuff, UCMGE.OnBuffAdded);
                 }
                 return newBuff;
             }
@@ -64,7 +64,7 @@ namespace UnknownCreator.Modules
                     if (!newBuff.isRelease)
                     {
                         newBuff.UpdateBuff();
-                        Mgr.Event.Send<BuffBase>(newBuff, UCMGameEvents.OnBuffAdded);
+                        Mgr.Event.Send<BuffBase>(newBuff, UCMGE.OnBuffAdded);
                     }
                     return newBuff;
                 }
@@ -127,7 +127,7 @@ namespace UnknownCreator.Modules
                 buffList.Remove(buff);
                 Mgr.RPool.Release(buff);
 
-                Mgr.Event.Send<string>(buffName, UCMGameEvents.OnBuffRemoved);
+                Mgr.Event.Send<string>(buffName, UCMGE.OnBuffRemoved);
 
             }
             buffDict.Remove(buffName);
@@ -213,7 +213,7 @@ namespace UnknownCreator.Modules
             }
             Mgr.RPool.Release(buff);
 
-            Mgr.Event.Send<string>(buffName, UCMGameEvents.OnBuffRemoved);
+            Mgr.Event.Send<string>(buffName, UCMGE.OnBuffRemoved);
         }
     }
 }
