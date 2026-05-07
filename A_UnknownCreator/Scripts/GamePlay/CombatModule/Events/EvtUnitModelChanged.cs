@@ -1,6 +1,6 @@
 namespace UnknownCreator.Modules
 {
-    public struct EvtUnitModelChanged
+    public struct EvtUnitModelChanged : IBusEvent
     {
         public string oldName;
         public string newName;

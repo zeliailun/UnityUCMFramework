@@ -5,7 +5,10 @@ namespace UnknownCreator.Modules
 {
     public interface IEntityMgr : IDearMgr
     {
-        Action<IEntity> OnEntityRegistered { set; get; }
+        IReadOnlyList<IEntity> allEnt { get; }
+        IReadOnlyList<IEntityGroup> allEntGroup { get; }
+
+        Action <IEntity> OnEntityRegistered { set; get; }
         int entityCount { get; }
         int entityGroupDCount { get; }
         void RegisterEntity(IEntity entity, string groupName);
@@ -17,8 +20,8 @@ namespace UnknownCreator.Modules
         void HideEntity(EntityId id);
         void HideAllEntity();
         IEntity GetEntity(EntityId id);
-        bool IsValidEntity(EntityId id);
-        bool IsValidEntity<T>(T ent) where T : IEntity;
+        bool IsVaildEntity(EntityId id);
+        bool IsVaildEntity<T>(T ent) where T : IEntity;
         void SetGroup(string groupName, IEntity entity);
         bool HasGroup(string groupName);
         void ShowGroup(string groupName);
@@ -28,7 +31,5 @@ namespace UnknownCreator.Modules
         IEntityGroup GetGroup(string groupName);
         void RemoveEntityGroup<T>(T ent) where T : IEntity;
         IEntityGroup GetEntityGroup<T>(T ent) where T : IEntity;
-        List<IEntityGroup> GetAllEntityGroup(bool isCopy);
-        List<IEntity> GetAllEntity(bool isCopy);
     }
 }

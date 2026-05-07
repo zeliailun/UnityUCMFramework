@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 namespace UnknownCreator.Modules
 {
@@ -8,6 +9,8 @@ namespace UnknownCreator.Modules
         void LogWarning<T>(T obj);
 
         void LogError<T>(T obj);
+
+        void LogException(Exception exception);
 
         void DrawLine(Vector3 start, Vector3 end, Color color, float duration);
 

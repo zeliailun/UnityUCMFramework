@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using UnityEngine;
 
 
@@ -34,6 +35,12 @@ namespace UnknownCreator.Modules
         public static void LogError(object obj)
         {
             if (isEnableDebug) log.LogError(obj);
+        }
+
+        [Conditional("UCMDebug")]
+        public static void LogException(Exception exception)
+        {
+            if (isEnableDebug) log.LogException(exception);
         }
 
         [Conditional("UCMDebug")]

@@ -30,6 +30,7 @@ namespace UnknownCreator.Modules
             if (!varDict.TryGetValue(key, out var result))
             {
                 varDict.Add(key, variable);
+                varList.Add(variable);
                 return variable;
             }
             else
@@ -44,6 +45,7 @@ namespace UnknownCreator.Modules
             {
                 var value = Mgr.RPool.Load<T>();
                 varDict.Add(key, value);
+                varList.Add(value);
                 return value;
             }
             else
@@ -103,14 +105,11 @@ namespace UnknownCreator.Modules
 
         public void ClearAll()
         {
-            varDict.Clear();
-            IVariable value;
             for (int i = varList.Count - 1; i >= 0; i--)
-            {
-                value = varList[i];
-                if (varList.Remove(value))
-                    Mgr.RPool.Release(value);
-            }
+                Mgr.RPool.Release(varList[i]);
+
+            varList.Clear();
+            varDict.Clear();
         }
 
         void IReference.ObjRelease()

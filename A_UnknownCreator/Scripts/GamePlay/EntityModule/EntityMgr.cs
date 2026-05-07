@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnknownCreator.Modules
 {
     public sealed partial class EntityMgr : IEntityMgr
@@ -14,6 +15,10 @@ namespace UnknownCreator.Modules
         internal List<IEntityGroup> groupList = new();
 
         internal Dictionary<EntityId, IEntityGroup> entityGroupDict = new();
+
+        public IReadOnlyList<IEntity> allEnt => entityList;
+
+        public IReadOnlyList<IEntityGroup> allEntGroup => groupList;
 
         public int entityCount => entityDict.Count;
 
@@ -46,28 +51,34 @@ namespace UnknownCreator.Modules
 
         void IDearMgr.UpdateMGR()
         {
+            IEntity entity;
             for (int i = 0; i < entityList.Count; i++)
             {
-                if (entityList[i].enable)
-                    entityList[i].UpdataEnt();
+                entity = entityList[i];
+                if (entity != null && entity.enable)
+                    entity.UpdataEnt();
             }
         }
 
         void IDearMgr.FixedUpdateMGR()
         {
-            for (int i = 0; i < entityList.Count; i++)
+            IEntity entity;
+            for (int i = entityList.Count - 1; i >= 0; i--)
             {
-                if (entityList[i].enable)
-                    entityList[i].FixedUpdataEnt();
+                entity = entityList[i];
+                if (entity != null && entity.enable)
+                    entity.FixedUpdataEnt();
             }
         }
 
         void IDearMgr.LateUpdateMGR()
         {
-            for (int i = 0; i < entityList.Count; i++)
+            IEntity entity;
+            for (int i = entityList.Count - 1; i >= 0; i--)
             {
-                if (entityList[i].enable)
-                    entityList[i].LateUpdataEnt();
+                entity = entityList[i];
+                if (entity != null && entity.enable)
+                    entity.LateUpdataEnt();
             }
         }
 
@@ -75,17 +86,17 @@ namespace UnknownCreator.Modules
         //==================================================================================================================
 
 
-        public bool IsValidEntity(EntityId id)
+        public bool IsVaildEntity(EntityId id)
         => GetEntity(id) != null;
 
-        public bool IsValidEntity<T>(T ent) where T : IEntity
+        public bool IsVaildEntity<T>(T ent) where T : IEntity
         => ent != null && GetEntity(ent.entID) != null;
 
         public void RegisterEntity(IEntity ent, string groupName)
         {
             if (ent is null) return;
 
-            if (IsValidEntity(ent.entID)) UCMDebug.LogError("重复注册实体");
+            if (IsVaildEntity(ent.entID)) UCMDebug.LogError("重复注册实体");
 
             entityDict.Add(ent.entID, ent);
             entityList.Add(ent);
@@ -112,12 +123,20 @@ namespace UnknownCreator.Modules
 
         public void ShowEntity(EntityId id)
         {
-            GetEntity(id).enable = true;
+            var entity = GetEntity(id);
+            if (entity == null)
+                return;
+
+            entity.enable = true;
         }
 
         public void HideEntity(EntityId id)
         {
-            GetEntity(id).enable = false;
+            var entity = GetEntity(id);
+            if (entity == null)
+                return;
+
+            entity.enable = false;
         }
 
         public void ShowAllEntity()
@@ -160,9 +179,6 @@ namespace UnknownCreator.Modules
         public IEntity GetEntity(EntityId id)
         => entityDict.TryGetValue(id, out var entity) ? entity : null;
 
-        public List<IEntity> GetAllEntity(bool isCopy)
-        => isCopy ? entityList.CopyToNewList() : entityList;
-
 
         //==================================================================================================================
 
@@ -173,7 +189,7 @@ namespace UnknownCreator.Modules
         public void SetGroup(string groupName, IEntity entity)
         {
             if (string.IsNullOrWhiteSpace(groupName)) UCMDebug.LogError("无法设置【" + groupName + "】实体组");
-            if (!IsValidEntity(entity.entID)) return;
+            if (!IsVaildEntity(entity.entID)) return;
             RemoveEntityGroup(entity);
             var group = GetGroup(groupName);
             if (group is null)
@@ -194,6 +210,7 @@ namespace UnknownCreator.Modules
             group.ClearEntity();
             groupDict.Remove(groupName);
             groupList.Remove(group);
+            Mgr.RPool.Release(group);
         }
 
         public void ShowGroup(string groupName)
@@ -223,7 +240,5 @@ namespace UnknownCreator.Modules
         public IEntityGroup GetEntityGroup<T>(T ent) where T : IEntity
         => entityGroupDict.TryGetValue(ent.entID, out var value) ? value : null;
 
-        public List<IEntityGroup> GetAllEntityGroup(bool isCopy)
-        => isCopy ? groupList.CopyToNewList() : groupList;
     }
 }

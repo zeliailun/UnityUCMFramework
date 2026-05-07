@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace UnknownCreator.Modules
@@ -18,6 +19,12 @@ namespace UnknownCreator.Modules
         public void Log<T>(T obj)
         {
             Debug.Log("<color=white>" + obj + "</color>");
+        }
+
+
+        public void LogException(Exception exception)
+        {
+            Debug.LogException(exception);
         }
 
         public void DrawLine(Vector3 start, Vector3 end, Color color, float duration)
