@@ -3,8 +3,9 @@ namespace UnknownCreator.Modules
 {
     public interface ICustomTime
     {
-        Action OnPause { set; get; }
-        Action OnResume { set; get; }
+        event Action OnPause;
+
+        event Action OnResume;
 
         float LocalTimeScale { set; get; }
 
@@ -16,5 +17,12 @@ namespace UnknownCreator.Modules
 
         void ResumeGame(bool isClear);
         void SetTimeScale(float value);
+
+
+        void ClearPauseEvents();
+
+        void ClearResumeEvents();
+
+        void ClearAllEvents();
     }
 }

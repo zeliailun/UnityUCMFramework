@@ -51,7 +51,7 @@ namespace UnknownCreator.Modules
             if (newValue != stateValue)
             {
                 stateDict[typeID] = newValue;
-                Mgr.Event.Send<EvtStateUpdated>(new(self, typeID, newValue > 0), UCMGE.OnStateUpdated);
+                GameEvtBus.Send<EvtStateUpdated>(new(self, typeID, newValue > 0));
             }
         }
 

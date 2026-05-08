@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace UnknownCreator.Modules
@@ -43,8 +44,17 @@ namespace UnknownCreator.Modules
 
         public override void UpdateComp()
         {
-            for (int i = 0; i < abilityList.Count; i++)
-                abilityList[i]?.UpdateAbility();
+            AbilityBase ab;
+            for (int i = 0; i < abilityList.Count;)
+            {
+                ab = abilityList[i];
+                ab?.UpdateAbility();
+
+                // 如果当前格子仍然是刚才这个 buff，说明它没被移除，正常前进
+                if (i < abilityList.Count && ReferenceEquals(abilityList[i], ab))
+                    i++;
+                // 否则说明列表发生了删除/移动，不 i++，继续处理当前下标的新元素
+            }
         }
 
 
@@ -129,7 +139,9 @@ namespace UnknownCreator.Modules
 
         public void InterruptAbility(AbilityBase ab)
         {
-            if (!ab.Equals(castAbility)) return;
+            if (ab == null || !ReferenceEquals(ab, castAbility))
+                return;
+
             InterruptCastPoint(ab);
             InterruptCastBackswing(ab);
         }
@@ -173,18 +185,33 @@ namespace UnknownCreator.Modules
 
         public AbilityBase ReplaceAbility(string abName, string cfgName, int index)
         {
-            var nullAb = abilityList[index];
-            Mgr.Event.Send<AbilityBase>(nullAb, UCMGE.OnRemoveAbility);
-            Mgr.RPool.Release(nullAb);
-            abilityById.Remove(nullAb.abilityID);
+            var nullAb = GetAbility(index);
+
+            if (nullAb != null)
+            {
+                GameEvtBus.Send<EvtAbilityWillRemove>(new(nullAb, self));
+
+                if (!nullAb.isRelease)
+                {
+                    Mgr.RPool.Release(nullAb);
+                    abilityById.Remove(nullAb.abilityID);
+                }
+
+            }
+
             AbilityBase newAb = (AbilityBase)Mgr.RPool.Load(Type.GetType(abName));
             newAb.InitAbility(self, index, abName, cfgName);
             abilityList[index] = newAb;
             abilityById.Add(newAb.abilityID, newAb);
             newAb.OnCreated();
+
             if (newAb.isRelease) return null;
+
             newAb.UpdateAbility();
-            Mgr.Event.Send<AbilityBase>(newAb, UCMGE.OnAbilityAdded);
+
+            if (newAb.isRelease) return null;
+
+            GameEvtBus.Send<EvtAbilityAdded>(new(newAb, self));
 
             return newAb;
         }
@@ -202,7 +229,11 @@ namespace UnknownCreator.Modules
             if (!newAb.isRelease)
             {
                 newAb.UpdateAbility();
-                Mgr.Event.Send<AbilityBase>(newAb, UCMGE.OnAbilityAdded);
+
+                if (newAb.isRelease) return null;
+
+                GameEvtBus.Send<EvtAbilityAdded>(new(newAb, self));
+
                 return newAb;
             }
             return null;
@@ -222,11 +253,20 @@ namespace UnknownCreator.Modules
         public void RemoveAbility(int index)
         {
             if (!IsRemoveAbility(index)) return;
+
             var old = abilityList[index];
+
             InterruptAbility(old);
-            Mgr.Event.Send<AbilityBase>(old, UCMGE.OnRemoveAbility);
-            Mgr.RPool.Release(old);
-            abilityById.Remove(old.abilityID);
+
+            GameEvtBus.Send<EvtAbilityWillRemove>(new(old, self));
+
+
+            if (!old.isRelease)
+            {
+                Mgr.RPool.Release(old);
+                abilityById.Remove(old.abilityID);
+            }
+
             AbilityBase generic = (AbilityBase)Mgr.RPool.Load(Type.GetType(AbilityGlobals.AbilityNull));
             generic.InitAbility(self, index, AbilityGlobals.AbilityNull, nameof(AbilityNull));
             abilityList[index] = generic;
@@ -308,6 +348,7 @@ namespace UnknownCreator.Modules
 
         private bool HasAbilityByIndex(int id)
         => hasAbility &&
+           id >= 0 &&
            id < abilityCount &&
            abilityList[id] != null;
 

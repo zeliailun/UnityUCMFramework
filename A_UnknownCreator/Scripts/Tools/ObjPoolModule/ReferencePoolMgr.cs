@@ -94,7 +94,15 @@ namespace UnknownCreator.Modules
         => type != null && referencePool.TryGetValue(type, out var pool) && pool.HasObject(obj);
 
         public void DestroyPool(object obj)
-        => DestroyPool(obj.GetType());
+        {
+            if (obj is null)
+            {
+                UCMDebug.LogWarning("无法销毁 null 对象对应的池");
+                return;
+            }
+
+            DestroyPool(obj.GetType());
+        }
 
         public void DestroyPool(Type type)
         {

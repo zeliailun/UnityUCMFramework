@@ -60,6 +60,9 @@ namespace UnknownCreator.Modules
 
         public virtual void OnProjectilePause(Projectile proj) { }
 
+        /// <summary>
+        /// 不要在里面重复移除会引起bug
+        /// </summary>
         public virtual void OnProjectileDestroy(Projectile proj) { }
 
 

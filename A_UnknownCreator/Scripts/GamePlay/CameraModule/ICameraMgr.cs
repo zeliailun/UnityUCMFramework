@@ -10,12 +10,11 @@ namespace UnknownCreator.Modules
         Camera mainCam { get; }
         Transform mainCamT { get; }
         Transform cameraRootT { get; }
-        void CretaeMainCamera(string mainCameraName);
+        void CreateMainCamera(string mainCameraName);
         void EnableAllCamera();
         void DisableAllCamera();
         void ClearAllCamera();
         void ReleaseAllCamera();
-        void SetCameraTarget(GameObject target);
-        void ChangeTarget(GameObject target);
+        void ChangeTarget(GameObject target, bool isReactivate = true);
     }
 }

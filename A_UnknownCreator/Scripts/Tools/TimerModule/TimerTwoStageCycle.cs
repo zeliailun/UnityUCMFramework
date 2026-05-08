@@ -16,7 +16,7 @@ namespace UnknownCreator.Modules
         {
             if (time >= delayCache)
             {
-                time = 0;
+                time= 0;
                 delayCache = secondDelay;
                 onTrigger?.Invoke(this);
             }

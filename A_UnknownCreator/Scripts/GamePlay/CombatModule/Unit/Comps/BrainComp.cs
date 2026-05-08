@@ -54,6 +54,7 @@
         {
             hbsmAI.ReleaseAllHBSM();
             hbsmPlayer.ReleaseAllHBSM();
+            brainType = BrainType.None;
             hbsmCurrent = null;
             self = null;
         }
@@ -63,7 +64,7 @@
             if (!self.enable || brainType == BrainType.Player) return;
             SetCurrentBrainHBSM(true);
             Mgr.Camera.ChangeTarget(self.ent);
-            Mgr.Cntlr.ChangeTarget(self.ent);
+            Mgr.Cntlr.SetControllerTargets(self.ent);
         }
 
         public void SwitchToAI()
@@ -72,7 +73,7 @@
             if (Mgr.Cntlr.IsControllerTarget(self.ent))
             {
                 Mgr.Camera.ChangeTarget(null);
-                Mgr.Cntlr.ChangeTarget(null);
+                Mgr.Cntlr.SetControllerTargets(null);
             }
             SetCurrentBrainHBSM(false);
         }

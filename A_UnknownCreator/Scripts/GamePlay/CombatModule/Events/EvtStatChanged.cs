@@ -1,15 +1,17 @@
 namespace UnknownCreator.Modules
 {
-    public readonly struct EvtStatChanged
+    public readonly struct EvtStatChanged:IBusEvent
     {
         public readonly Unit target;
-        public readonly double oldValue;
+        public readonly double oldFinalValue;
+        public readonly double oldBonusValue;
         public readonly StatData stat;
 
-        public EvtStatChanged(Unit target, double oldValue, StatData stat)
+        public EvtStatChanged(Unit target, double oldFinalValue, double oldBonusValue,StatData stat)
         {
             this.target = target;
-            this.oldValue = oldValue;
+            this.oldFinalValue = oldFinalValue;
+            this.oldBonusValue = oldBonusValue;
             this.stat = stat;
         }
     }

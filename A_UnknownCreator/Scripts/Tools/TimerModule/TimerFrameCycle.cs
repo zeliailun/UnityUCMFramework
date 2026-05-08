@@ -1,4 +1,3 @@
-using UnityEngine;
 using System;
 
 namespace UnknownCreator.Modules
@@ -15,13 +14,14 @@ namespace UnknownCreator.Modules
 
         protected override void OnInitTimer()
         {
-            currentFrameCount = frameCount;
+            currentFrameCount = Math.Max(frameCount, 1);
         }
 
         protected override void OnUpdateTimer()
         {
-            frameCount--;
-            if (frameCount <= 0)
+            currentFrameCount--;
+
+            if (currentFrameCount <= 0)
             {
                 isStart = false;
                 onCompleted?.Invoke(this);
@@ -38,7 +38,7 @@ namespace UnknownCreator.Modules
 
         protected override void OnResetTimer()
         {
-            currentFrameCount = frameCount;
+            currentFrameCount = Math.Max(frameCount, 1);
         }
     }
 }

@@ -51,20 +51,37 @@ namespace UnknownCreator.Modules
             hfsm?.FixedUpdateAllHBSM();
         }
 
-        public void SetCameraTarget(GameObject target)
+        public void ChangeTarget(GameObject newTarget, bool isReactivate = true)
         {
-            this.target = target;
+            // 目标相同，不替换
+            if (newTarget != null && target != null && newTarget.GetEntityId() == target.GetEntityId())
+            {
+                return;
+            }
+
+            // 新目标为空：直接清空目标并关闭相机，无视 isReactivate
+            if (newTarget == null)
+            {
+                target = null;
+                DisableAllCamera();
+                return;
+            }
+
+            // 需要重新激活相机：先关闭，再换目标，再开启
+            if (isReactivate)
+            {
+                DisableAllCamera();
+                target = newTarget;
+                EnableAllCamera();
+                return;
+            }
+
+            // 不重新激活相机：只替换目标，然后刷新状态机
+            target = newTarget;
+            hfsm?.RefreshAllHBSM();
         }
 
-        public void ChangeTarget(GameObject target)
-        {
-            if (target != null && this.target != null && target.GetEntityId() == this.target.GetEntityId()) return;
-            DisableAllCamera();
-            SetCameraTarget(target);
-            if (target != null) EnableAllCamera();
-        }
-
-        public void CretaeMainCamera(string mainCameraName)
+        public void CreateMainCamera(string mainCameraName)
         {
             if (cameraCache != null)
             {
@@ -89,7 +106,7 @@ namespace UnknownCreator.Modules
             if (cameraCache != null && !cameraCache.activeSelf)
             {
                 cameraCache.SetActive(true);
-                hfsm.EnableAllHBSM();
+                hfsm?.EnableAllHBSM();
             }
         }
 
@@ -97,7 +114,7 @@ namespace UnknownCreator.Modules
         {
             if (cameraCache != null && cameraCache.activeSelf)
             {
-                hfsm.DisableAllHBSM();
+                hfsm?.DisableAllHBSM();
                 cameraCache.SetActive(false);
             }
         }
@@ -120,11 +137,12 @@ namespace UnknownCreator.Modules
                 mainCam = null;
                 mainCamT = null;
                 cameraCache = null;
+                mainCameraName = null;
             }
 
             if (cameraRootCache != null)
             {
-                Mgr.GPool.Release(cameraRootName, cameraRootCache,false);
+                Mgr.GPool.Release(cameraRootName, cameraRootCache, false);
                 cameraRootT = null;
                 cameraRootCache = null;
             }

@@ -9,6 +9,11 @@ namespace UnknownCreator.Modules
     /// 全局事件：Bus<TEvent> + global List，不查字典。
     /// 实体事件：Bus<TEvent> + EntityId，才查 Dictionary。
     /// 执行顺序：priority 高的先执行；相同 priority 按添加顺序执行。
+    ///
+    /// 发送期间允许 Add / Remove / Clear：
+    /// - Remove / Once：当前位置置 null，占位，不改变当前 List 索引。
+    /// - Add：进入 pendingAdds，本轮 Send 不执行，最外层 Send 结束后按 priority 插入。
+    /// - Clear：当前已存在监听置 null，pendingAdds 中对应监听移除。
     /// </summary>
     public static class Bus<TEvent> where TEvent : IBusEvent
     {
@@ -33,12 +38,19 @@ namespace UnknownCreator.Modules
             public string DebugName => $"Bus<{typeof(TEvent).Name}>";
         }
 
+        private struct PendingAdd
+        {
+            public Listener listener;
+        }
+
         private static readonly List<Listener> globalListeners = new();
         private static readonly Dictionary<EntityId, List<Listener>> entityListeners = new();
 
-#if UNITY_EDITOR
         private static int publishingDepth;
-#endif
+        private static bool globalDirty;
+        private static readonly HashSet<EntityId> dirtyEntityIds = new();
+        private static readonly List<EntityId> emptyEntityIds = new();
+        private static readonly List<PendingAdd> pendingAdds = new();
 
         static Bus()
         {
@@ -57,10 +69,6 @@ namespace UnknownCreator.Modules
             if (action == null)
                 return new EventHandle(null);
 
-#if UNITY_EDITOR
-            WarnIfModifyWhilePublishing("Subscribe");
-#endif
-
             if (!allowDuplicate)
                 Remove(action);
 
@@ -72,7 +80,7 @@ namespace UnknownCreator.Modules
                 isEntity = false
             };
 
-            InsertByPriority(globalListeners, listener);
+            AddListener(listener);
 
             return new EventHandle(() =>
             {
@@ -88,10 +96,6 @@ namespace UnknownCreator.Modules
             if (action == null)
                 return new EventHandle(null);
 
-#if UNITY_EDITOR
-            WarnIfModifyWhilePublishing("SubscribeOnce");
-#endif
-
             if (!allowDuplicate)
                 Remove(action);
 
@@ -103,7 +107,7 @@ namespace UnknownCreator.Modules
                 isEntity = false
             };
 
-            InsertByPriority(globalListeners, listener);
+            AddListener(listener);
 
             return new EventHandle(() =>
             {
@@ -116,11 +120,8 @@ namespace UnknownCreator.Modules
             if (action == null)
                 return;
 
-#if UNITY_EDITOR
-            WarnIfModifyWhilePublishing("Unsubscribe");
-#endif
-
-            RemoveActionFromList(globalListeners, action);
+            RemoveActionFromPendingAdds(action, false, default);
+            RemoveActionFromList(globalListeners, action, false, default);
         }
 
         public static void Send(TEvent eventData)
@@ -133,21 +134,26 @@ namespace UnknownCreator.Modules
 
         public static bool HasListener()
         {
-            return globalListeners.Count > 0;
+            return HasAliveListener(globalListeners);
         }
 
         public static int GetListenerCount()
         {
-            return globalListeners.Count;
+            return CountAliveListeners(globalListeners);
         }
 
         public static void Clear()
         {
-#if UNITY_EDITOR
-            WarnIfModifyWhilePublishing("Clear");
-#endif
+            if (publishingDepth > 0)
+            {
+                MarkAllRemoveLater(globalListeners, false, default);
+                RemovePendingAddsByKey(false, default);
+                return;
+            }
 
             globalListeners.Clear();
+            RemovePendingAddsByKey(false, default);
+            globalDirty = false;
         }
 
         // =========================
@@ -163,10 +169,6 @@ namespace UnknownCreator.Modules
             if (action == null)
                 return new EventHandle(null);
 
-#if UNITY_EDITOR
-            WarnIfModifyWhilePublishing("SubscribeEntity");
-#endif
-
             if (!allowDuplicate)
                 RemoveEntity(id, action);
 
@@ -179,8 +181,7 @@ namespace UnknownCreator.Modules
                 isEntity = true
             };
 
-            List<Listener> list = GetOrCreateEntityList(id);
-            InsertByPriority(list, listener);
+            AddListener(listener);
 
             return new EventHandle(() =>
             {
@@ -197,10 +198,6 @@ namespace UnknownCreator.Modules
             if (action == null)
                 return new EventHandle(null);
 
-#if UNITY_EDITOR
-            WarnIfModifyWhilePublishing("SubscribeEntityOnce");
-#endif
-
             if (!allowDuplicate)
                 RemoveEntity(id, action);
 
@@ -213,8 +210,7 @@ namespace UnknownCreator.Modules
                 isEntity = true
             };
 
-            List<Listener> list = GetOrCreateEntityList(id);
-            InsertByPriority(list, listener);
+            AddListener(listener);
 
             return new EventHandle(() =>
             {
@@ -227,16 +223,14 @@ namespace UnknownCreator.Modules
             if (action == null)
                 return;
 
-#if UNITY_EDITOR
-            WarnIfModifyWhilePublishing("UnsubscribeEntity");
-#endif
+            RemoveActionFromPendingAdds(action, true, id);
 
             if (!entityListeners.TryGetValue(id, out List<Listener> list))
                 return;
 
-            RemoveActionFromList(list, action);
+            RemoveActionFromList(list, action, true, id);
 
-            if (list.Count == 0)
+            if (publishingDepth <= 0 && list.Count == 0)
                 entityListeners.Remove(id);
         }
 
@@ -249,26 +243,30 @@ namespace UnknownCreator.Modules
                 return;
 
             PublishList(eventData, list);
-
-            if (list.Count == 0)
-                entityListeners.Remove(id);
         }
 
         public static bool HasEntityListener(EntityId id)
         {
-            return entityListeners.TryGetValue(id, out List<Listener> list) && list.Count > 0;
+            return entityListeners.TryGetValue(id, out List<Listener> list) && HasAliveListener(list);
         }
 
         public static int GetEntityListenerCount(EntityId id)
         {
-            return entityListeners.TryGetValue(id, out List<Listener> list) ? list.Count : 0;
+            return entityListeners.TryGetValue(id, out List<Listener> list) ? CountAliveListeners(list) : 0;
         }
 
         public static void ClearEntity(EntityId id)
         {
-#if UNITY_EDITOR
-            WarnIfModifyWhilePublishing("ClearEntity");
-#endif
+            RemovePendingAddsByKey(true, id);
+
+            if (!entityListeners.TryGetValue(id, out List<Listener> list))
+                return;
+
+            if (publishingDepth > 0)
+            {
+                MarkAllRemoveLater(list, true, id);
+                return;
+            }
 
             entityListeners.Remove(id);
         }
@@ -279,12 +277,59 @@ namespace UnknownCreator.Modules
 
         public static void ClearAll()
         {
-#if UNITY_EDITOR
-            WarnIfModifyWhilePublishing("ClearAll");
-#endif
+            if (publishingDepth > 0)
+            {
+                MarkAllRemoveLater(globalListeners, false, default);
+
+                foreach (var pair in entityListeners)
+                {
+                    MarkAllRemoveLater(pair.Value, true, pair.Key);
+                }
+
+                pendingAdds.Clear();
+                return;
+            }
 
             globalListeners.Clear();
             entityListeners.Clear();
+
+            globalDirty = false;
+            dirtyEntityIds.Clear();
+            emptyEntityIds.Clear();
+            pendingAdds.Clear();
+        }
+
+        private static void AddListener(Listener listener)
+        {
+            if (listener == null || listener.action == null)
+                return;
+
+            if (publishingDepth > 0)
+            {
+                pendingAdds.Add(new PendingAdd
+                {
+                    listener = listener
+                });
+
+                return;
+            }
+
+            AddListenerDirect(listener);
+        }
+
+        private static void AddListenerDirect(Listener listener)
+        {
+            if (listener == null || listener.action == null)
+                return;
+
+            if (!listener.isEntity)
+            {
+                InsertByPriority(globalListeners, listener);
+                return;
+            }
+
+            List<Listener> list = GetOrCreateEntityList(listener.id);
+            InsertByPriority(list, listener);
         }
 
         private static List<Listener> GetOrCreateEntityList(EntityId id)
@@ -303,45 +348,106 @@ namespace UnknownCreator.Modules
             if (list == null || list.Count == 0)
                 return;
 
-#if UNITY_EDITOR
-            publishingDepth++;
-#endif
+            BeginPublish();
 
             try
             {
-                for (int i = 0; i < list.Count;)
+                for (int i = 0; i < list.Count; i++)
                 {
                     Listener listener = list[i];
 
-                    if (listener == null || listener.action == null)
-                    {
-                        list.RemoveAt(i);
+                    if (listener == null)
                         continue;
+
+                    Action<TEvent> action = listener.action;
+
+                    if (action == null)
+                    {
+                        MarkRemoveLater(list, i, listener);
+                        continue;
+                    }
+
+                    // Once 先标记删除，再执行。
+                    // 这样回调里递归 Send 同事件时，Once 不会重复触发。
+                    if (listener.once)
+                    {
+                        MarkRemoveLater(list, i, listener);
                     }
 
                     try
                     {
-                        listener.action.Invoke(eventData);
+                        action.Invoke(eventData);
                     }
                     catch (Exception e)
                     {
                         UCMDebug.LogException(e);
                     }
-
-                    if (listener.once)
-                    {
-                        list.RemoveAt(i);
-                        continue;
-                    }
-
-                    i++;
                 }
             }
             finally
             {
-#if UNITY_EDITOR
-                publishingDepth--;
-#endif
+                EndPublish();
+            }
+        }
+
+        private static void BeginPublish()
+        {
+            publishingDepth++;
+        }
+
+        private static void EndPublish()
+        {
+            publishingDepth--;
+
+            if (publishingDepth <= 0)
+            {
+                publishingDepth = 0;
+                FlushPendingChanges();
+            }
+        }
+
+        private static void FlushPendingChanges()
+        {
+            if (globalDirty)
+            {
+                RemoveNullSlots(globalListeners);
+                globalDirty = false;
+            }
+
+            if (dirtyEntityIds.Count > 0)
+            {
+                foreach (EntityId id in dirtyEntityIds)
+                {
+                    if (!entityListeners.TryGetValue(id, out List<Listener> list))
+                        continue;
+
+                    RemoveNullSlots(list);
+
+                    if (list.Count == 0)
+                        emptyEntityIds.Add(id);
+                }
+
+                dirtyEntityIds.Clear();
+
+                for (int i = 0; i < emptyEntityIds.Count; i++)
+                {
+                    entityListeners.Remove(emptyEntityIds[i]);
+                }
+
+                emptyEntityIds.Clear();
+            }
+
+            if (pendingAdds.Count > 0)
+            {
+                for (int i = 0; i < pendingAdds.Count; i++)
+                {
+                    Listener listener = pendingAdds[i].listener;
+
+                    if (listener != null && listener.action != null)
+                        AddListenerDirect(listener);
+                }
+
+                pendingAdds.Clear();
             }
         }
 
@@ -350,27 +456,59 @@ namespace UnknownCreator.Modules
             if (listener == null)
                 return;
 
-#if UNITY_EDITOR
-            WarnIfModifyWhilePublishing("RemoveListener");
-#endif
+            RemovePendingListener(listener);
 
             if (!listener.isEntity)
             {
-                globalListeners.Remove(listener);
+                RemoveListenerFromList(globalListeners, listener, false, default);
                 return;
             }
 
             if (!entityListeners.TryGetValue(listener.id, out List<Listener> list))
                 return;
 
-            list.Remove(listener);
+            RemoveListenerFromList(list, listener, true, listener.id);
 
-            if (list.Count == 0)
+            if (publishingDepth <= 0 && list.Count == 0)
                 entityListeners.Remove(listener.id);
         }
 
-        private static void RemoveActionFromList(List<Listener> list, Action<TEvent> action)
+        private static void RemoveListenerFromList(
+            List<Listener> list,
+            Listener listener,
+            bool isEntity,
+            EntityId id)
         {
+            if (list == null || listener == null)
+                return;
+
+            for (int i = list.Count - 1; i >= 0; i--)
+            {
+                if (!ReferenceEquals(list[i], listener))
+                    continue;
+
+                if (publishingDepth > 0)
+                {
+                    MarkRemoveLater(list, i, listener);
+                }
+                else
+                {
+                    list.RemoveAt(i);
+                }
+
+                break;
+            }
+        }
+
+        private static void RemoveActionFromList(
+            List<Listener> list,
+            Action<TEvent> action,
+            bool isEntity,
+            EntityId id)
+        {
+            if (list == null || action == null)
+                return;
+
             for (int i = list.Count - 1; i >= 0; i--)
             {
                 Listener listener = list[i];
@@ -378,8 +516,133 @@ namespace UnknownCreator.Modules
                 if (listener == null)
                     continue;
 
-                if (Delegate.Equals(listener.action, action))
+                if (!Delegate.Equals(listener.action, action))
+                    continue;
+
+                if (publishingDepth > 0)
+                {
+                    MarkRemoveLater(list, i, listener);
+                }
+                else
+                {
                     list.RemoveAt(i);
+                }
+            }
+        }
+
+        private static void MarkRemoveLater(List<Listener> list, int index, Listener listener)
+        {
+            if (list == null || index < 0 || index >= list.Count)
+                return;
+
+            if (list[index] == null)
+                return;
+
+            list[index] = null;
+
+            if (listener != null && listener.isEntity)
+            {
+                dirtyEntityIds.Add(listener.id);
+            }
+            else
+            {
+                globalDirty = true;
+            }
+        }
+
+        private static void MarkAllRemoveLater(List<Listener> list, bool isEntity, EntityId id)
+        {
+            if (list == null || list.Count == 0)
+                return;
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i] != null)
+                    list[i] = null;
+            }
+
+            if (isEntity)
+                dirtyEntityIds.Add(id);
+            else
+                globalDirty = true;
+        }
+
+        private static void RemoveNullSlots(List<Listener> list)
+        {
+            if (list == null)
+                return;
+
+            for (int i = list.Count - 1; i >= 0; i--)
+            {
+                if (list[i] == null)
+                    list.RemoveAt(i);
+            }
+        }
+
+        private static bool RemovePendingListener(Listener listener)
+        {
+            bool removed = false;
+
+            for (int i = pendingAdds.Count - 1; i >= 0; i--)
+            {
+                if (!ReferenceEquals(pendingAdds[i].listener, listener))
+                    continue;
+
+                pendingAdds.RemoveAt(i);
+                removed = true;
+            }
+
+            return removed;
+        }
+
+        private static void RemoveActionFromPendingAdds(
+            Action<TEvent> action,
+            bool isEntity,
+            EntityId id)
+        {
+            if (action == null || pendingAdds.Count == 0)
+                return;
+
+            for (int i = pendingAdds.Count - 1; i >= 0; i--)
+            {
+                Listener listener = pendingAdds[i].listener;
+
+                if (listener == null)
+                {
+                    pendingAdds.RemoveAt(i);
+                    continue;
+                }
+
+                if (listener.isEntity != isEntity)
+                    continue;
+
+                if (isEntity && !EqualityComparer<EntityId>.Default.Equals(listener.id, id))
+                    continue;
+
+                if (Delegate.Equals(listener.action, action))
+                    pendingAdds.RemoveAt(i);
+            }
+        }
+
+        private static void RemovePendingAddsByKey(bool isEntity, EntityId id)
+        {
+            for (int i = pendingAdds.Count - 1; i >= 0; i--)
+            {
+                Listener listener = pendingAdds[i].listener;
+
+                if (listener == null)
+                {
+                    pendingAdds.RemoveAt(i);
+                    continue;
+                }
+
+                if (listener.isEntity != isEntity)
+                    continue;
+
+                if (isEntity && !EqualityComparer<EntityId>.Default.Equals(listener.id, id))
+                    continue;
+
+                pendingAdds.RemoveAt(i);
             }
         }
 
@@ -387,36 +650,69 @@ namespace UnknownCreator.Modules
         {
             int i = list.Count - 1;
 
-            while (i >= 0 && list[i].priority < listener.priority)
+            while (i >= 0)
             {
+                Listener current = list[i];
+
+                if (current == null)
+                {
+                    i--;
+                    continue;
+                }
+
+                if (current.priority >= listener.priority)
+                    break;
+
                 i--;
             }
 
             list.Insert(i + 1, listener);
         }
 
-        private static int GetTotalListenerCount()
+        private static bool HasAliveListener(List<Listener> list)
         {
-            int count = globalListeners.Count;
+            if (list == null)
+                return false;
 
-            foreach (var pair in entityListeners)
+            for (int i = 0; i < list.Count; i++)
             {
-                count += pair.Value.Count;
+                Listener listener = list[i];
+
+                if (listener != null && listener.action != null)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static int CountAliveListeners(List<Listener> list)
+        {
+            if (list == null)
+                return 0;
+
+            int count = 0;
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                Listener listener = list[i];
+
+                if (listener != null && listener.action != null)
+                    count++;
             }
 
             return count;
         }
 
-#if UNITY_EDITOR
-        private static void WarnIfModifyWhilePublishing(string operation)
+        private static int GetTotalListenerCount()
         {
-            if (publishingDepth <= 0)
-                return;
+            int count = CountAliveListeners(globalListeners);
 
-            UCMDebug.LogWarning(
-                $"Bus<{typeof(TEvent).Name}> 正在 Publish 时执行了 {operation}。当前版本没有延迟操作队列，可能导致监听顺序或索引异常。"
-            );
+            foreach (var pair in entityListeners)
+            {
+                count += CountAliveListeners(pair.Value);
+            }
+
+            return count;
         }
-#endif
     }
 }

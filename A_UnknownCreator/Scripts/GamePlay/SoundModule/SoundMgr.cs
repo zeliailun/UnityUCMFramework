@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -27,18 +27,18 @@ namespace UnknownCreator.Modules
 
         public int soundGroupCount => soundGroupDict.Count;
 
-
         public int sameSoundCount => soundCountDict.Count;
-
-        //private SoundMgr() { }
 
         void IDearMgr.WorkWork()
         {
+            soundCountDict ??= new();
             soundGroupDict ??= new();
             soundDict ??= new();
             soundGroupList ??= new();
             soundList ??= new();
-            mixer = UnityGlobals.LoadSync<AudioMixer>(mixerName);
+
+            if (!string.IsNullOrWhiteSpace(mixerName))
+                mixer = UnityGlobals.LoadSync<AudioMixer>(mixerName);
         }
 
         void IDearMgr.DoNothing()
@@ -46,19 +46,17 @@ namespace UnknownCreator.Modules
             ClearAllSound();
             UnityGlobals.Release(mixer);
             mixer = null;
-
         }
 
         void IDearMgr.UpdateMGR()
         {
             for (int i = soundList.Count - 1; i >= 0; i--)
-            {
                 soundList[i]?.UpdateSound();
-            }
         }
 
         public void SetSoundMixer(string am)
         {
+            mixerName = am;
             UnityGlobals.Release(mixer);
             mixer = null;
 
@@ -66,18 +64,20 @@ namespace UnknownCreator.Modules
                 mixer = UnityGlobals.LoadSync<AudioMixer>(am);
         }
 
-
         public void IncreaseSoundPlayCount(string name)
         {
+            if (string.IsNullOrWhiteSpace(name)) return;
+
             soundCountDict.TryGetValue(name, out var count);
             soundCountDict[name] = count + 1;
         }
 
         public void DecreaseSoundPlayCount(string name)
         {
+            if (string.IsNullOrWhiteSpace(name)) return;
             if (!soundCountDict.TryGetValue(name, out var count)) return;
 
-            soundCountDict[name] = --count;
+            soundCountDict[name] = count <= 1 ? 0 : count - 1;
         }
 
         public int CurrentSoundPlayCount(string name)
@@ -94,11 +94,15 @@ namespace UnknownCreator.Modules
                 info.Item1.AddComponent<AudioSource>();
                 info.Item1.layer = 2;
             }
+
             var sound = Mgr.RPool.Load<T>();
             sound.Init(soundName, info.Item1);
             soundDict.Add(sound.id, sound);
             soundList.Add(sound);
-            if (!string.IsNullOrWhiteSpace(soundGroupName)) SetSoundGroup(sound.id, soundGroupName);
+
+            if (!string.IsNullOrWhiteSpace(soundGroupName))
+                SetSoundGroup(sound.id, soundGroupName);
+
             return sound;
         }
 
@@ -108,11 +112,13 @@ namespace UnknownCreator.Modules
             UnloadSound(sound.id);
         }
 
-
         public void UnloadSound(EntityId id)
         {
             if (!soundDict.Remove(id, out var sound)) return;
-            if (sound.HasGroup()) GetSoundGroup(sound.groupName)?.RemoveSound(id);
+
+            if (sound.HasGroup())
+                GetSoundGroup(sound.groupName)?.RemoveSound(id);
+
             soundList.Remove(sound);
             Mgr.RPool.Release(sound);
         }
@@ -156,27 +162,40 @@ namespace UnknownCreator.Modules
 
         public void SetSoundGroup(EntityId id, string soundGroupName)
         {
-            if (string.IsNullOrWhiteSpace(soundGroupName)) UCMDebug.LogError("无法设置【" + soundGroupName + "】声音组");
+            if (string.IsNullOrWhiteSpace(soundGroupName))
+            {
+                UCMDebug.LogError("无法设置空声音组");
+                return;
+            }
 
             var sound = GetSound(id);
             if (sound is null) return;
+
             if (sound.HasGroup())
             {
-                var oldGroup = GetSoundGroup(sound.groupName);
-                oldGroup.RemoveSound(id);
+                if (sound.groupName == soundGroupName) return;
+                GetSoundGroup(sound.groupName)?.RemoveSound(id);
             }
-            var group = GetSoundGroup(soundGroupName) ?? Mgr.RPool.Load<SoundGroup>();
-            group.groupName = soundGroupName;
+
+            var group = GetSoundGroup(soundGroupName);
+            if (group is null)
+            {
+                group = Mgr.RPool.Load<SoundGroup>();
+                group.groupName = soundGroupName;
+                soundGroupDict.Add(soundGroupName, group);
+                soundGroupList.Add(group);
+            }
+
             group.AddSound(id, sound);
-            soundGroupDict.Add(soundGroupName, (SoundGroup)group);
-            soundGroupList.Add(group);
         }
 
         public void RemoveSoundGroup(EntityId id)
         {
             var sound = GetSound(id);
             if (sound is null) return;
-            if (sound.HasGroup()) GetSoundGroup(sound.groupName)?.RemoveSound(id);
+
+            if (sound.HasGroup())
+                GetSoundGroup(sound.groupName)?.RemoveSound(id);
         }
 
         public void PauseSoundGroup(string soundGroupName)
@@ -198,14 +217,20 @@ namespace UnknownCreator.Modules
         {
             var group = GetSoundGroup(soundGroupName);
             if (group is null) return;
+
             soundGroupDict.Remove(soundGroupName);
             soundGroupList.Remove(group);
             Mgr.RPool.Release(group);
         }
 
-        public void MuteSoundSound(string soundGroupName, bool isMute)
+        public void MuteSoundGroup(string soundGroupName, bool isMute)
         {
             GetSoundGroup(soundGroupName)?.MuteAllSound(isMute);
+        }
+
+        public void MuteSoundSound(string soundGroupName, bool isMute)
+        {
+            MuteSoundGroup(soundGroupName, isMute);
         }
 
         public ISoundGroup GetSoundGroup(string soundGroupName)
@@ -217,25 +242,19 @@ namespace UnknownCreator.Modules
         public void PauseAllSound()
         {
             for (int i = soundList.Count - 1; i >= 0; i--)
-            {
-                soundList[i].PauseSound();
-            }
+                soundList[i]?.PauseSound();
         }
 
         public void ResumeAllSound()
         {
             for (int i = soundList.Count - 1; i >= 0; i--)
-            {
-                soundList[i].ResumeSound();
-            }
+                soundList[i]?.ResumeSound();
         }
 
         public void StopAllSound()
         {
             for (int i = soundList.Count - 1; i >= 0; i--)
-            {
-                soundList[i].StopSound();
-            }
+                soundList[i]?.StopSound();
         }
 
         public void ClearAllSound()
@@ -243,18 +262,17 @@ namespace UnknownCreator.Modules
             soundCountDict.Clear();
             soundGroupDict.Clear();
             soundDict.Clear();
-            ISoundGroup soundGroup;
+
             for (int i = soundGroupList.Count - 1; i >= 0; i--)
             {
-                soundGroup = soundGroupList[i];
+                var soundGroup = soundGroupList[i];
                 soundGroupList.RemoveAt(i);
                 Mgr.RPool.Release(soundGroup);
-
             }
-            ISound sound;
+
             for (int i = soundList.Count - 1; i >= 0; i--)
             {
-                sound = soundList[i];
+                var sound = soundList[i];
                 soundList.RemoveAt(i);
                 Mgr.RPool.Release(sound);
             }

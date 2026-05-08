@@ -113,6 +113,11 @@ namespace UnknownCreator.Modules
             }
             else
             {
+                if (cfg.assets == null || cfg.assets.Count == 0)
+                {
+                    UCMDebug.LogWarning($"动画配置没有资源: {cfg.animName}");
+                    return;
+                }
                 var result = cfg.assets[0];
                 ap.SetAnimAsset(result.animKey, result.baseSpeed);
             }

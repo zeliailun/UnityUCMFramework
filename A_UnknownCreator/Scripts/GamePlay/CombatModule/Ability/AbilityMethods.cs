@@ -169,7 +169,7 @@ namespace UnknownCreator.Modules
             if (!isCooldownReady)
             {
                 currentCd = 0;
-                Mgr.Event.Send<AbilityBase>(this, UCMGE.OnAbilityCooldownCalc);
+                GameEvtBus.Send<EvtAbilityCooldownCalculate>(new(this, owner, currentCd));
             }
 
             var charge = GetCharge();
@@ -213,7 +213,7 @@ namespace UnknownCreator.Modules
                 currentCd = Math.Max(0, currentCd + value);
             }
 
-            Mgr.Event.Send<AbilityBase>(this, UCMGE.OnAbilityCooldownCalc);
+            GameEvtBus.Send<EvtAbilityCooldownCalculate>(new(this, owner, currentCd));
         }
         public void ReduceCurrentCooldown(double value)
         {
@@ -229,7 +229,9 @@ namespace UnknownCreator.Modules
         => ++frozenCooldown;
 
         public void RemoveFrozenCooldown()
-        => --frozenCooldown;
+        {
+            frozenCooldown = Math.Max(0, frozenCooldown - 1);
+        }
 
         public bool HasBehavior(AbBehavior behavior)
         => (GetBehaviorType() & behavior) == behavior;
@@ -324,7 +326,7 @@ namespace UnknownCreator.Modules
         {
             var oldCooldown = currentCd;
             currentCd = cooldown;
-            Mgr.Event.Send<EvtAbilityCooldownStart>(new EvtAbilityCooldownStart(this, owner, oldCooldown, currentCd), UCMGE.OnAbilityCooldownStart);
+            GameEvtBus.Send<EvtAbilityCooldownStart>(new EvtAbilityCooldownStart(this, owner, oldCooldown, currentCd));
         }
     }
 }

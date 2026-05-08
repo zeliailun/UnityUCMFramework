@@ -101,7 +101,7 @@ namespace UnknownCreator.Modules
                 {
                     var oldTeam = team;
                     team = value;
-                    Mgr.Event.Send<EvtUnitTeamChanged>(new(this, oldTeam, team), UCMGE.OnUnitTeamChanged);
+                    GameEvtBus.Send<EvtUnitTeamChanged>(new(this, oldTeam, team));
                 }
             }
         }
@@ -194,7 +194,7 @@ namespace UnknownCreator.Modules
                 item?.CreateUnitBuilder(this);
         }
 
-        public void UpdataEnt()
+        public void UpdateEnt()
         {
             if (master != null &&
                 Mgr.RPool.HasObject(selfType, master))
@@ -204,12 +204,12 @@ namespace UnknownCreator.Modules
             hbsm.UpdateAllHBSM();
         }
 
-        public void FixedUpdataEnt()
+        public void FixedUpdateEnt()
         {
             hbsm.FixedUpdateAllHBSM();
         }
 
-        public void LateUpdataEnt()
+        public void LateUpdateEnt()
         {
 
             hbsm.LateUpdateAllHBSM();
@@ -218,11 +218,20 @@ namespace UnknownCreator.Modules
         void IReference.ObjRelease()
         {
             _enable = false;
-            Mgr.RPool.Release(hbsm);
-            Mgr.GPool.Release(unitModelCfg?.model, model);
-            Mgr.GPool.Release(unitCfg.root, ent);
+            _enable = false;
+
             ClearHitBox();
             ClearBodyPart();
+
+            if (model != null && unitModelCfg != null)
+                Mgr.GPool.Release(unitModelCfg.model, model);
+
+            if (ent != null && unitCfg != null)
+                Mgr.GPool.Release(unitCfg.root, ent);
+
+            if (hbsm != null)
+                Mgr.RPool.Release(hbsm);
+
             unitCfg = null;
             unitModelCfg = null;
             master = null;
@@ -270,7 +279,14 @@ namespace UnknownCreator.Modules
 
             foreach (var result in unitModelCfg.hitBoxList)
             {
-                var id = entT.Find(result).gameObject.GetEntityId();
+                var hitBoxT = entT.Find(result);
+                if (hitBoxT == null)
+                {
+                    UCMDebug.LogWarning($"未找到 HitBox 路径: {result}, Unit: {entName}, ModelCfg: {cfgName}");
+                    continue;
+                }
+
+                var id = hitBoxT.gameObject.GetEntityId();
                 hitBoxID.Add(id);
                 Mgr.Unit.AddUnitRoot(id, this);
             }
@@ -280,24 +296,24 @@ namespace UnknownCreator.Modules
 
             if (show) ShowModel();
 
-            Mgr.Event.Send<EvtUnitModelChanged>(new(modelOldCfgName, modelCfgName, this), UCMGE.OnGetModelName);
-
+            GameEvtBus.Send<EvtUnitModelChanged>(new(modelOldCfgName, modelCfgName, this));
         }
 
         private void SetModel(string cfgName)
         {
             if (unitModelCfg is null) return;
 
-            ReleaseModel(unitModelCfg.model);
-            SetModel(cfgName, isShow = (model == null || model.activeSelf));
+            bool show = model == null || model.activeSelf;
 
+            ReleaseModel(unitModelCfg.model);
+            SetModel(cfgName, show);
         }
 
         private void UpdateModel()
         {
             if (unitModelCfg is null) return;
 
-            modelNewCfgName = Mgr.Event.SendR<string>(UCMGE.OnGetModelName, entID);
+            modelNewCfgName = GameEvtBus.QueryEntity<EvtReturnUnitModelName>(entID).modelName;
 
             if (model == null &&
                 !string.IsNullOrWhiteSpace(modelNewCfgName))
@@ -439,13 +455,8 @@ namespace UnknownCreator.Modules
 
         public bool HasAlive() => alive != null;
 
-        public bool HasMaster()
-        {
-            return master != null;
-        }
-
         public EntityId GetOwnerID()
-        => HasMaster() ? master.entID : entID;
+        => hasMaster ? master.entID : entID;
 
         #endregion
 

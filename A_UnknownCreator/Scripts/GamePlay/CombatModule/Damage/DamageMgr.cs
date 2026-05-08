@@ -18,10 +18,9 @@ namespace UnknownCreator.Modules
         void IDearMgr.DoNothing()
         {
             hurtDict.Clear();
-            hurtDict = null;
         }
 
-        public Func<DamageData, bool> FilterDamageCalc { set; get; }
+        public Func<DamageData, bool> FilterDamageCalc { set; get; } = _ => true;
 
         public void ApplyDamage<T>(T newData) where T : DamageData, new()
         {
@@ -31,14 +30,26 @@ namespace UnknownCreator.Modules
                 return;
 
             var data = Mgr.RPool.Load<T>();
-            data.Init(newData);
-            if (FilterDamageCalc(data))
-                target.OnHurt(data);
-            Mgr.RPool.Release(data);
+            try
+            {
+                data.Init(newData);
+
+                if (FilterDamageCalc(data))
+                    target.OnHurt(data);
+            }
+            finally
+            {
+                Mgr.RPool.Release(data);
+            }
         }
 
         public void AddHurt<T>(EntityId id, T hurt) where T : class, IHealth
-        => hurtDict?.TryAdd(id, hurt);
+        {
+            if (hurtDict is null || hurt is null)
+                return;
+
+            hurtDict[id] = hurt;
+        }
 
         public void RemoveHurt(EntityId id)
         {

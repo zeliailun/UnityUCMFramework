@@ -84,9 +84,9 @@ namespace UnknownCreator.Modules
         {
             var sb = GetState(name);
             if (sb is null) return;
-            if (previousState.Equals(sb)) previousState = null;
-            if (defaultState.Equals(sb)) defaultState = null;
-            if (currentState.Equals(sb)) currentState = null;
+            if (ReferenceEquals(currentState, sb)) currentState = null;
+            if (ReferenceEquals(previousState, sb)) previousState = null;
+            if (ReferenceEquals(defaultState, sb)) defaultState = null;
             stDict.Remove(sb.stateName);
             allStateList.Remove(sb);
             seqStateList.Remove(sb);
@@ -183,17 +183,24 @@ namespace UnknownCreator.Modules
 
         public void BackBeforeSeqState()
         {
-            if (!seqStateList.IsValid())
+            if (!isActivated || isTransition)
+                return;
+
+            if (!TryGetLastValidSeqState(out var st))
             {
-                ChangeNullState(); 
+                ChangeNullState();
                 return;
             }
 
-            var st = seqStateList[^1];
+            if (currentState != null && !currentState.CanExit())
+                return;
 
-            if (st == null)
+            if (!st.CanEnter())
+                return;
+
+            if (ReferenceEquals(currentState, st))
             {
-                ChangeNullState();
+                seqStateList.RemoveAt(seqStateList.Count - 1);
                 return;
             }
 
@@ -373,6 +380,30 @@ namespace UnknownCreator.Modules
         private bool CanAnyUpdate()
         {
             return isActivated && currentState is not null && !isTransition;
+        }
+
+
+        private bool TryGetLastValidSeqState(out IState st)
+        {
+            st = null;
+
+            while (seqStateList != null && seqStateList.Count > 0)
+            {
+                var index = seqStateList.Count - 1;
+                var result = seqStateList[index];
+
+                if (result != null &&
+                    !string.IsNullOrWhiteSpace(result.stateName) &&
+                    HasState(result.stateName))
+                {
+                    st = result;
+                    return true;
+                }
+
+                seqStateList.RemoveAt(index);
+            }
+
+            return false;
         }
     }
 }

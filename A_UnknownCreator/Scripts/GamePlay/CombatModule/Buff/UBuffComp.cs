@@ -22,8 +22,17 @@ namespace UnknownCreator.Modules
 
         public override void UpdateComp()
         {
-            for (int k = 0; k < buffList.Count; k++)
-                buffList[k]?.UpdateBuff();
+            BuffBase buff;
+            for (int i = 0; i < buffList.Count;)
+            {
+                buff = buffList[i];
+                buff?.UpdateBuff();
+
+                // 如果当前格子仍然是刚才这个 buff，说明它没被移除，正常前进
+                if (i < buffList.Count && ReferenceEquals(buffList[i], buff))
+                    i++;
+                // 否则说明列表发生了删除/移动，不 i++，继续处理当前下标的新元素
+            }
         }
 
         public override void ReleaseComp()
@@ -48,7 +57,9 @@ namespace UnknownCreator.Modules
                 if (!newBuff.isRelease)
                 {
                     newBuff.UpdateBuff();
-                    Mgr.Event.Send<BuffBase>(newBuff, UCMGE.OnBuffAdded);
+
+                    if (!newBuff.isRelease)
+                        GameEvtBus.Send<EvtBuffAdded>(new(newBuff, self));
                 }
                 return newBuff;
             }
@@ -64,7 +75,9 @@ namespace UnknownCreator.Modules
                     if (!newBuff.isRelease)
                     {
                         newBuff.UpdateBuff();
-                        Mgr.Event.Send<BuffBase>(newBuff, UCMGE.OnBuffAdded);
+
+                        if (!newBuff.isRelease)
+                            GameEvtBus.Send<EvtBuffAdded>(new(newBuff, self));
                     }
                     return newBuff;
                 }
@@ -116,19 +129,21 @@ namespace UnknownCreator.Modules
             for (int i = list.Count - 1; i >= 0; i--)
             {
                 buff = list[i];
+
                 if (buff == null)
                 {
                     list.RemoveAt(i);
                     continue;
                 }
 
+                GameEvtBus.Send<EvtBuffWillRemove>(new(buff, self));
+
+                if (buff.isRelease) continue;
+
                 buff.OnRemove(false);
                 list.RemoveAt(i);
                 buffList.Remove(buff);
                 Mgr.RPool.Release(buff);
-
-                Mgr.Event.Send<string>(buffName, UCMGE.OnBuffRemoved);
-
             }
             buffDict.Remove(buffName);
             ListPool<BuffBase>.Release(list);
@@ -154,7 +169,7 @@ namespace UnknownCreator.Modules
             BuffBase newBuff;
             while (buffList.Count > 0)
             {
-                buffDict.Clear();
+                ReleaseBuffList();
 
                 attemptCount++;
 
@@ -190,7 +205,7 @@ namespace UnknownCreator.Modules
         => buffList;
 
         public BuffBase GetBuffByIndex(int id)
-        => (id < 0 || id >= buffList.Count) ? buffList[id] : null;
+        => (id >= 0 && id < buffList.Count) ? buffList[id] : null;
 
 
         private BuffBase CreateBuff(string buffName, AbilityBase ability, Unit inflicter, double duration, IVariableMgr kv, bool isKVRecyclePool)
@@ -203,6 +218,11 @@ namespace UnknownCreator.Modules
         private void RemoveBuff(BuffBase buff, ref List<BuffBase> list)
         {
             string buffName = buff.buffName;
+
+            GameEvtBus.Send<EvtBuffWillRemove>(new(buff, self));
+
+            if (buff.isRelease) return;
+
             buff.OnRemove(false);
             list.Remove(buff);
             buffList.Remove(buff);
@@ -212,8 +232,20 @@ namespace UnknownCreator.Modules
                 ListPool<BuffBase>.Release(list);
             }
             Mgr.RPool.Release(buff);
+        }
 
-            Mgr.Event.Send<string>(buffName, UCMGE.OnBuffRemoved);
+        private void ReleaseBuffList()
+        {
+            foreach (var list in buffDict.Values)
+            {
+                if (list != null)
+                {
+                    list.Clear();
+                    ListPool<BuffBase>.Release(list);
+                }
+            }
+
+            buffDict.Clear();
         }
     }
 }

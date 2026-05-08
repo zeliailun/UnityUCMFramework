@@ -4,12 +4,20 @@ namespace UnknownCreator.Modules
     {
         protected BTStateBase child { private set; get; }
 
-        public BTStateBase AddChild(BTStateBase child)
+        protected override void OnRelease()
         {
             RemoveChild();
+        }
+
+        public BTStateBase AddChild(BTStateBase child)
+        {
+            if (child is null) return null;
+
+            RemoveChild();
+
             child.Init(string.Empty, cntlr, parent);
-            child.Init();
-            return this.child = child;
+            this.child = child;
+            return child;
         }
 
         public T AddChild<T>() where T : BTStateBase, new()

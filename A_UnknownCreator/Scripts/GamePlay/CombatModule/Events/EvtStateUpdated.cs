@@ -1,6 +1,6 @@
 namespace UnknownCreator.Modules
 {
-    public readonly struct EvtStateUpdated
+    public readonly struct EvtStateUpdated:IBusEvent
     {
         public readonly Unit target;
         public readonly int typeID;

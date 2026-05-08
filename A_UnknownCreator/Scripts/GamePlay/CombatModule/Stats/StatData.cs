@@ -119,49 +119,6 @@ namespace UnknownCreator.Modules
 
         // ========================= BUFF =========================
 
-        public void AddOrUpdateBuff(BuffBase buff, CalcType calcType, double value, bool isStatsStacked)
-        {
-            StatsCalc sc = null;
-
-            var keyName = new StatsKeyByName(buff.buffName, calcType);
-
-            if (!isStatsStacked && nameKeys.TryGetValue(keyName, out var result1))
-            {
-                sc = result1;
-            }
-            else
-            {
-                var keyBuff = new StatsKeyByBuff(buff, calcType);
-
-                if (!buffKeys.TryGetValue(keyBuff, out var result2))
-                {
-                    var newCalc = Mgr.RPool.Load<StatsCalc>();
-                    newCalc.buff = buff;
-                    newCalc.name = buff.buffName;
-                    newCalc.calcType = calcType;
-                    newCalc.value = value;
-
-                    calcList.Add(newCalc);
-                    buffList.Add(buff);
-
-                    nameKeys[keyName] = newCalc;
-                    buffKeys[keyBuff] = newCalc;
-
-                    CalcStatsValue();
-                }
-                else
-                {
-                    sc = result2;
-                }
-            }
-
-            if (sc != null && Math.Abs(sc.value - value) > 0.0001)
-            {
-                sc.value = value;
-                CalcStatsValue();
-            }
-        }
-
         public void AddByName(string name, CalcType calcType, double value)
         {
             var key = new StatsKeyByName(name, calcType);
@@ -185,25 +142,127 @@ namespace UnknownCreator.Modules
             CalcStatsValue();
         }
 
+
+        public void AddOrUpdateBuff(BuffBase buff, CalcType calcType, double value, bool isStatsStacked)
+        {
+            if (buff == null)
+            {
+                UCMDebug.LogWarning($"{idName}>添加属性修改失败，buff 为空");
+                return;
+            }
+
+            string buffName = buff.buffName;
+            var nameKey = new StatsKeyByName(buffName, calcType);
+
+            // =========================================================
+            // 不可堆叠：
+            // 同名 + 同计算类型，只保留一条 StatsCalc
+            // 重复添加时只更新数值，并把归属 buff 切换成最新 buff
+            // =========================================================
+            if (!isStatsStacked && nameKeys.TryGetValue(nameKey, out var existByName))
+            {
+                bool changed = false;
+
+                // 如果这次传进来的 buff 不是旧 buff，
+                // 说明是同名 buff 重新刷新 / 替换了来源。
+                // 这时要把 buffKeys 从旧 buff 改绑到新 buff。
+                if (!ReferenceEquals(existByName.buff, buff))
+                {
+                    if (existByName.buff != null)
+                    {
+                        var oldBuffKey = new StatsKeyByBuff(existByName.buff, calcType);
+                        buffKeys.Remove(oldBuffKey);
+                        buffList.Remove(existByName.buff);
+                    }
+
+                    existByName.buff = buff;
+                    existByName.name = buffName;
+                    existByName.calcType = calcType;
+
+                    var newBuffKey = new StatsKeyByBuff(buff, calcType);
+                    buffKeys[newBuffKey] = existByName;
+
+                    if (!buffList.Contains(buff))
+                        buffList.Add(buff);
+                }
+
+                if (Math.Abs(existByName.value - value) > 0.0001)
+                {
+                    existByName.value = value;
+                    changed = true;
+                }
+
+                if (changed)
+                    CalcStatsValue();
+
+                return;
+            }
+
+            // =========================================================
+            // 可堆叠：
+            // 按 buff 实例 + 计算类型区分。
+            // 同一个 buff 重复添加时更新数值。
+            // 不同 buff 即使同名，也可以各自生效。
+            // =========================================================
+            var buffKey = new StatsKeyByBuff(buff, calcType);
+
+            if (buffKeys.TryGetValue(buffKey, out var existByBuff))
+            {
+                if (Math.Abs(existByBuff.value - value) > 0.0001)
+                {
+                    existByBuff.value = value;
+                    CalcStatsValue();
+                }
+
+                return;
+            }
+
+            var newCalc = Mgr.RPool.Load<StatsCalc>();
+            newCalc.buff = buff;
+            newCalc.name = buffName;
+            newCalc.calcType = calcType;
+            newCalc.value = value;
+
+            calcList.Add(newCalc);
+            buffList.Add(buff);
+
+            buffKeys[buffKey] = newCalc;
+
+            if (!isStatsStacked)
+                nameKeys[nameKey] = newCalc;
+
+            CalcStatsValue();
+        }
+
         public bool Remove(BuffBase buff, CalcType calcType, bool isStatsStacked)
         {
-            var key = new StatsKeyByBuff(buff, calcType);
+            if (buff == null)
+                return false;
 
-            if (buffKeys.Remove(key, out var result))
+            var buffKey = new StatsKeyByBuff(buff, calcType);
+
+            if (!buffKeys.Remove(buffKey, out var result))
+                return false;
+
+            buffList.Remove(buff);
+
+            var nameKey = new StatsKeyByName(buff.buffName, calcType);
+
+            // 只在 nameKeys 当前指向的就是这条 StatsCalc 时才删除。
+            // 避免误删 AddByName 或其他同名但不同来源的数据。
+            if (nameKeys.TryGetValue(nameKey, out var existByName) &&
+                ReferenceEquals(existByName, result))
             {
-                buffList.Remove(buff);
-
-                if (!isStatsStacked || buffList.Count < 1)
-                    nameKeys.Remove(new StatsKeyByName(buff.buffName, calcType));
-
-                calcList.Remove(result);
-                Mgr.RPool.Release(result);
-
-                CalcStatsValue();
-                return true;
+                nameKeys.Remove(nameKey);
             }
-            return false;
+
+            calcList.Remove(result);
+            Mgr.RPool.Release(result);
+
+            CalcStatsValue();
+            return true;
         }
+
 
         public void Clear()
         {
@@ -233,9 +292,8 @@ namespace UnknownCreator.Modules
                 return;
             }
 
-            calcList.Sort((a, b) => a.order.CompareTo(b.order));
-
             double oldFinalValue = finalValue;
+            double oldBonusValue = bonusValue;
 
             // ===== 记录联动目标状态 =====
             int linkCount = linkNames.Count;
@@ -300,7 +358,7 @@ namespace UnknownCreator.Modules
             finalValue = newFinalValue;
             bonusValue = finalValue - baseValue;
 
-            Mgr.Event.Send<EvtStatChanged>(new(self, oldFinalValue, this), UCMGE.OnStatChanged);
+            GameEvtBus.Send<EvtStatChanged>(new(self, oldFinalValue, oldBonusValue, this));
 
             // ===== 联动修改统计 =====
             if (linkCount > 0 && !isLinking)
@@ -346,6 +404,9 @@ namespace UnknownCreator.Modules
         {
             Clear();
             baseV = bonusV = 0;
+            idName = string.Empty;
+            propertyChanged = null;
+            holder = null;
             cntlr = null;
             self = null;
         }

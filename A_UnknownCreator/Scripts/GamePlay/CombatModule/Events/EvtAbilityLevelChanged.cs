@@ -1,6 +1,6 @@
 namespace UnknownCreator.Modules
 {
-    public readonly struct EvtAbilityLevelChanged
+    public readonly struct EvtAbilityLevelChanged : IBusEvent
     {
         public readonly AbilityBase ability;
         public readonly Unit owner;

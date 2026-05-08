@@ -9,6 +9,7 @@ namespace UnknownCreator.Modules
         internal Dictionary<string, IPool> gameObjPool = new();
 
         internal Dictionary<string, Stack<GameObject>> newObjPool = new();
+        internal Dictionary<string, HashSet<GameObject>> newObjPoolSet = new();
 
         internal List<IPool> poolList = new();
 
@@ -33,6 +34,8 @@ namespace UnknownCreator.Modules
             gameObjPool ??= new();
             poolList ??= new();
             newObjPool ??= new();
+            newObjPoolSet ??= new();
+
             root = new GameObject(nameof(GameObjPoolMgr));
             Object.DontDestroyOnLoad(root);
         }
@@ -52,6 +55,8 @@ namespace UnknownCreator.Modules
             root = null;
             gameObjPool = null;
             poolList = null;
+            newObjPool = null;
+            newObjPoolSet = null;
         }
 
         public void SetRoot(GameObject obj, bool worldPositionStays)
@@ -110,16 +115,21 @@ namespace UnknownCreator.Modules
         {
             GameObject go;
             bool isNew = false;
+
             if (newObjPool.TryGetValue(name, out var result) &&
                 result.Count > 0)
             {
                 go = result.Pop();
+
+                if (newObjPoolSet.TryGetValue(name, out var set))
+                    set.Remove(go);
             }
             else
             {
                 go = new GameObject(name);
                 isNew = true;
             }
+
             SetRoot(go, true);
             go.SetActive(true);
             return (go, isNew);
@@ -132,17 +142,30 @@ namespace UnknownCreator.Modules
                 UCMDebug.LogWarning("无法释放null对象");
                 return;
             }
+
+            if (!newObjPoolSet.TryGetValue(name, out var set))
+            {
+                set = new HashSet<GameObject>();
+                newObjPoolSet.Add(name, set);
+            }
+
+            if (set.Contains(go))
+            {
+                UCMDebug.LogWarning($"重复释放 GameObject：{go.name}，对象池名：{name}");
+                return;
+            }
+
             go.SetActive(false);
-            if (newObjPool.TryGetValue(name, out var result))
+            SetRoot(go, true);
+
+            if (!newObjPool.TryGetValue(name, out var result))
             {
-                result.Push(go);
+                result = new Stack<GameObject>();
+                newObjPool.Add(name, result);
             }
-            else
-            {
-                var stack = new Stack<GameObject>();
-                stack.Push(go);
-                newObjPool.Add(name, stack);
-            }
+
+            result.Push(go);
+            set.Add(go);
         }
 
         public bool HasObject(GameObject obj, string name)
@@ -177,10 +200,11 @@ namespace UnknownCreator.Modules
 
             foreach (var pool in newObjPool.Values)
             {
-                for (int i = 0; i < pool.Count; i++)
+                while (pool.Count > 0)
                     Object.Destroy(pool.Pop());
             }
             newObjPool.Clear();
+            newObjPoolSet.Clear();
         }
     }
 }

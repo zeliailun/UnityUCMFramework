@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
-using UnityEditor.Localization.Plugins.XLIFF.V12;
+﻿using System;
+using System.Collections.Generic;
+
 namespace UnknownCreator.Modules
 {
     public sealed class TimerMgr : ITimerMgr
@@ -10,12 +11,23 @@ namespace UnknownCreator.Modules
 
         public int GetTimerCount => timerList.Count;
 
+        private bool isUpdating;
+        private bool needCompact;
+        private readonly List<ITimer> pendingReleaseList = new();
+
+
+
         //private TimerMgr() { }
 
         void IDearMgr.WorkWork()
         {
             timerList ??= new();
             dict ??= new();
+
+            isUpdating = false;
+            needCompact = false;
+
+            pendingReleaseList.Clear();
         }
 
         void IDearMgr.DoNothing()
@@ -25,9 +37,37 @@ namespace UnknownCreator.Modules
 
         void IDearMgr.UpdateMGR()
         {
-            for (int i = timerList.Count - 1; i >= 0; i--)
+            isUpdating = true;
+
+            try
             {
-                timerList[i]?.Update();
+                for (int i = timerList.Count - 1; i >= 0; i--)
+                {
+                    ITimer timer = timerList[i];
+                    if (timer == null) continue;
+
+                    if (!HasTimer(timer)) continue;
+
+                    if (timer is IInternalTimer t)
+                        t.Update();
+                }
+            }
+            finally
+            {
+                isUpdating = false;
+
+                for (int i = 0; i < pendingReleaseList.Count; i++)
+                {
+                    Mgr.RPool.Release(pendingReleaseList[i]);
+                }
+
+                pendingReleaseList.Clear();
+
+                if (needCompact)
+                {
+                    needCompact = false;
+                    timerList.RemoveAll(t => t == null);
+                }
             }
         }
 
@@ -50,24 +90,42 @@ namespace UnknownCreator.Modules
 
         public void RemoveTimer(ITimer timer)
         {
-            if (timer != null && dict != null && dict.Remove(timer.id))
+            if (timer == null || dict == null) return;
+
+            if (!dict.Remove(timer.id))
+                return;
+
+            if (isUpdating)
             {
-                timerList.Remove(timer);
-                Mgr.RPool.Release(timer);
+                int index = timerList.IndexOf(timer);
+                if (index >= 0)
+                    timerList[index] = null;
+
+                pendingReleaseList.Add(timer);
+                needCompact = true;
+                return;
             }
+
+            timerList.Remove(timer);
+            Mgr.RPool.Release(timer);
         }
 
         public void ClearAllTimer()
         {
             dict.Clear();
-            ITimer timer;
+
             for (int i = timerList.Count - 1; i >= 0; i--)
             {
-                timer = timerList[i];
-                if (timer is null) continue;
+                ITimer timer = timerList[i];
+                if (timer == null) continue;
+
                 timerList.RemoveAt(i);
                 Mgr.RPool.Release(timer);
             }
+
+            pendingReleaseList.Clear();
+            needCompact = false;
+            isUpdating = false;
         }
 
         public ITimer GetTimer(long id)
@@ -75,22 +133,68 @@ namespace UnknownCreator.Modules
 
         public ITimer CreateTimer(ITimer timer)
         {
-            if (timer != null)
+            if (timer == null)
+                return null;
+
+            if (timer is not IInternalTimer internalTimer)
             {
-                if (!dict.TryGetValue(timer.id, out _))
+                UCMDebug.LogError("创建 Timer 失败：timer 不是 IInternalTimer");
+                return null;
+            }
+
+            // 已初始化的 Timer，只有一种情况是正常的：
+            // 它已经在当前 TimerMgr 中，并且 dict 里的对象就是它自己
+            if (timer.isInited)
+            {
+                if (dict.TryGetValue(timer.id, out ITimer existTimer) && ReferenceEquals(existTimer, timer))
                 {
-                    timer.Init();
-                    dict.Add(timer.id, timer);
-                    timerList.Add(timer);
-                    timer.Update();
+                    UCMDebug.LogWarning("尝试重复创建已经存在的 Timer");
                     return timer;
                 }
-                else
+
+                UCMDebug.LogError("创建 Timer 失败：Timer 已初始化，但不在当前 TimerMgr 中，状态异常");
+                return null;
+            }
+
+            internalTimer.Init();
+
+            if (dict.TryGetValue(timer.id,out _))
+            {
+                UCMDebug.LogError("尝试创建重复计时器");
+                Mgr.RPool.Release(timer);
+                return null;
+            }
+
+            dict.Add(timer.id, timer);
+            timerList.Add(timer);
+
+            return timer;
+        }
+
+        private void FlushPendingRelease()
+        {
+            for (int i = 0; i < pendingReleaseList.Count; i++)
+            {
+                ITimer timer = pendingReleaseList[i];
+                if (timer == null) continue;
+
+                try
                 {
-                    UCMDebug.LogError("尝试创建重复计时器");
+                    Mgr.RPool.Release(timer);
+                }
+                catch (Exception e)
+                {
+                    UCMDebug.LogError($"Timer Release 异常: {e}");
                 }
             }
-            return null;
+
+            pendingReleaseList.Clear();
+
+            if (needCompact)
+            {
+                needCompact = false;
+                timerList.RemoveAll(t => t == null);
+            }
         }
     }
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -25,7 +24,7 @@ namespace UnknownCreator.Modules
 
         IUnitExpBuilder expBuilder { get; }
 
-        List<double> unitExpList { get; }
+        IReadOnlyList<double> unitExpList { get; }
 
         void UpdateMaxLevelAndFormula(IUnitExpBuilder expBuilder, int value);
 

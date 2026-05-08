@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -27,7 +26,9 @@ namespace UnknownCreator.Modules
         public Dictionary<EntityId, GameObject> targetDict { private set; get; }
         public List<GameObject> targets { private set; get; }
 
-        public bool hasTarget => targetDict.Count > 0;
+        public IReadOnlyList<GameObject> allTarget => targets;
+
+        public bool hasTarget => targetDict != null && targetDict.Count > 0;
 
         void IDearMgr.WorkWork()
         {
@@ -59,14 +60,21 @@ namespace UnknownCreator.Modules
 
         public void SetInput(IInputActionCollection2 actionInput)
         {
+            bool wasActivated = isActivated;
+
+            if (wasActivated)
+                DisableController();
+
             DestroyController();
             inputClass = actionInput;
+
+            if (wasActivated)
+                EnableController();
         }
 
         public void SetInput<T>() where T : IInputActionCollection2, new()
         {
-            DestroyController();
-            inputClass = new T();
+            SetInput(new T());
         }
 
         public T GetInput<T>() where T : IInputActionCollection2
@@ -85,7 +93,7 @@ namespace UnknownCreator.Modules
 
             targetDict[id] = target;
             targets.Add(target);
-     
+
         }
 
         public void RemoveControllerTarget(GameObject target)
@@ -102,11 +110,10 @@ namespace UnknownCreator.Modules
 
         public GameObject GetTargetByIndex(int index)
         {
-            if (targets.IsValid() && index < targets.Count && index >= 0)
-            {
-                return targets[0];
-            }
-            return null;
+            if (targets == null || index < 0 || index >= targets.Count)
+                return null;
+
+            return targets[index];
         }
 
         public GameObject GetTargetByID(EntityId id)
@@ -118,19 +125,21 @@ namespace UnknownCreator.Modules
             return null;
         }
 
-        public List<GameObject> GetAllTarget()
-        {
-            return targets;
-        }
-
-
         public Vector3 GetControllerDir(string name)
         {
-            if (sm is null || sm.stateName != name) sm = hfsm.GetHBSM(name);
-            return ((IController)sm?.currentState)?.GetInputDir() ?? Vector3.zero;
+            if (hfsm == null || string.IsNullOrWhiteSpace(name))
+                return Vector3.zero;
+
+            if (sm == null || sm.stateName != name)
+                sm = hfsm.GetHBSM(name);
+
+            if (sm?.currentState is IController controller)
+                return controller.GetInputDir();
+
+            return Vector3.zero;
         }
 
-        public void ChangeTarget(GameObject target)
+        public void SetControllerTargets(GameObject target)
         {
             if (target == null || targetDict.TryGetValue(target.GetEntityId(), out _)) return;
 
@@ -141,13 +150,19 @@ namespace UnknownCreator.Modules
 
         public void EnableController()
         {
-            if (!isActivated)
+            if (isActivated) return;
+
+            if (inputClass == null)
             {
-                inputClass.Enable();
-                hfsm?.EnableAllHBSM();
-                isActivated = true;
+                UCMDebug.LogError("ControllerMgr 启用失败：inputClass 为空");
+                return;
             }
+
+            inputClass.Enable();
+            hfsm?.EnableAllHBSM();
+            isActivated = true;
         }
+
 
         public void DisableController()
         {
@@ -155,7 +170,7 @@ namespace UnknownCreator.Modules
             {
                 isActivated = false;
                 hfsm?.DisableAllHBSM();
-                inputClass.Disable();
+                inputClass?.Disable();
             }
         }
 
@@ -178,9 +193,10 @@ namespace UnknownCreator.Modules
 
         private void DestroyController()
         {
-            if (inputClass is not null &&
-                inputClass is IDisposable disposable)
+            if (inputClass is IDisposable disposable)
                 disposable.Dispose();
+
+            inputClass = null;
         }
     }
 }

@@ -23,7 +23,7 @@ namespace UnknownCreator.Modules
         public int remainingNum
         {
             get => remNum;
-            set => remNum = Math.Max(1, value);
+            set => remNum = Math.Max(0, value);
         }
 
         private float interval;
@@ -54,23 +54,25 @@ namespace UnknownCreator.Modules
 
         public (bool isNew, T t) Love()
         {
-            T obj;
-            if (storageCount > 0)
+            if (pool.Count > 0)
             {
-                storageCount--;
-                obj = pool.Pop();
+                var obj = pool.Pop();
                 findPool.Remove(obj);
                 OnPop(obj);
+                return (false, obj);
             }
-            else
-            {
-                obj = OnCreate();
-            }
-            return (storageCount <= 0, obj);
+
+            return (true, OnCreate());
         }
 
         public void Hate(T obj)
         {
+            if (obj == null)
+            {
+                UCMDebug.LogWarning("无法回收 null 对象");
+                return;
+            }
+
             if (HasObject(obj))
             {
                 UCMDebug.LogWarning("尝试存放空对象或者重复的对象>>" + obj);
@@ -92,13 +94,19 @@ namespace UnknownCreator.Modules
 
         public void Preload(T obj)
         {
+            if (obj == null)
+            {
+                UCMDebug.LogWarning("无法回收 null 对象");
+                return;
+            }
+
             if (HasObject(obj))
             {
                 UCMDebug.LogWarning("尝试存放空对象或者重复的对象>>" + obj);
                 return;
             }
 
-            if (storageCount > maxNum)
+            if (storageCount >= maxNum)
             {
                 UCMDebug.LogWarning("存放的对象数量超出限制");
                 return;
@@ -147,8 +155,7 @@ namespace UnknownCreator.Modules
             }
         }
 
-        public bool HasObject(object obj)
-        => obj != null && storageCount > 0 && findPool.Contains((T)obj);
+        public bool HasObject(object obj)=> obj is T target && findPool.Contains(target);
 
         protected virtual T OnCreate() => default;
 

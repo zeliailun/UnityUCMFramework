@@ -1,6 +1,6 @@
 namespace UnknownCreator.Modules
 {
-    public readonly struct EvtUnitExpAdded
+    public readonly struct EvtUnitExpAdded:IBusEvent
     {
         public readonly Unit target;
         public readonly double oldExp;

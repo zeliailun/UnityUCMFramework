@@ -8,7 +8,6 @@ namespace UnknownCreator.Modules
 
         public CalcType calcType { get; set; }
 
-        public int order { get; set; }
 
         public double value { get; set; }
 
@@ -17,7 +16,6 @@ namespace UnknownCreator.Modules
             name = string.Empty;
             buff = null;
             value = 0;
-            order = 0;
         }
 
 

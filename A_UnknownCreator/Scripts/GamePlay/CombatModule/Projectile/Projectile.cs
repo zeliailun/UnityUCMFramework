@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
@@ -37,6 +38,10 @@ namespace UnknownCreator.Modules
 
         public bool isRelease { private set; get; }
 
+        // NonAlloc 命中结果缓存。
+        // Projectile 是对象池复用的，所以这个 List 只会跟随 Projectile 创建一次。
+        private List<ProjCheckInfo> hitResults = new();
+
         private float timeCount;
 
         internal void InitProjectile(ProjectileData data, IProjMvt mvt, IProjCheck check, IVariableMgr kv)
@@ -51,13 +56,15 @@ namespace UnknownCreator.Modules
             objT.localScale = Vector3.one;
             objT.SetPositionAndRotation(this.data.spawnPos, this.data.spawnRot);
             timeCount = 0;
+            hitResults.Clear();
             isPause = false;
             isRelease = false;
         }
 
-        internal void UpdateProjectile()
+        internal void UpdateProjectile(float deltaTime)
         {
             if (isRelease) return;
+
 
             if (!obj.activeSelf)
             {
@@ -66,10 +73,10 @@ namespace UnknownCreator.Modules
                 data.ability?.OnProjectileSpawn(this);
                 if (isRelease) return;
 
-                Mgr.Event.Send<Projectile>(this, UCMGE.OnProjectileSpawned);
+                GameEvtBus.Send<EvtProjectileSpawned>(new(this, data, kv, data.owner));
             }
 
-            timeCount += CustomTime.DeltaTime();
+            timeCount += deltaTime;
             if (data.distanceMax <= 0 ||
                 timeCount >= data.durationMax ||
                 UnityGlobals.DistanceH(data.spawnPos, objT.position) >= data.distanceMax)
@@ -89,31 +96,43 @@ namespace UnknownCreator.Modules
             data.ability?.OnProjectileMotion(this);
             if (isRelease) return;
 
-            Mgr.Event.Send<Projectile>(this, UCMGE.OnProjectileMotion);
+            GameEvtBus.Send<EvtProjectileMotion>(new(this, data, kv, data.owner));
+
             if (isRelease) return;
 
-            var hitResults = check?.OnProjCheck(this);
-
+            check.OnProjCheck(this, ref hitResults);
             if (hitResults.IsValid())
             {
                 for (int i = 0; i < hitResults.Count; i++)
                 {
-                    var result = hitResults[i];
-                    if (result.isHit)
-                    {
-                        (bool isOK, Unit target) = Mgr.Proj.FilterProjectileHit(this, result.target);
-                        if (isOK)
-                        {
-                            var evt = new EvtProjectileHitAfter(
-                                this, target, result.target, result.raycastHit, result.isMultiTarget, result.targetIndex);
+                    ProjCheckInfo result = hitResults[i];
 
-                            data.ability?.OnProjectileHit(evt);
+                    if (!result.isHit)
+                        continue;
 
-                            if (!isRelease)
-                                Mgr.Event.Send<EvtProjectileHitAfter>(evt, UCMGE.OnProjectileHitAfter);
-                        }
-                    }
+                    (bool isOK, Unit target) = Mgr.Proj.FilterProjectileHit(this, result.target);
+
+                    if (!isOK)
+                        continue;
+
+                    var evt = new EvtProjectileHitAfter(
+                        this,
+                        data.owner,
+                        target,
+                        result.target,
+                        result.raycastHit,
+                        result.isMultiTarget,
+                        result.targetIndex
+                    );
+
+                    data.ability?.OnProjectileHit(evt);
+
+                    if (isRelease) return;
+
+                    GameEvtBus.Send<EvtProjectileHitAfter>(evt);
                 }
+
+                hitResults.Clear();
             }
 
         }
@@ -129,7 +148,6 @@ namespace UnknownCreator.Modules
                 mvt = null;
             }
             mvt = newMvt;
-            Mgr.Event.Send<Projectile>(this, UCMGE.OnProjectileMvtReplaced);
         }
 
         public void ReplaceCheck(IProjCheck newCheck)
@@ -142,7 +160,6 @@ namespace UnknownCreator.Modules
                 check = null;
             }
             check = newCheck;
-            Mgr.Event.Send<Projectile>(this, UCMGE.OnProjectileCheckReplaced);
         }
 
         void IReference.ObjRelease()
@@ -150,8 +167,9 @@ namespace UnknownCreator.Modules
             if (isRelease) return;
 
             isRelease = true;
-            data.ability?.OnProjectileDestroy(this);
-            Mgr.Event.Send<Projectile>(this, UCMGE.OnProjectileDestroy);
+            data.ability?.OnProjectileDestroy(this); 
+            GameEvtBus.Send<EvtProjectileDestroy>(new(this, data, kv, data.owner));
+            hitResults.Clear();
             Mgr.RPool.Release(check);
             Mgr.RPool.Release(mvt);
             Mgr.GPool.Release(data.projName, obj);

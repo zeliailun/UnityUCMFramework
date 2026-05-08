@@ -63,7 +63,7 @@ namespace UnknownCreator.Modules
             return this;
         }
 
-        public bool IsVaild() => _target != null;
+        public bool IsValid() => _target != null;
 
         public void Clear()
         {

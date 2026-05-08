@@ -9,6 +9,8 @@ namespace UnknownCreator.Modules
         bool hasTarget { get; }
         bool isActivated { get; }
 
+        IReadOnlyList<GameObject> allTarget { get; }
+
         IHBSMController hfsm { get; }
 
         List<GameObject> targets { get; }
@@ -29,11 +31,10 @@ namespace UnknownCreator.Modules
 
         void RemoveControllerTarget(GameObject target);
 
-        void ChangeTarget(GameObject target);
+        void SetControllerTargets(GameObject target);
         void SetInput(IInputActionCollection2 actionInput);
         void SetInput<T>() where T : IInputActionCollection2, new();
         T GetInput<T>() where T : IInputActionCollection2;
-        List<GameObject> GetAllTarget();
         GameObject GetFirstTarget();
         GameObject GetTargetByIndex(int index);
         GameObject GetTargetByID(EntityId id);

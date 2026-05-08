@@ -40,16 +40,22 @@ namespace UnknownCreator.Modules
             if (!newAb.isRelease)
             {
                 newAb.UpdateAbility();
-                Mgr.Event.Send<EvtTalentChanged>(new(self, newAb), UCMGE.OnTalentAdded);
+
+                if (!newAb.isRelease)
+                    GameEvtBus.Send<EvtTalentChanged>(new(self, newAb, true));
             }
         }
 
         public void RemoveTalent(string talentName)
         {
-            if (!talentDict.Remove(talentName, out var result))
-                return;
+            if (!talentDict.TryGetValue(talentName, out var result)) return;
+
+            GameEvtBus.Send<EvtTalentChanged>(new(self, result, false));
+
+            if (result.isRelease) return;
+
+            talentDict.Remove(talentName);
             talentList.Remove(result);
-            Mgr.Event.Send<EvtTalentChanged>(new(self, result), UCMGE.OnTalentRemove);
             Mgr.RPool.Release(result);
         }
 

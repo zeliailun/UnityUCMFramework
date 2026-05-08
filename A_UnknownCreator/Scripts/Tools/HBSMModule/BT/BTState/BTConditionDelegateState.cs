@@ -6,6 +6,6 @@ namespace UnknownCreator.Modules
         public Func<bool> func;
 
         protected override bool GetCondition()
-        => func();
+        => func?.Invoke() ?? false;
     }
 }

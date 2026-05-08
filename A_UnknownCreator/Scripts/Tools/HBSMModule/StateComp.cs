@@ -55,7 +55,16 @@ namespace UnknownCreator.Modules
 
         void IReference.ObjRelease()
         {
+            if (_enable)
+            {
+                _enable = false;
+                DisableComp();
+            }
+
             ReleaseComp();
+
+            cntlr = null;
+            compType = null;
         }
 
         void IReference.ObjDestroy()

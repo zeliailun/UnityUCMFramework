@@ -56,7 +56,7 @@ namespace UnknownCreator.Modules
             {
                 entity = entityList[i];
                 if (entity != null && entity.enable)
-                    entity.UpdataEnt();
+                    entity.UpdateEnt();
             }
         }
 
@@ -67,7 +67,7 @@ namespace UnknownCreator.Modules
             {
                 entity = entityList[i];
                 if (entity != null && entity.enable)
-                    entity.FixedUpdataEnt();
+                    entity.FixedUpdateEnt();
             }
         }
 
@@ -78,7 +78,7 @@ namespace UnknownCreator.Modules
             {
                 entity = entityList[i];
                 if (entity != null && entity.enable)
-                    entity.LateUpdataEnt();
+                    entity.LateUpdateEnt();
             }
         }
 

@@ -4,8 +4,9 @@ namespace UnknownCreator.Modules
 {
     public sealed class DefaultCustomTime : ICustomTime
     {
-        public Action OnPause { get; set; }
-        public Action OnResume { get; set; }
+        public event Action OnPause;
+
+        public event Action OnResume;
 
         public float LocalTimeScale
         {
@@ -34,12 +35,16 @@ namespace UnknownCreator.Modules
 
         public void ResumeGame(bool isClear)
         {
-            pauseCount = isClear ? 0 : Math.Max(0, pauseCount - 1);
-            if (pauseCount == 0)
-            {
-                Time.timeScale = beforeTimeScale;
-                OnResume?.Invoke();
-            }
+            if (pauseCount <= 0)
+                return;
+
+            pauseCount = isClear ? 0 : pauseCount - 1;
+
+            if (pauseCount > 0)
+                return;
+
+            Time.timeScale = beforeTimeScale;
+            OnResume?.Invoke();
         }
 
         public void SetTimeScale(float value)
@@ -52,6 +57,27 @@ namespace UnknownCreator.Modules
                 Time.timeScale = newTimeScale;
         }
 
-        private float GetTimeScaleValue(float value) => value <= Mathf.Epsilon ? 0 : value;
+        private float GetTimeScaleValue(float value)
+        {
+            if (float.IsNaN(value) || float.IsInfinity(value))
+                return 1f;
+
+            return value <= Mathf.Epsilon ? 0f : value;
+        }
+        public void ClearPauseEvents()
+        {
+            OnPause = null;
+        }
+
+        public void ClearResumeEvents()
+        {
+            OnResume = null;
+        }
+
+        public void ClearAllEvents()
+        {
+            OnPause = null;
+            OnResume = null;
+        }
     }
 }

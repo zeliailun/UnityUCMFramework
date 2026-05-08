@@ -33,7 +33,7 @@ namespace UnknownCreator.Modules
                 if (newLv != lv)
                 {
                     lv = newLv;
-                    Mgr.Event.Send<EvtAbilityLevelChanged>(new EvtAbilityLevelChanged(this, owner, oldLv, lv), UCMGE.OnAbilityLevelChanged);
+                    GameEvtBus.Send<EvtAbilityLevelChanged>(new EvtAbilityLevelChanged(this, owner, oldLv, lv));
                 }
             }
         }
@@ -58,7 +58,7 @@ namespace UnknownCreator.Modules
                 if (newCharge != oldCharge)
                 {
                     currCharge = value;
-                    Mgr.Event.Send<EvtAbilityChargeChanged>(new EvtAbilityChargeChanged(this, owner, currCharge), UCMGE.OnAbilityChargeChanged);
+                    GameEvtBus.Send<EvtAbilityChargeChanged>(new(this, owner, currCharge));
                 }
             }
         }
@@ -83,7 +83,8 @@ namespace UnknownCreator.Modules
         private Action<TimerCountCycle> castPointAct, castBackswingAct;
         private ITimer timerCastPoint, timerCastBackswing;
         private int frozenCooldown, lv, maxlv, currCharge;
-        private bool isDie;
+        private bool lastOwnerAliveState;
+        private bool hasCheckedOwnerAliveState;
 
 
         internal void InitAbility(Unit owner, int index, string abName, string cfgName)
@@ -95,8 +96,8 @@ namespace UnknownCreator.Modules
             this.index = index;
             abilityCfg = Mgr.JD.GetData<Dictionary<string, AbilityCfg>>(JsonCfgKeyGlobals.AbilityJson)[string.IsNullOrWhiteSpace(cfgName) ? abName : cfgName];
 
-            level = abilityCfg.startLevel;
             maxlevel = abilityCfg.maxLevel;
+            level = abilityCfg.startLevel;
 
             //加载默认施法动画
             ap = Mgr.RPool.Load<AnimPlayer>();
@@ -153,7 +154,8 @@ namespace UnknownCreator.Modules
             castPointAct = EndCastPoint;
             castBackswingAct = EndCastBackswing;
             currentCd = frozenCooldown = 0;
-            isDie = owner.isAlive;
+            lastOwnerAliveState = false;
+            hasCheckedOwnerAliveState = false;
             isRelease = isFirstChargeCooldown = false;
         }
 
@@ -179,7 +181,7 @@ namespace UnknownCreator.Modules
             if (!isCooldownReady || hasChargeLogic)
             {
                 currentCd = Math.Max(0, currentCd - CustomTime.DeltaTime());
-                Mgr.Event.Send<AbilityBase>(this, UCMGE.OnAbilityCooldownCalc);
+                GameEvtBus.Send<EvtAbilityCooldownCalculate>(new(this, owner, currentCd));
                 if (currentCd <= 0 && hasChargeLogic)
                 {
                     ++currentCharge;
@@ -187,10 +189,7 @@ namespace UnknownCreator.Modules
                     if (currentCharge != chargeLimit)
                     {
                         currentCd = GetCooldown(level);
-
-                        Mgr.Event.Send<EvtAbilityCooldownStart>(
-                            new EvtAbilityCooldownStart(this, owner, 0, currentCd),
-                            UCMGE.OnAbilityCooldownStart);
+                        GameEvtBus.Send<EvtAbilityCooldownStart>(new(this, owner, 0, currentCd));
                     }
                     else
                     {
@@ -224,17 +223,39 @@ namespace UnknownCreator.Modules
 
         private void UpdateDeathState()
         {
-            if (!owner.isAlive && !isDie)
+            bool currentAlive = owner.isAlive;
+
+            // 第一次检查
+            if (!hasCheckedOwnerAliveState)
             {
-                isDie = true;
-                owner.abilityC?.InterruptAbility(this);
-                OnOwnerDead();
+                hasCheckedOwnerAliveState = true;
+                lastOwnerAliveState = currentAlive;
+
+                if (currentAlive)
+                {
+                    OnOwnerRespawn();
+                }
+                else
+                {
+                    OnOwnerDead();
+                }
+
                 return;
             }
 
-            if (owner.isAlive && isDie)
+            // 没变化，不处理
+            if (currentAlive == lastOwnerAliveState)
+                return;
+
+            lastOwnerAliveState = currentAlive;
+
+            if (!currentAlive)
             {
-                isDie = false;
+                owner.abilityC?.InterruptAbility(this);
+                OnOwnerDead();
+            }
+            else
+            {
                 OnOwnerRespawn();
             }
         }

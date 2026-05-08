@@ -9,7 +9,7 @@ namespace UnknownCreator.Modules
         private UITKBuilder builder;
         private UITKOpenInfo showInfo = new();
         private UITKHideInfo hideInfo = new();
-        private ITimer startTween, endTween, delayTween;
+        private long endTween, startTween, delayTween;
         private VisualElement view;
         private Action<float> changeOpacity;
         private Action<TimerTween> finalOpacity;
@@ -78,14 +78,14 @@ namespace UnknownCreator.Modules
             if (showInfo.startDuration <= 0)
                 ApplyFinalOpacity(null);
             else
-                startTween = Mgr.Timer.Custom(0F, 1F, showInfo.startDuration, 1, false, changeOpacity, finalOpacity, EaseTypes.Linear, showInfo.isTimeScale);
+                startTween = Mgr.Timer.CustomID(0F, 1F, showInfo.startDuration, 1, false, changeOpacity, finalOpacity, EaseTypes.Linear, showInfo.isTimeScale);
 
             if (showInfo.isAutoHide)
             {
                 if (showInfo.delay <= 0)
                     AutoHideHandle(null);
                 else
-                    delayTween = Mgr.Timer.CycleCount(1, showInfo.delay + showInfo.startDuration, false, autoHideView, null, showInfo.isTimeScale);
+                    delayTween = Mgr.Timer.CycleCountID(1, showInfo.delay + showInfo.startDuration, false, autoHideView, null, showInfo.isTimeScale);
             }
         }
 
@@ -102,7 +102,7 @@ namespace UnknownCreator.Modules
             if (info.hideDuration <= 0)
                 HideView(false, null);
             else
-                endTween = Mgr.Timer.Custom<bool>(false, currentValue, 0F, info.hideDuration, 1, false, changeOpacity2, hideView, EaseTypes.Linear, info.isTimeScale);
+                endTween = Mgr.Timer.CustomID<bool>(false, currentValue, 0F, info.hideDuration, 1, false, changeOpacity2, hideView, EaseTypes.Linear, info.isTimeScale);
         }
 
         private void AutoHideHandle(TimerCountCycle cycle)
@@ -110,7 +110,7 @@ namespace UnknownCreator.Modules
             if (showInfo.endDuration <= 0)
                 HideView(true, null);
             else
-                endTween = Mgr.Timer.Custom<bool>(true, 1F, 0F, showInfo.endDuration, 1, false, changeOpacity2, hideView, EaseTypes.Linear, showInfo.isTimeScale);
+                endTween = Mgr.Timer.CustomID<bool>(true, 1F, 0F, showInfo.endDuration, 1, false, changeOpacity2, hideView, EaseTypes.Linear, showInfo.isTimeScale);
         }
 
         private void HideView(bool isAuto, TimerTween tt)
@@ -147,11 +147,8 @@ namespace UnknownCreator.Modules
         private void DestroyTween()
         {
             startTween.DestroySelf();
-            startTween = null;
             delayTween.DestroySelf();
-            delayTween = null;
             endTween.DestroySelf();
-            endTween = null;
         }
 
         private void SetOpacity(float value)

@@ -58,7 +58,9 @@ namespace UnknownCreator.Modules
 
         protected override void OnRelease()
         {
-            foreach (var item in children) Mgr.RPool.Release(item);
+            for (int i = children.Count - 1; i >= 0; i--)
+                Mgr.RPool.Release(children[i]);
+
             children.Clear();
         }
     }

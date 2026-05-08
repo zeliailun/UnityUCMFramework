@@ -11,6 +11,7 @@ namespace UnknownCreator.Modules
         void EnableAllHBSM();
         void DisableAllHBSM();
         void ReleaseAllHBSM();
+        void RefreshAllHBSM();
         void Create(Action<IHBSMController> builder);
         void Create(IHBSMBuilder builder);
         void Create(List<IHBSMBuilder> list);

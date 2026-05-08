@@ -9,6 +9,8 @@ namespace UnknownCreator.Modules
 
         private List<StatData> statsList = new();
 
+        public IReadOnlyList<StatData> allStatsList => statsList;
+
         private IEntity self;
 
         public override void InitComp()
@@ -44,8 +46,6 @@ namespace UnknownCreator.Modules
         public List<StatData> GetStatsListByName(string name)
         => statsDict.TryGetValue(name, out var data) ? data : null;
 
-        public List<StatData> GetAllStatsList()
-        => statsList;
 
         public StatData AddStats(StatsCfg cfg, double newV, object holder)
         {
@@ -76,14 +76,14 @@ namespace UnknownCreator.Modules
 
         public void RemoveAllStats()
         {
-            statsDict.Clear();
-            StatData sd;
             for (int i = statsList.Count - 1; i >= 0; i--)
             {
-                sd = statsList[i];
-                if (statsList.Remove(sd))
-                    Mgr.RPool.Release(sd);
+                var sd = statsList[i];
+                statsList.RemoveAt(i);
+                Mgr.RPool.Release(sd);
             }
+
+            statsDict.Clear();
         }
 
         public void UpdateStats(BuffBase buff, string statsName, CalcType calcType, double value, bool isStatsStacked)
@@ -92,6 +92,8 @@ namespace UnknownCreator.Modules
                 !data.IsValid())
                 return;
 
+            GameEvtBus.Send<EvtStatWillUpdate>(new(self.As<Unit>(), buff, statsName, calcType, value, isStatsStacked));
+
             StatData sd;
             for (int i = 0; i < data.Count; i++)
             {
@@ -99,7 +101,7 @@ namespace UnknownCreator.Modules
                 if (sd is null || !sd.canCalcValue) continue;
                 sd.AddOrUpdateBuff(buff, calcType, value, isStatsStacked);
             }
-            Mgr.Event.Send<EvtStatUpdated>(new(self.As<Unit>(), buff, statsName, calcType, value, isStatsStacked), UCMGE.OnStatUpdated);
+          
         }
 
         public void ClearStatsCalc(BuffBase buff, CalcType calcType, string statsName, bool isStatsStacked)

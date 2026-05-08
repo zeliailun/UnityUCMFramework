@@ -1,6 +1,6 @@
 namespace UnknownCreator.Modules
 {
-    public readonly struct EvtAbilityCastError
+    public readonly struct EvtAbilityCastError:IBusEvent
     {
         public readonly AbilityBase ability;
         public readonly Unit owner;

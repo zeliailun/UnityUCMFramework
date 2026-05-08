@@ -13,7 +13,7 @@ namespace UnknownCreator.Modules
 
     public interface IProjCheck
     {
-        List<ProjCheckInfo> OnProjCheck(Projectile proj);
+        void OnProjCheck(Projectile proj,ref List<ProjCheckInfo> results);
     }
 
 }

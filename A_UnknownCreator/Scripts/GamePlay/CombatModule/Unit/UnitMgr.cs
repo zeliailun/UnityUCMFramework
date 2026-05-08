@@ -37,10 +37,9 @@ namespace UnknownCreator.Modules
         public IUnitExpBuilder expBuilder { get; private set; }
 
         [JsonIgnore]
-        public List<double> unitExpList { get; private set; } = new();
+        public IReadOnlyList<double> unitExpList => unitExpListCache;
 
-
-        //===========================================================================
+        private readonly List<double> unitExpListCache = new();
 
         private Dictionary<EntityId, Unit> rootDict = new();
 
@@ -66,8 +65,25 @@ namespace UnknownCreator.Modules
 
         public void UpdateMaxLevelAndFormula(IUnitExpBuilder expBuilder, int value)
         {
-            unitMaxLevel = value;
-            unitExpList = expBuilder.ExpBuilder(unitMaxLevel);
+            this.expBuilder = expBuilder;
+            unitMaxLevel = Mathf.Max(0, value);
+
+            unitExpListCache.Clear();
+
+            if (this.expBuilder == null)
+            {
+                UCMDebug.LogWarning("UnitExpBuilder 未配置，无法生成全局单位经验表");
+                return;
+            }
+
+            var list = this.expBuilder.ExpBuilder(unitMaxLevel);
+            if (list == null)
+            {
+                UCMDebug.LogWarning("UnitExpBuilder 生成的经验表为空");
+                return;
+            }
+
+            unitExpListCache.AddRange(list);
         }
 
 

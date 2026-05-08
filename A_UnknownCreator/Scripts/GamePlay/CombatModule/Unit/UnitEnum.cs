@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 
 namespace UnknownCreator.Modules
@@ -14,12 +15,13 @@ namespace UnknownCreator.Modules
         All,
     }
 
+    [Flags]
     public enum UnitTargetFlags
     {
-        None = 1 << 0,
-        CanFindDeathUnit = 1 << 1,
-        CanFindInvincibleUnit = 1 << 2,
-        IgnoreSelf = 1 << 3,
+        None = 0,
+        CanFindDeathUnit = 1 << 0,
+        CanFindInvincibleUnit = 1 << 1,
+        IgnoreSelf = 1 << 2,
     }
 
     public enum UnitFindType

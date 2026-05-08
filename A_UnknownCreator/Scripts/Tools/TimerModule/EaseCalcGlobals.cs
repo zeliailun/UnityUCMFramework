@@ -54,9 +54,11 @@
         private static float BounceInOut(float start, float end, float value)
         {
             end -= start;
-            float d = 1f;
-            if (value < d * 0.5f) return BounceOut(0, end, value * 2) * 0.5f + start;
-            else return BounceOut(0, end, value * 2 - d) * 0.5f + end * 0.5f + start;
+
+            if (value < 0.5f)
+                return BounceIn(0, end, value * 2f) * 0.5f + start;
+
+            return BounceOut(0, end, value * 2f - 1f) * 0.5f + end * 0.5f + start;
         }
     }
 }

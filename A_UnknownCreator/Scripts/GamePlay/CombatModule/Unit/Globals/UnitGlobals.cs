@@ -34,7 +34,7 @@ namespace UnknownCreator.Modules
         => obj?.entID == targetID;
 
         public static bool IsEnemy(this Unit obj, Unit target)
-        => obj.unitTeam != target.unitTeam;
+            => obj != null && target != null && obj.unitTeam != target.unitTeam;
 
     }
 }

@@ -29,8 +29,14 @@ namespace UnknownCreator.Modules
 
         void IDearMgr.UpdateMGR()
         {
-            for (int i = 0; i < projList.Count; i++)
-                projList[i]?.UpdateProjectile();
+            Projectile proj;
+            float deltaTime = CustomTime.DeltaTime();
+            for (int i = projList.Count - 1; i >= 0; i--)
+            {
+                proj = projList[i];
+                if (proj is null || proj.isRelease) continue;
+                proj.UpdateProjectile(deltaTime);
+            }
         }
 
         [JsonIgnore] public Func<Projectile, GameObject, (bool, Unit)> FilterProjectileHit { set; get; }
@@ -56,27 +62,38 @@ namespace UnknownCreator.Modules
         public void ReleaseAllProjectile()
         {
             int attemptCount = 0;
-            Projectile value;
+
             while (projList.Count > 0)
             {
-                projDict.Clear();
-
                 attemptCount++;
 
-                for (int i = projList.Count - 1; i >= 0; i--)
+                int count = projList.Count;
+
+                Projectile value;
+                for (int i = count - 1; i >= 0; i--)
                 {
+                    if (i >= projList.Count)
+                        continue;
+
                     value = projList[i];
-                    if (projList.Remove(value))
-                        Mgr.RPool.Release(value);
+
+                    projList.RemoveAt(i);
+
+                    if (value == null)
+                        continue;
+
+                    projDict.Remove(value.id);
+                    Mgr.RPool.Release(value);
                 }
 
                 if (attemptCount > maxAttempts)
                 {
-                    UCMDebug.LogWarning("投射物生成可能触发了死循环");
+                    UCMDebug.LogWarning("投射物释放可能触发了死循环");
                     break;
                 }
             }
 
+            projDict.Clear();
         }
 
         public Projectile GetProjectile(long id)
@@ -100,21 +117,21 @@ namespace UnknownCreator.Modules
             proj.InitProjectile(info.data, info.mvt, info.check, info.kv);
             projDict.Add(proj.id, proj);
             projList.Add(proj);
-            proj.UpdateProjectile();
+            proj.UpdateProjectile(CustomTime.DeltaTime());
             return proj;
         }
 
-       /* public ProjectileInfo<IMvt, ICheck, Data> CreateProjectileData<IMvt, ICheck, Data>()
-        where IMvt : class, IProjMvt
-        where ICheck : class, IProjCheck
-        where Data : ProjectileData, new()
-        {
-            var mvt = Mgr.RPool.Load<IMvt>();
-            var check = Mgr.RPool.Load<ICheck>();
-            var vb = Mgr.RPool.Load<VariableMgr>();
-            var data = Mgr.RPool.Load<Data>();
-            return new(mvt, check, vb, data);
-        }*/
+        /* public ProjectileInfo<IMvt, ICheck, Data> CreateProjectileData<IMvt, ICheck, Data>()
+         where IMvt : class, IProjMvt
+         where ICheck : class, IProjCheck
+         where Data : ProjectileData, new()
+         {
+             var mvt = Mgr.RPool.Load<IMvt>();
+             var check = Mgr.RPool.Load<ICheck>();
+             var vb = Mgr.RPool.Load<VariableMgr>();
+             var data = Mgr.RPool.Load<Data>();
+             return new(mvt, check, vb, data);
+         }*/
 
     }
 }

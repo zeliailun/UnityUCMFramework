@@ -50,7 +50,7 @@ namespace UnknownCreator.Modules
 
         private bool shouldRemoveBuff
         => !isRelease && !isPassive &&
-            ( duration <= 0 || Mgr.RPool.HasObject(inflicterType, inflicter) || (owner.HasAlive() && !owner.isAlive && IsDeathRemove()) );
+            (duration <= 0 || Mgr.RPool.HasObject(inflicterType, inflicter) || (owner.HasAlive() && !owner.isAlive && IsDeathRemove()));
 
         private bool isUpdateTimer
         => isEnableTimer && timer >= delay;
@@ -67,6 +67,8 @@ namespace UnknownCreator.Modules
 
         private Dictionary<(string name, EntityId id), Delegate> evtDict = new();
         private Action clearEvt;
+
+        private readonly Dictionary<BusEventKey, EventHandle> busEvtDict = new();
 
         private double dur;
         private int stack;
@@ -168,11 +170,11 @@ namespace UnknownCreator.Modules
                 type = statsList[i].type;
                 value = statsList[i].callback();
                 key = (name, (int)type);
-                if (!statsDict.TryGetValue(key, out var result) ||
-                    result != value)
+                if (!statsDict.TryGetValue(key, out var oldValue) || oldValue != value)
+                {
                     statsDict[key] = value;
-
-                owner.statsC.UpdateStats(this, name, type, value, (IsStacked() && IsStatsStacked()));
+                    owner.statsC.UpdateStats(this, name, type, value, IsStacked() && IsStatsStacked());
+                }
             }
         }
 
@@ -180,18 +182,26 @@ namespace UnknownCreator.Modules
         {
             if (isRelease || stateList is null || stateList.Count == 0) return;
 
-            int id;
-            bool value;
             for (int i = 0; i < stateList.Count; i++)
             {
-                id = stateList[i].id;
-                value = stateList[i].callback();
-                if (!stateDict.TryGetValue(id, out var result) ||
-                    result != value)
+                int id = stateList[i].id;
+                bool newValue = stateList[i].callback();
+
+                if (!stateDict.TryGetValue(id, out bool oldValue))
                 {
-                    stateDict[id] = value;
-                    owner.stateC.UpdateState(id, value ? 1 : -1);
+                    stateDict[id] = newValue;
+
+                    if (newValue)
+                        owner.stateC.UpdateState(id, 1);
+
+                    continue;
                 }
+
+                if (oldValue == newValue)
+                    continue;
+
+                stateDict[id] = newValue;
+                owner.stateC.UpdateState(id, newValue ? 1 : -1);
             }
         }
 
@@ -202,9 +212,8 @@ namespace UnknownCreator.Modules
             isRelease = true;
             OnRelease();
             StopThink();
-            evtDict.Clear();
-            clearEvt?.Invoke();
             RemoveMotionController();
+            ClearAllEvent();
             ClearStats();
             ClearState();
             if (isKVRecyclePool) Mgr.RPool.Release(kv);

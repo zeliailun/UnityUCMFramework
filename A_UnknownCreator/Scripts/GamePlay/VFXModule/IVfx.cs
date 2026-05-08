@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+using UnityEngine;
+
 namespace UnknownCreator.Modules
 {
     public interface IVfx
@@ -10,6 +11,7 @@ namespace UnknownCreator.Modules
         string vfxName { get; }
         bool isPlaying { get; }
         bool isRelease { get; }
+
         void InitVfx(string vfxName, GameObject obj, IEntity owner);
         void PlayVfx();
         void StopVfx();
@@ -23,6 +25,4 @@ namespace UnknownCreator.Modules
         void ClearFollow();
         void ClearParent();
     }
-
-
 }

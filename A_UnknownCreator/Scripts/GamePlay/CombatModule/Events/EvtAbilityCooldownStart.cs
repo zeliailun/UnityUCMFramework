@@ -1,6 +1,6 @@
 namespace UnknownCreator.Modules
 {
-    public readonly struct EvtAbilityCooldownStart
+    public readonly struct EvtAbilityCooldownStart:IBusEvent
     {
         public readonly AbilityBase ability;
         public readonly Unit owner;

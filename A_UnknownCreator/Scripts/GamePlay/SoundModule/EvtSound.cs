@@ -1,15 +1,18 @@
 using UnityEngine;
 
-public struct EvtSoundPlayEnd
+namespace UnknownCreator.Modules
 {
-    public string name;
-    public float volume;
-    public Vector3 position;
-
-    public EvtSoundPlayEnd(string name, float volume, Vector3 position)
+    public struct EvtSoundPlayEnd
     {
-        this.name = name;
-        this.volume = volume;
-        this.position = position;
+        public string name;
+        public float volume;
+        public Vector3 position;
+
+        public EvtSoundPlayEnd(string name, float volume, Vector3 position)
+        {
+            this.name = name;
+            this.volume = volume;
+            this.position = position;
+        }
     }
 }

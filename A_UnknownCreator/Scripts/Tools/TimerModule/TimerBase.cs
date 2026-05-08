@@ -2,7 +2,7 @@
 
 namespace UnknownCreator.Modules
 {
-    public abstract class TimerBase : ITimer, IReference
+    public abstract class TimerBase : IInternalTimer, IReference
     {
         public long id { get; private set; }
 
@@ -15,9 +15,13 @@ namespace UnknownCreator.Modules
         public Action onUpdate { get; set; }
         public Action onRelease { get; set; }
 
+        public bool isInited { get; private set; } = false;
+
         // 初始化 Timer
-        public void Init()
+        void IInternalTimer.Init()
         {
+            if (isInited) return;
+            isInited = true;
 
             time = 0;
             id = GlobalID.GetUniqueID();
@@ -26,13 +30,16 @@ namespace UnknownCreator.Modules
         }
 
         // ITimer 更新方法
-        void ITimer.Update()
+        void IInternalTimer.Update()
         {
             if (!isStart) return;
 
             time += CustomTime.DeltaTime(isApplyTimeScale);
 
             OnUpdateTimer();
+
+            if (!isStart || !Mgr.Timer.HasTimer(this)) return;
+
             onUpdate?.Invoke();
         }
 
@@ -56,12 +63,13 @@ namespace UnknownCreator.Modules
         void IReference.ObjRelease()
         {
             isStart = false;
-            time = 0;
             onRelease?.Invoke();
             OnClearTimer();
             onUpdate = null;
             onRelease = null;
+            time = 0;
             id = -1;
+            isInited = false;
         }
 
         protected virtual void OnInitTimer() { }

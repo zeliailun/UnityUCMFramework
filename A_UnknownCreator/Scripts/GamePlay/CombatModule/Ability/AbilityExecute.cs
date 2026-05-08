@@ -1,6 +1,7 @@
-﻿using UnityEngine;
+﻿using System;
 using Animancer;
-using System;
+using UnityEngine;
+using static StylizedWater3.Extension;
 
 namespace UnknownCreator.Modules
 {
@@ -8,7 +9,7 @@ namespace UnknownCreator.Modules
     {
         internal void ExecuteAbilityInterrupt(bool isPointOrBackswing)
         {
-            Mgr.Event.Send<EvtAbilityInterrupt>(new(this, owner, isPointOrBackswing), UCMGE.OnAbilityCastPointInterrupt);
+            GameEvtBus.Send<EvtAbilityInterrupt>(new(this, owner, isPointOrBackswing));
             if (isPointOrBackswing)
             {
                 timerCastPoint.DestroySelf();
@@ -20,6 +21,7 @@ namespace UnknownCreator.Modules
                 timerCastBackswing.DestroySelf();
                 timerCastBackswing = null;
                 owner.abilityC.SetCastBackswing(false);
+                GameEvtBus.Send<EvtAbilityFullyCast>(new(this,owner));
             }
             if (isCastAnimPlaying)
                 ap.FadeOutLayer();
@@ -27,7 +29,7 @@ namespace UnknownCreator.Modules
             castAnimState = null;
             owner.abilityC.SetCastAbility(null);
             ApplyState(-1);
-            Mgr.Event.Send(this, UCMGE.OnAbilityFullyCast);
+            //
         }
 
         internal void ExecuteAbilityOnImmediate()
@@ -81,8 +83,7 @@ namespace UnknownCreator.Modules
 
             if (!CastFilter()) return;
 
-
-            Mgr.Event.Send<AbilityBase>(this, UCMGE.OnAbilityStart);
+            GameEvtBus.Send<EvtAbilityStart>(new(this, owner));
 
             if (IsForceCastDir())
             {
@@ -122,6 +123,7 @@ namespace UnknownCreator.Modules
 
                 TriggerAbility();
                 selectedTarget = null;
+                GameEvtBus.Send<EvtAbilityFullyCast>(new(this, owner));
             }
             else
             {
@@ -157,14 +159,14 @@ namespace UnknownCreator.Modules
             selectedTarget = null;
             castAnimState = null;
             ApplyState(-1);
-            Mgr.Event.Send(this, UCMGE.OnAbilityFullyCast);
+            GameEvtBus.Send<EvtAbilityFullyCast>(new(this, owner));
         }
 
         private void TriggerAbility()
         {
             StartCooldown(GetCooldown(level));
             OnCastTrigger();
-            Mgr.Event.Send<AbilityBase>(this, UCMGE.OnAbilityExecuted);
+            GameEvtBus.Send<EvtAbilityExecuted>(new(this, owner));
         }
 
 
@@ -177,14 +179,14 @@ namespace UnknownCreator.Modules
             bool isCastBackswing = owner.abilityC.isCastBackswing && !HasFlags(AbFlags.InterruptOtherCastBackswing);
             bool isCustomFilter = !GetCustomCastFilter();
 
-            if (isGamePaused || isCastPoint || isCastBackswing ||  isCustomFilter)
+            if (isGamePaused || isCastPoint || isCastBackswing || isCustomFilter)
             {
                 if (isCustomFilter && IsEnableCharge())
                 {
                     int id = GetCustomCastFilterID();
                     if (id == -1)
                         id = AbilityGlobals.InvalidCast;
-                    Mgr.Event.Send(new EvtAbilityCastError(this, owner, id), UCMGE.OnAbilityInvalidSpellCast);
+                    GameEvtBus.Send<EvtAbilityCastError>(new(this, owner, id));
                 }
 
                 return false;
@@ -192,7 +194,7 @@ namespace UnknownCreator.Modules
 
             if (!isLevelReady)
             {
-                Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidLevel), UCMGE.OnAbilityInvalidSpellCast);
+                GameEvtBus.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidLevel));
                 return false;
             }
 
@@ -200,13 +202,13 @@ namespace UnknownCreator.Modules
             {
                 if (currentCharge < 1)
                 {
-                    Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidCharge), UCMGE.OnAbilityInvalidSpellCast);
+                    GameEvtBus.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidCharge));
                     return false;
                 }
             }
             else if (!isCooldownReady)
             {
-                Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidCooldown), UCMGE.OnAbilityInvalidSpellCast);
+                GameEvtBus.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidCooldown));
                 return false;
             }
 
@@ -220,25 +222,25 @@ namespace UnknownCreator.Modules
 
                 if (!IsEnoughCastRange(UnityGlobals.DistanceH(owner.entP, selectedPos)))
                 {
-                    Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidCastRange), UCMGE.OnAbilityInvalidSpellCast);
+                    GameEvtBus.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidCastRange));
                     return false;
                 }
             }
 
             if (!isStunnedCast)
             {
-                Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidStunned), UCMGE.OnAbilityInvalidSpellCast);
+                GameEvtBus.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidStunned));
                 return false;
             }
 
             if (!isSilencedCast)
             {
-                Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidSilenced), UCMGE.OnAbilityInvalidSpellCast);
+                GameEvtBus.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidSilenced));
                 return false;
             }
 
-            if (HasFlags(AbFlags.InterruptOtherCastBackswing))
-                ExecuteAbilityInterrupt(false);
+            if (HasFlags(AbFlags.InterruptOtherCastBackswing) && owner.abilityC.isCastBackswing)
+                owner.abilityC.InterruptAbility(false);
 
             return (!HasBehavior(AbBehavior.Target) || HasBehavior(AbBehavior.Immediate) || HasBehavior(AbBehavior.NotTarget) || TargetFilter()) && OnCastStart();
         }
@@ -254,14 +256,14 @@ namespace UnknownCreator.Modules
             if (selectedTarget is null)
             {
                 if (HasBehavior(AbBehavior.Point)) return true;
-                Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.NotTarget), UCMGE.OnAbilityInvalidSpellCast);
+                GameEvtBus.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.NotTarget));
                 return false;
             }
 
             if (!selectedTarget.isAlive && !HasFlags(AbFlags.CanDeathTarget))
             {
                 if (HasBehavior(AbBehavior.Point)) return true;
-                Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.DeadTarget), UCMGE.OnAbilityInvalidSpellCast);
+                GameEvtBus.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.DeadTarget));
                 return false;
             }
 
@@ -270,7 +272,7 @@ namespace UnknownCreator.Modules
                 HasTargetTeam(AbTargetTeam.Friendly) && owner.unitTeam == selectedTarget.unitTeam)
                 return true;
 
-            Mgr.Event.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidTeam), UCMGE.OnAbilityInvalidSpellCast);
+            GameEvtBus.Send<EvtAbilityCastError>(new(this, owner, AbilityGlobals.InvalidTeam));
             return false;
         }
     }

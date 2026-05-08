@@ -1,5 +1,3 @@
-﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -19,52 +17,62 @@ namespace UnknownCreator.Modules
 
         public void AddSound(EntityId id, ISound sound)
         {
-            if (!soundDict.TryGetValue(id, out _))
-            {
-                sound.groupName = groupName;
-                soundDict.Add(id, sound);
-                soundList.Add(sound);
-            }
+            if (sound is null) return;
+            if (soundDict.TryGetValue(id, out _)) return;
+
+            sound.groupName = groupName;
+            soundDict.Add(id, sound);
+            soundList.Add(sound);
         }
 
         public void RemoveSound(EntityId id)
         {
-            if (soundDict.Remove(id, out var value))
-                value.groupName = string.Empty;
+            if (!soundDict.Remove(id, out var sound)) return;
+
+            soundList.Remove(sound);
+            sound.groupName = string.Empty;
         }
 
         public void PauseAllSounds()
         {
             for (int i = soundList.Count - 1; i >= 0; i--)
-                soundList[i].PauseSound();
+                soundList[i]?.PauseSound();
         }
 
         public void ResumeAllSound()
         {
             for (int i = soundList.Count - 1; i >= 0; i--)
-                soundList[i].ResumeSound();
+                soundList[i]?.ResumeSound();
         }
 
         public void StopAllSound()
         {
             for (int i = soundList.Count - 1; i >= 0; i--)
-                soundList[i].StopSound();
+                soundList[i]?.StopSound();
         }
 
         public void MuteAllSound(bool isMute)
         {
             for (int i = soundList.Count - 1; i >= 0; i--)
-                soundList[i].MuteSound(isMute);
+                soundList[i]?.MuteSound(isMute);
         }
 
         public void ClearSounds()
         {
-            soundDict.Clear();
             for (int i = soundList.Count - 1; i >= 0; i--)
-                soundList[i].groupName = string.Empty;
+            {
+                if (soundList[i] != null)
+                    soundList[i].groupName = string.Empty;
+            }
+
+            soundDict.Clear();
             soundList.Clear();
         }
 
-        void IReference.ObjRelease() => ClearSounds();
+        void IReference.ObjRelease()
+        {
+            ClearSounds();
+            groupName = string.Empty;
+        }
     }
 }

@@ -9,6 +9,11 @@ namespace UnknownCreator.Modules
     /// 全局查询：QueryBus<TResult> + global List，不查字典。
     /// 实体查询：QueryBus<TResult> + EntityId，才查 Dictionary。
     /// 查询规则：priority 高的先返回；相同 priority 取最后添加的那个。
+    ///
+    /// Query 期间允许 Add / Remove / Clear：
+    /// - Remove：当前位置置 null，占位，不改变当前 List 索引。
+    /// - Add：进入 pendingAdds，本轮 Query 不生效，最外层 Query 结束后按 priority 插入。
+    /// - Clear：当前已存在监听置 null，pendingAdds 中对应监听移除。
     /// </summary>
     public static class QueryBus<TResult>
     {
@@ -32,12 +37,19 @@ namespace UnknownCreator.Modules
             public string DebugName => $"QueryBus<{typeof(TResult).Name}>";
         }
 
+        private struct PendingAdd
+        {
+            public Listener listener;
+        }
+
         private static readonly List<Listener> globalListeners = new();
         private static readonly Dictionary<EntityId, List<Listener>> entityListeners = new();
 
-#if UNITY_EDITOR
         private static int queryingDepth;
-#endif
+        private static bool globalDirty;
+        private static readonly HashSet<EntityId> dirtyEntityIds = new();
+        private static readonly List<EntityId> emptyEntityIds = new();
+        private static readonly List<PendingAdd> pendingAdds = new();
 
         static QueryBus()
         {
@@ -56,10 +68,6 @@ namespace UnknownCreator.Modules
             if (func == null)
                 return new EventHandle(null);
 
-#if UNITY_EDITOR
-            WarnIfModifyWhileQuerying("Subscribe");
-#endif
-
             if (!allowDuplicate)
                 Remove(func);
 
@@ -70,7 +78,7 @@ namespace UnknownCreator.Modules
                 isEntity = false
             };
 
-            InsertByPriority(globalListeners, listener);
+            AddListener(listener);
 
             return new EventHandle(() =>
             {
@@ -83,11 +91,8 @@ namespace UnknownCreator.Modules
             if (func == null)
                 return;
 
-#if UNITY_EDITOR
-            WarnIfModifyWhileQuerying("Unsubscribe");
-#endif
-
-            RemoveFuncFromList(globalListeners, func);
+            RemoveFuncFromPendingAdds(func, false, default);
+            RemoveFuncFromList(globalListeners, func, false, default);
         }
 
         public static TResult Query()
@@ -107,21 +112,26 @@ namespace UnknownCreator.Modules
 
         public static bool HasListener()
         {
-            return globalListeners.Count > 0;
+            return HasAliveListener(globalListeners);
         }
 
         public static int GetListenerCount()
         {
-            return globalListeners.Count;
+            return CountAliveListeners(globalListeners);
         }
 
         public static void Clear()
         {
-#if UNITY_EDITOR
-            WarnIfModifyWhileQuerying("Clear");
-#endif
+            if (queryingDepth > 0)
+            {
+                MarkAllRemoveLater(globalListeners, false, default);
+                RemovePendingAddsByKey(false, default);
+                return;
+            }
 
             globalListeners.Clear();
+            RemovePendingAddsByKey(false, default);
+            globalDirty = false;
         }
 
         // =========================
@@ -137,10 +147,6 @@ namespace UnknownCreator.Modules
             if (func == null)
                 return new EventHandle(null);
 
-#if UNITY_EDITOR
-            WarnIfModifyWhileQuerying("SubscribeEntity");
-#endif
-
             if (!allowDuplicate)
                 RemoveEntity(id, func);
 
@@ -152,8 +158,7 @@ namespace UnknownCreator.Modules
                 isEntity = true
             };
 
-            List<Listener> list = GetOrCreateEntityList(id);
-            InsertByPriority(list, listener);
+            AddListener(listener);
 
             return new EventHandle(() =>
             {
@@ -166,16 +171,14 @@ namespace UnknownCreator.Modules
             if (func == null)
                 return;
 
-#if UNITY_EDITOR
-            WarnIfModifyWhileQuerying("UnsubscribeEntity");
-#endif
+            RemoveFuncFromPendingAdds(func, true, id);
 
             if (!entityListeners.TryGetValue(id, out List<Listener> list))
                 return;
 
-            RemoveFuncFromList(list, func);
+            RemoveFuncFromList(list, func, true, id);
 
-            if (list.Count == 0)
+            if (queryingDepth <= 0 && list.Count == 0)
                 entityListeners.Remove(id);
         }
 
@@ -207,19 +210,26 @@ namespace UnknownCreator.Modules
 
         public static bool HasEntityListener(EntityId id)
         {
-            return entityListeners.TryGetValue(id, out List<Listener> list) && list.Count > 0;
+            return entityListeners.TryGetValue(id, out List<Listener> list) && HasAliveListener(list);
         }
 
         public static int GetEntityListenerCount(EntityId id)
         {
-            return entityListeners.TryGetValue(id, out List<Listener> list) ? list.Count : 0;
+            return entityListeners.TryGetValue(id, out List<Listener> list) ? CountAliveListeners(list) : 0;
         }
 
         public static void ClearEntity(EntityId id)
         {
-#if UNITY_EDITOR
-            WarnIfModifyWhileQuerying("ClearEntity");
-#endif
+            RemovePendingAddsByKey(true, id);
+
+            if (!entityListeners.TryGetValue(id, out List<Listener> list))
+                return;
+
+            if (queryingDepth > 0)
+            {
+                MarkAllRemoveLater(list, true, id);
+                return;
+            }
 
             entityListeners.Remove(id);
         }
@@ -230,12 +240,59 @@ namespace UnknownCreator.Modules
 
         public static void ClearAll()
         {
-#if UNITY_EDITOR
-            WarnIfModifyWhileQuerying("ClearAll");
-#endif
+            if (queryingDepth > 0)
+            {
+                MarkAllRemoveLater(globalListeners, false, default);
+
+                foreach (var pair in entityListeners)
+                {
+                    MarkAllRemoveLater(pair.Value, true, pair.Key);
+                }
+
+                pendingAdds.Clear();
+                return;
+            }
 
             globalListeners.Clear();
             entityListeners.Clear();
+
+            globalDirty = false;
+            dirtyEntityIds.Clear();
+            emptyEntityIds.Clear();
+            pendingAdds.Clear();
+        }
+
+        private static void AddListener(Listener listener)
+        {
+            if (listener == null || listener.func == null)
+                return;
+
+            if (queryingDepth > 0)
+            {
+                pendingAdds.Add(new PendingAdd
+                {
+                    listener = listener
+                });
+
+                return;
+            }
+
+            AddListenerDirect(listener);
+        }
+
+        private static void AddListenerDirect(Listener listener)
+        {
+            if (listener == null || listener.func == null)
+                return;
+
+            if (!listener.isEntity)
+            {
+                InsertByPriority(globalListeners, listener);
+                return;
+            }
+
+            List<Listener> list = GetOrCreateEntityList(listener.id);
+            InsertByPriority(list, listener);
         }
 
         private static List<Listener> GetOrCreateEntityList(EntityId id)
@@ -257,9 +314,10 @@ namespace UnknownCreator.Modules
             if (list == null || list.Count == 0)
                 return default;
 
-#if UNITY_EDITOR
-            queryingDepth++;
-#endif
+            TResult returnValue = default;
+            bool hasValue = false;
+
+            BeginQuery();
 
             try
             {
@@ -267,28 +325,38 @@ namespace UnknownCreator.Modules
                 {
                     Listener listener = list[i];
 
-                    if (listener == null || listener.func == null)
+                    if (listener == null)
                         continue;
+
+                    Func<TResult> func = listener.func;
+
+                    if (func == null)
+                    {
+                        MarkRemoveLater(list, i, listener);
+                        continue;
+                    }
 
                     try
                     {
-                        return listener.func.Invoke();
+                        returnValue = func.Invoke();
+                        hasValue = true;
+                        break;
                     }
                     catch (Exception e)
                     {
                         UCMDebug.LogException(e);
-                        return default;
+                        returnValue = default;
+                        hasValue = false;
+                        break;
                     }
                 }
-
-                return default;
             }
             finally
             {
-#if UNITY_EDITOR
-                queryingDepth--;
-#endif
+                EndQuery();
             }
+
+            return hasValue ? returnValue : default;
         }
 
         private static bool TryQueryList(List<Listener> list, out TResult result)
@@ -301,9 +369,10 @@ namespace UnknownCreator.Modules
             if (list == null || list.Count == 0)
                 return false;
 
-#if UNITY_EDITOR
-            queryingDepth++;
-#endif
+            TResult returnValue = default;
+            bool hasValue = false;
+
+            BeginQuery();
 
             try
             {
@@ -311,29 +380,39 @@ namespace UnknownCreator.Modules
                 {
                     Listener listener = list[i];
 
-                    if (listener == null || listener.func == null)
+                    if (listener == null)
                         continue;
+
+                    Func<TResult> func = listener.func;
+
+                    if (func == null)
+                    {
+                        MarkRemoveLater(list, i, listener);
+                        continue;
+                    }
 
                     try
                     {
-                        result = listener.func.Invoke();
-                        return true;
+                        returnValue = func.Invoke();
+                        hasValue = true;
+                        break;
                     }
                     catch (Exception e)
                     {
                         UCMDebug.LogException(e);
-                        return false;
+                        returnValue = default;
+                        hasValue = false;
+                        break;
                     }
                 }
-
-                return false;
             }
             finally
             {
-#if UNITY_EDITOR
-                queryingDepth--;
-#endif
+                EndQuery();
             }
+
+            result = returnValue;
+            return hasValue;
         }
 
         private static List<TResult> QueryAllList(List<Listener> list)
@@ -346,9 +425,7 @@ namespace UnknownCreator.Modules
             if (list == null || list.Count == 0)
                 return resultList;
 
-#if UNITY_EDITOR
-            queryingDepth++;
-#endif
+            BeginQuery();
 
             try
             {
@@ -356,26 +433,93 @@ namespace UnknownCreator.Modules
                 {
                     Listener listener = list[i];
 
-                    if (listener == null || listener.func == null)
+                    if (listener == null)
                         continue;
+
+                    Func<TResult> func = listener.func;
+
+                    if (func == null)
+                    {
+                        MarkRemoveLater(list, i, listener);
+                        continue;
+                    }
 
                     try
                     {
-                        resultList.Add(listener.func.Invoke());
+                        resultList.Add(func.Invoke());
                     }
                     catch (Exception e)
                     {
                         UCMDebug.LogException(e);
                     }
                 }
-
-                return resultList;
             }
             finally
             {
-#if UNITY_EDITOR
-                queryingDepth--;
-#endif
+                EndQuery();
+            }
+
+            return resultList;
+        }
+
+        private static void BeginQuery()
+        {
+            queryingDepth++;
+        }
+
+        private static void EndQuery()
+        {
+            queryingDepth--;
+
+            if (queryingDepth <= 0)
+            {
+                queryingDepth = 0;
+                FlushPendingChanges();
+            }
+        }
+
+        private static void FlushPendingChanges()
+        {
+            if (globalDirty)
+            {
+                RemoveNullSlots(globalListeners);
+                globalDirty = false;
+            }
+
+            if (dirtyEntityIds.Count > 0)
+            {
+                foreach (EntityId id in dirtyEntityIds)
+                {
+                    if (!entityListeners.TryGetValue(id, out List<Listener> list))
+                        continue;
+
+                    RemoveNullSlots(list);
+
+                    if (list.Count == 0)
+                        emptyEntityIds.Add(id);
+                }
+
+                dirtyEntityIds.Clear();
+
+                for (int i = 0; i < emptyEntityIds.Count; i++)
+                {
+                    entityListeners.Remove(emptyEntityIds[i]);
+                }
+
+                emptyEntityIds.Clear();
+            }
+
+            if (pendingAdds.Count > 0)
+            {
+                for (int i = 0; i < pendingAdds.Count; i++)
+                {
+                    Listener listener = pendingAdds[i].listener;
+
+                    if (listener != null && listener.func != null)
+                        AddListenerDirect(listener);
+                }
+
+                pendingAdds.Clear();
             }
         }
 
@@ -384,27 +528,59 @@ namespace UnknownCreator.Modules
             if (listener == null)
                 return;
 
-#if UNITY_EDITOR
-            WarnIfModifyWhileQuerying("RemoveListener");
-#endif
+            RemovePendingListener(listener);
 
             if (!listener.isEntity)
             {
-                globalListeners.Remove(listener);
+                RemoveListenerFromList(globalListeners, listener, false, default);
                 return;
             }
 
             if (!entityListeners.TryGetValue(listener.id, out List<Listener> list))
                 return;
 
-            list.Remove(listener);
+            RemoveListenerFromList(list, listener, true, listener.id);
 
-            if (list.Count == 0)
+            if (queryingDepth <= 0 && list.Count == 0)
                 entityListeners.Remove(listener.id);
         }
 
-        private static void RemoveFuncFromList(List<Listener> list, Func<TResult> func)
+        private static void RemoveListenerFromList(
+            List<Listener> list,
+            Listener listener,
+            bool isEntity,
+            EntityId id)
         {
+            if (list == null || listener == null)
+                return;
+
+            for (int i = list.Count - 1; i >= 0; i--)
+            {
+                if (!ReferenceEquals(list[i], listener))
+                    continue;
+
+                if (queryingDepth > 0)
+                {
+                    MarkRemoveLater(list, i, listener);
+                }
+                else
+                {
+                    list.RemoveAt(i);
+                }
+
+                break;
+            }
+        }
+
+        private static void RemoveFuncFromList(
+            List<Listener> list,
+            Func<TResult> func,
+            bool isEntity,
+            EntityId id)
+        {
+            if (list == null || func == null)
+                return;
+
             for (int i = list.Count - 1; i >= 0; i--)
             {
                 Listener listener = list[i];
@@ -412,8 +588,133 @@ namespace UnknownCreator.Modules
                 if (listener == null)
                     continue;
 
-                if (Delegate.Equals(listener.func, func))
+                if (!Delegate.Equals(listener.func, func))
+                    continue;
+
+                if (queryingDepth > 0)
+                {
+                    MarkRemoveLater(list, i, listener);
+                }
+                else
+                {
                     list.RemoveAt(i);
+                }
+            }
+        }
+
+        private static void MarkRemoveLater(List<Listener> list, int index, Listener listener)
+        {
+            if (list == null || index < 0 || index >= list.Count)
+                return;
+
+            if (list[index] == null)
+                return;
+
+            list[index] = null;
+
+            if (listener != null && listener.isEntity)
+            {
+                dirtyEntityIds.Add(listener.id);
+            }
+            else
+            {
+                globalDirty = true;
+            }
+        }
+
+        private static void MarkAllRemoveLater(List<Listener> list, bool isEntity, EntityId id)
+        {
+            if (list == null || list.Count == 0)
+                return;
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i] != null)
+                    list[i] = null;
+            }
+
+            if (isEntity)
+                dirtyEntityIds.Add(id);
+            else
+                globalDirty = true;
+        }
+
+        private static void RemoveNullSlots(List<Listener> list)
+        {
+            if (list == null)
+                return;
+
+            for (int i = list.Count - 1; i >= 0; i--)
+            {
+                if (list[i] == null)
+                    list.RemoveAt(i);
+            }
+        }
+
+        private static bool RemovePendingListener(Listener listener)
+        {
+            bool removed = false;
+
+            for (int i = pendingAdds.Count - 1; i >= 0; i--)
+            {
+                if (!ReferenceEquals(pendingAdds[i].listener, listener))
+                    continue;
+
+                pendingAdds.RemoveAt(i);
+                removed = true;
+            }
+
+            return removed;
+        }
+
+        private static void RemoveFuncFromPendingAdds(
+            Func<TResult> func,
+            bool isEntity,
+            EntityId id)
+        {
+            if (func == null || pendingAdds.Count == 0)
+                return;
+
+            for (int i = pendingAdds.Count - 1; i >= 0; i--)
+            {
+                Listener listener = pendingAdds[i].listener;
+
+                if (listener == null)
+                {
+                    pendingAdds.RemoveAt(i);
+                    continue;
+                }
+
+                if (listener.isEntity != isEntity)
+                    continue;
+
+                if (isEntity && !EqualityComparer<EntityId>.Default.Equals(listener.id, id))
+                    continue;
+
+                if (Delegate.Equals(listener.func, func))
+                    pendingAdds.RemoveAt(i);
+            }
+        }
+
+        private static void RemovePendingAddsByKey(bool isEntity, EntityId id)
+        {
+            for (int i = pendingAdds.Count - 1; i >= 0; i--)
+            {
+                Listener listener = pendingAdds[i].listener;
+
+                if (listener == null)
+                {
+                    pendingAdds.RemoveAt(i);
+                    continue;
+                }
+
+                if (listener.isEntity != isEntity)
+                    continue;
+
+                if (isEntity && !EqualityComparer<EntityId>.Default.Equals(listener.id, id))
+                    continue;
+
+                pendingAdds.RemoveAt(i);
             }
         }
 
@@ -421,37 +722,72 @@ namespace UnknownCreator.Modules
         {
             int i = list.Count - 1;
 
-            while (i >= 0 && list[i].priority <= listener.priority)
+            while (i >= 0)
             {
+                Listener current = list[i];
+
+                if (current == null)
+                {
+                    i--;
+                    continue;
+                }
+
+                // QueryBus 的规则：相同 priority 取最后添加的那个。
+                // 所以新 listener 要插到同优先级旧 listener 前面。
+                if (current.priority > listener.priority)
+                    break;
+
                 i--;
             }
 
             list.Insert(i + 1, listener);
         }
 
-        private static int GetTotalListenerCount()
+        private static bool HasAliveListener(List<Listener> list)
         {
-            int count = globalListeners.Count;
+            if (list == null)
+                return false;
 
-            foreach (var pair in entityListeners)
+            for (int i = 0; i < list.Count; i++)
             {
-                count += pair.Value.Count;
+                Listener listener = list[i];
+
+                if (listener != null && listener.func != null)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static int CountAliveListeners(List<Listener> list)
+        {
+            if (list == null)
+                return 0;
+
+            int count = 0;
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                Listener listener = list[i];
+
+                if (listener != null && listener.func != null)
+                    count++;
             }
 
             return count;
         }
 
-#if UNITY_EDITOR
-        private static void WarnIfModifyWhileQuerying(string operation)
+        private static int GetTotalListenerCount()
         {
-            if (queryingDepth <= 0)
-                return;
+            int count = CountAliveListeners(globalListeners);
 
-            UCMDebug.LogWarning(
-                $"QueryBus<{typeof(TResult).Name}> 正在 Query 时执行了 {operation}。当前版本没有延迟操作队列，可能导致监听顺序或索引异常。"
-            );
+            foreach (var pair in entityListeners)
+            {
+                count += CountAliveListeners(pair.Value);
+            }
+
+            return count;
         }
-#endif
     }
 
     /// <summary>
@@ -459,6 +795,11 @@ namespace UnknownCreator.Modules
     /// 全局查询：QueryBus<TQuery, TResult> + global List，不查字典。
     /// 实体查询：QueryBus<TQuery, TResult> + EntityId，才查 Dictionary。
     /// 查询规则：priority 高的先返回；相同 priority 取最后添加的那个。
+    ///
+    /// Query 期间允许 Add / Remove / Clear：
+    /// - Remove：当前位置置 null，占位，不改变当前 List 索引。
+    /// - Add：进入 pendingAdds，本轮 Query 不生效，最外层 Query 结束后按 priority 插入。
+    /// - Clear：当前已存在监听置 null，pendingAdds 中对应监听移除。
     /// </summary>
     public static class QueryBus<TQuery, TResult>
     {
@@ -482,12 +823,19 @@ namespace UnknownCreator.Modules
             public string DebugName => $"QueryBus<{typeof(TQuery).Name}, {typeof(TResult).Name}>";
         }
 
+        private struct PendingAdd
+        {
+            public Listener listener;
+        }
+
         private static readonly List<Listener> globalListeners = new();
         private static readonly Dictionary<EntityId, List<Listener>> entityListeners = new();
 
-#if UNITY_EDITOR
-        private static bool isQuerying;
-#endif
+        private static int queryingDepth;
+        private static bool globalDirty;
+        private static readonly HashSet<EntityId> dirtyEntityIds = new();
+        private static readonly List<EntityId> emptyEntityIds = new();
+        private static readonly List<PendingAdd> pendingAdds = new();
 
         static QueryBus()
         {
@@ -506,10 +854,6 @@ namespace UnknownCreator.Modules
             if (func == null)
                 return new EventHandle(null);
 
-#if UNITY_EDITOR
-            WarnIfModifyWhileQuerying("Subscribe");
-#endif
-
             if (!allowDuplicate)
                 Remove(func);
 
@@ -520,7 +864,7 @@ namespace UnknownCreator.Modules
                 isEntity = false
             };
 
-            InsertByPriority(globalListeners, listener);
+            AddListener(listener);
 
             return new EventHandle(() =>
             {
@@ -533,11 +877,8 @@ namespace UnknownCreator.Modules
             if (func == null)
                 return;
 
-#if UNITY_EDITOR
-            WarnIfModifyWhileQuerying("Unsubscribe");
-#endif
-
-            RemoveFuncFromList(globalListeners, func);
+            RemoveFuncFromPendingAdds(func, false, default);
+            RemoveFuncFromList(globalListeners, func, false, default);
         }
 
         public static TResult Query(TQuery query)
@@ -557,21 +898,26 @@ namespace UnknownCreator.Modules
 
         public static bool HasListener()
         {
-            return globalListeners.Count > 0;
+            return HasAliveListener(globalListeners);
         }
 
         public static int GetListenerCount()
         {
-            return globalListeners.Count;
+            return CountAliveListeners(globalListeners);
         }
 
         public static void Clear()
         {
-#if UNITY_EDITOR
-            WarnIfModifyWhileQuerying("Clear");
-#endif
+            if (queryingDepth > 0)
+            {
+                MarkAllRemoveLater(globalListeners, false, default);
+                RemovePendingAddsByKey(false, default);
+                return;
+            }
 
             globalListeners.Clear();
+            RemovePendingAddsByKey(false, default);
+            globalDirty = false;
         }
 
         // =========================
@@ -587,10 +933,6 @@ namespace UnknownCreator.Modules
             if (func == null)
                 return new EventHandle(null);
 
-#if UNITY_EDITOR
-            WarnIfModifyWhileQuerying("SubscribeEntity");
-#endif
-
             if (!allowDuplicate)
                 RemoveEntity(id, func);
 
@@ -602,8 +944,7 @@ namespace UnknownCreator.Modules
                 isEntity = true
             };
 
-            List<Listener> list = GetOrCreateEntityList(id);
-            InsertByPriority(list, listener);
+            AddListener(listener);
 
             return new EventHandle(() =>
             {
@@ -616,16 +957,14 @@ namespace UnknownCreator.Modules
             if (func == null)
                 return;
 
-#if UNITY_EDITOR
-            WarnIfModifyWhileQuerying("UnsubscribeEntity");
-#endif
+            RemoveFuncFromPendingAdds(func, true, id);
 
             if (!entityListeners.TryGetValue(id, out List<Listener> list))
                 return;
 
-            RemoveFuncFromList(list, func);
+            RemoveFuncFromList(list, func, true, id);
 
-            if (list.Count == 0)
+            if (queryingDepth <= 0 && list.Count == 0)
                 entityListeners.Remove(id);
         }
 
@@ -657,19 +996,26 @@ namespace UnknownCreator.Modules
 
         public static bool HasEntityListener(EntityId id)
         {
-            return entityListeners.TryGetValue(id, out List<Listener> list) && list.Count > 0;
+            return entityListeners.TryGetValue(id, out List<Listener> list) && HasAliveListener(list);
         }
 
         public static int GetEntityListenerCount(EntityId id)
         {
-            return entityListeners.TryGetValue(id, out List<Listener> list) ? list.Count : 0;
+            return entityListeners.TryGetValue(id, out List<Listener> list) ? CountAliveListeners(list) : 0;
         }
 
         public static void ClearEntity(EntityId id)
         {
-#if UNITY_EDITOR
-            WarnIfModifyWhileQuerying("ClearEntity");
-#endif
+            RemovePendingAddsByKey(true, id);
+
+            if (!entityListeners.TryGetValue(id, out List<Listener> list))
+                return;
+
+            if (queryingDepth > 0)
+            {
+                MarkAllRemoveLater(list, true, id);
+                return;
+            }
 
             entityListeners.Remove(id);
         }
@@ -680,12 +1026,59 @@ namespace UnknownCreator.Modules
 
         public static void ClearAll()
         {
-#if UNITY_EDITOR
-            WarnIfModifyWhileQuerying("ClearAll");
-#endif
+            if (queryingDepth > 0)
+            {
+                MarkAllRemoveLater(globalListeners, false, default);
+
+                foreach (var pair in entityListeners)
+                {
+                    MarkAllRemoveLater(pair.Value, true, pair.Key);
+                }
+
+                pendingAdds.Clear();
+                return;
+            }
 
             globalListeners.Clear();
             entityListeners.Clear();
+
+            globalDirty = false;
+            dirtyEntityIds.Clear();
+            emptyEntityIds.Clear();
+            pendingAdds.Clear();
+        }
+
+        private static void AddListener(Listener listener)
+        {
+            if (listener == null || listener.func == null)
+                return;
+
+            if (queryingDepth > 0)
+            {
+                pendingAdds.Add(new PendingAdd
+                {
+                    listener = listener
+                });
+
+                return;
+            }
+
+            AddListenerDirect(listener);
+        }
+
+        private static void AddListenerDirect(Listener listener)
+        {
+            if (listener == null || listener.func == null)
+                return;
+
+            if (!listener.isEntity)
+            {
+                InsertByPriority(globalListeners, listener);
+                return;
+            }
+
+            List<Listener> list = GetOrCreateEntityList(listener.id);
+            InsertByPriority(list, listener);
         }
 
         private static List<Listener> GetOrCreateEntityList(EntityId id)
@@ -707,9 +1100,10 @@ namespace UnknownCreator.Modules
             if (list == null || list.Count == 0)
                 return default;
 
-#if UNITY_EDITOR
-            isQuerying = true;
-#endif
+            TResult returnValue = default;
+            bool hasValue = false;
+
+            BeginQuery();
 
             try
             {
@@ -717,28 +1111,38 @@ namespace UnknownCreator.Modules
                 {
                     Listener listener = list[i];
 
-                    if (listener == null || listener.func == null)
+                    if (listener == null)
                         continue;
+
+                    Func<TQuery, TResult> func = listener.func;
+
+                    if (func == null)
+                    {
+                        MarkRemoveLater(list, i, listener);
+                        continue;
+                    }
 
                     try
                     {
-                        return listener.func.Invoke(query);
+                        returnValue = func.Invoke(query);
+                        hasValue = true;
+                        break;
                     }
                     catch (Exception e)
                     {
                         Debug.LogException(e);
-                        return default;
+                        returnValue = default;
+                        hasValue = false;
+                        break;
                     }
                 }
-
-                return default;
             }
             finally
             {
-#if UNITY_EDITOR
-                isQuerying = false;
-#endif
+                EndQuery();
             }
+
+            return hasValue ? returnValue : default;
         }
 
         private static bool TryQueryList(List<Listener> list, TQuery query, out TResult result)
@@ -751,9 +1155,10 @@ namespace UnknownCreator.Modules
             if (list == null || list.Count == 0)
                 return false;
 
-#if UNITY_EDITOR
-            isQuerying = true;
-#endif
+            TResult returnValue = default;
+            bool hasValue = false;
+
+            BeginQuery();
 
             try
             {
@@ -761,29 +1166,39 @@ namespace UnknownCreator.Modules
                 {
                     Listener listener = list[i];
 
-                    if (listener == null || listener.func == null)
+                    if (listener == null)
                         continue;
+
+                    Func<TQuery, TResult> func = listener.func;
+
+                    if (func == null)
+                    {
+                        MarkRemoveLater(list, i, listener);
+                        continue;
+                    }
 
                     try
                     {
-                        result = listener.func.Invoke(query);
-                        return true;
+                        returnValue = func.Invoke(query);
+                        hasValue = true;
+                        break;
                     }
                     catch (Exception e)
                     {
                         Debug.LogException(e);
-                        return false;
+                        returnValue = default;
+                        hasValue = false;
+                        break;
                     }
                 }
-
-                return false;
             }
             finally
             {
-#if UNITY_EDITOR
-                isQuerying = false;
-#endif
+                EndQuery();
             }
+
+            result = returnValue;
+            return hasValue;
         }
 
         private static List<TResult> QueryAllList(List<Listener> list, TQuery query)
@@ -796,9 +1211,7 @@ namespace UnknownCreator.Modules
             if (list == null || list.Count == 0)
                 return resultList;
 
-#if UNITY_EDITOR
-            isQuerying = true;
-#endif
+            BeginQuery();
 
             try
             {
@@ -806,26 +1219,93 @@ namespace UnknownCreator.Modules
                 {
                     Listener listener = list[i];
 
-                    if (listener == null || listener.func == null)
+                    if (listener == null)
                         continue;
+
+                    Func<TQuery, TResult> func = listener.func;
+
+                    if (func == null)
+                    {
+                        MarkRemoveLater(list, i, listener);
+                        continue;
+                    }
 
                     try
                     {
-                        resultList.Add(listener.func.Invoke(query));
+                        resultList.Add(func.Invoke(query));
                     }
                     catch (Exception e)
                     {
                         Debug.LogException(e);
                     }
                 }
-
-                return resultList;
             }
             finally
             {
-#if UNITY_EDITOR
-                isQuerying = false;
-#endif
+                EndQuery();
+            }
+
+            return resultList;
+        }
+
+        private static void BeginQuery()
+        {
+            queryingDepth++;
+        }
+
+        private static void EndQuery()
+        {
+            queryingDepth--;
+
+            if (queryingDepth <= 0)
+            {
+                queryingDepth = 0;
+                FlushPendingChanges();
+            }
+        }
+
+        private static void FlushPendingChanges()
+        {
+            if (globalDirty)
+            {
+                RemoveNullSlots(globalListeners);
+                globalDirty = false;
+            }
+
+            if (dirtyEntityIds.Count > 0)
+            {
+                foreach (EntityId id in dirtyEntityIds)
+                {
+                    if (!entityListeners.TryGetValue(id, out List<Listener> list))
+                        continue;
+
+                    RemoveNullSlots(list);
+
+                    if (list.Count == 0)
+                        emptyEntityIds.Add(id);
+                }
+
+                dirtyEntityIds.Clear();
+
+                for (int i = 0; i < emptyEntityIds.Count; i++)
+                {
+                    entityListeners.Remove(emptyEntityIds[i]);
+                }
+
+                emptyEntityIds.Clear();
+            }
+
+            if (pendingAdds.Count > 0)
+            {
+                for (int i = 0; i < pendingAdds.Count; i++)
+                {
+                    Listener listener = pendingAdds[i].listener;
+
+                    if (listener != null && listener.func != null)
+                        AddListenerDirect(listener);
+                }
+
+                pendingAdds.Clear();
             }
         }
 
@@ -834,27 +1314,59 @@ namespace UnknownCreator.Modules
             if (listener == null)
                 return;
 
-#if UNITY_EDITOR
-            WarnIfModifyWhileQuerying("RemoveListener");
-#endif
+            RemovePendingListener(listener);
 
             if (!listener.isEntity)
             {
-                globalListeners.Remove(listener);
+                RemoveListenerFromList(globalListeners, listener, false, default);
                 return;
             }
 
             if (!entityListeners.TryGetValue(listener.id, out List<Listener> list))
                 return;
 
-            list.Remove(listener);
+            RemoveListenerFromList(list, listener, true, listener.id);
 
-            if (list.Count == 0)
+            if (queryingDepth <= 0 && list.Count == 0)
                 entityListeners.Remove(listener.id);
         }
 
-        private static void RemoveFuncFromList(List<Listener> list, Func<TQuery, TResult> func)
+        private static void RemoveListenerFromList(
+            List<Listener> list,
+            Listener listener,
+            bool isEntity,
+            EntityId id)
         {
+            if (list == null || listener == null)
+                return;
+
+            for (int i = list.Count - 1; i >= 0; i--)
+            {
+                if (!ReferenceEquals(list[i], listener))
+                    continue;
+
+                if (queryingDepth > 0)
+                {
+                    MarkRemoveLater(list, i, listener);
+                }
+                else
+                {
+                    list.RemoveAt(i);
+                }
+
+                break;
+            }
+        }
+
+        private static void RemoveFuncFromList(
+            List<Listener> list,
+            Func<TQuery, TResult> func,
+            bool isEntity,
+            EntityId id)
+        {
+            if (list == null || func == null)
+                return;
+
             for (int i = list.Count - 1; i >= 0; i--)
             {
                 Listener listener = list[i];
@@ -862,8 +1374,133 @@ namespace UnknownCreator.Modules
                 if (listener == null)
                     continue;
 
-                if (Delegate.Equals(listener.func, func))
+                if (!Delegate.Equals(listener.func, func))
+                    continue;
+
+                if (queryingDepth > 0)
+                {
+                    MarkRemoveLater(list, i, listener);
+                }
+                else
+                {
                     list.RemoveAt(i);
+                }
+            }
+        }
+
+        private static void MarkRemoveLater(List<Listener> list, int index, Listener listener)
+        {
+            if (list == null || index < 0 || index >= list.Count)
+                return;
+
+            if (list[index] == null)
+                return;
+
+            list[index] = null;
+
+            if (listener != null && listener.isEntity)
+            {
+                dirtyEntityIds.Add(listener.id);
+            }
+            else
+            {
+                globalDirty = true;
+            }
+        }
+
+        private static void MarkAllRemoveLater(List<Listener> list, bool isEntity, EntityId id)
+        {
+            if (list == null || list.Count == 0)
+                return;
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i] != null)
+                    list[i] = null;
+            }
+
+            if (isEntity)
+                dirtyEntityIds.Add(id);
+            else
+                globalDirty = true;
+        }
+
+        private static void RemoveNullSlots(List<Listener> list)
+        {
+            if (list == null)
+                return;
+
+            for (int i = list.Count - 1; i >= 0; i--)
+            {
+                if (list[i] == null)
+                    list.RemoveAt(i);
+            }
+        }
+
+        private static bool RemovePendingListener(Listener listener)
+        {
+            bool removed = false;
+
+            for (int i = pendingAdds.Count - 1; i >= 0; i--)
+            {
+                if (!ReferenceEquals(pendingAdds[i].listener, listener))
+                    continue;
+
+                pendingAdds.RemoveAt(i);
+                removed = true;
+            }
+
+            return removed;
+        }
+
+        private static void RemoveFuncFromPendingAdds(
+            Func<TQuery, TResult> func,
+            bool isEntity,
+            EntityId id)
+        {
+            if (func == null || pendingAdds.Count == 0)
+                return;
+
+            for (int i = pendingAdds.Count - 1; i >= 0; i--)
+            {
+                Listener listener = pendingAdds[i].listener;
+
+                if (listener == null)
+                {
+                    pendingAdds.RemoveAt(i);
+                    continue;
+                }
+
+                if (listener.isEntity != isEntity)
+                    continue;
+
+                if (isEntity && !EqualityComparer<EntityId>.Default.Equals(listener.id, id))
+                    continue;
+
+                if (Delegate.Equals(listener.func, func))
+                    pendingAdds.RemoveAt(i);
+            }
+        }
+
+        private static void RemovePendingAddsByKey(bool isEntity, EntityId id)
+        {
+            for (int i = pendingAdds.Count - 1; i >= 0; i--)
+            {
+                Listener listener = pendingAdds[i].listener;
+
+                if (listener == null)
+                {
+                    pendingAdds.RemoveAt(i);
+                    continue;
+                }
+
+                if (listener.isEntity != isEntity)
+                    continue;
+
+                if (isEntity && !EqualityComparer<EntityId>.Default.Equals(listener.id, id))
+                    continue;
+
+                pendingAdds.RemoveAt(i);
             }
         }
 
@@ -871,36 +1508,71 @@ namespace UnknownCreator.Modules
         {
             int i = list.Count - 1;
 
-            while (i >= 0 && list[i].priority <= listener.priority)
+            while (i >= 0)
             {
+                Listener current = list[i];
+
+                if (current == null)
+                {
+                    i--;
+                    continue;
+                }
+
+                // QueryBus 的规则：相同 priority 取最后添加的那个。
+                // 所以新 listener 要插到同优先级旧 listener 前面。
+                if (current.priority > listener.priority)
+                    break;
+
                 i--;
             }
 
             list.Insert(i + 1, listener);
         }
 
-        private static int GetTotalListenerCount()
+        private static bool HasAliveListener(List<Listener> list)
         {
-            int count = globalListeners.Count;
+            if (list == null)
+                return false;
 
-            foreach (var pair in entityListeners)
+            for (int i = 0; i < list.Count; i++)
             {
-                count += pair.Value.Count;
+                Listener listener = list[i];
+
+                if (listener != null && listener.func != null)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static int CountAliveListeners(List<Listener> list)
+        {
+            if (list == null)
+                return 0;
+
+            int count = 0;
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                Listener listener = list[i];
+
+                if (listener != null && listener.func != null)
+                    count++;
             }
 
             return count;
         }
 
-#if UNITY_EDITOR
-        private static void WarnIfModifyWhileQuerying(string operation)
+        private static int GetTotalListenerCount()
         {
-            if (!isQuerying)
-                return;
+            int count = CountAliveListeners(globalListeners);
 
-            Debug.LogWarning(
-                $"QueryBus<{typeof(TQuery).Name}, {typeof(TResult).Name}> 正在 Query 时执行了 {operation}。当前版本没有延迟操作队列，可能导致监听顺序或索引异常。"
-            );
+            foreach (var pair in entityListeners)
+            {
+                count += CountAliveListeners(pair.Value);
+            }
+
+            return count;
         }
-#endif
     }
 }

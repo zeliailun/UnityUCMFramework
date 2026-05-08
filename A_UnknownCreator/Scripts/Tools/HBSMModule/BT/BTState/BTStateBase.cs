@@ -25,6 +25,7 @@ namespace UnknownCreator.Modules
         protected sealed override void Release()
         {
             OnRelease();
+            stateType = BTStateType.Running;
             isActivated = true;
             isStarted = false;
         }

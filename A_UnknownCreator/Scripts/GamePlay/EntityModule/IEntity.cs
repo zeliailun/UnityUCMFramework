@@ -20,11 +20,11 @@ namespace UnknownCreator.Modules
 
         public bool enable { get; set; }
 
-        void UpdataEnt();
+        void UpdateEnt();
 
-        void FixedUpdataEnt();
+        void FixedUpdateEnt();
 
-        void LateUpdataEnt();
+        void LateUpdateEnt();
 
         void ShowEnt();
 

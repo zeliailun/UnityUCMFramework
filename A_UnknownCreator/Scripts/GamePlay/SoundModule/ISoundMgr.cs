@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -30,6 +30,7 @@ namespace UnknownCreator.Modules
         void ResumeSoundGroup(string soundGroupName);
         void StopSoundGroup(string soundGroupName);
         void ClearSoundGroup(string soundGroupName);
+        void MuteSoundGroup(string soundGroupName, bool isMute);
         void MuteSoundSound(string soundGroupName, bool isMute);
         ISoundGroup GetSoundGroup(string soundGroupName);
         bool HasSound(EntityId id);

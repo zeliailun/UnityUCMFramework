@@ -7,7 +7,7 @@ namespace UnknownCreator.Modules
     public sealed class ULevelExpComp : StateComp
     {
         private List<double> unitExpList = new();
-        private List<double> expList => Mgr.Unit.isUseGlobalLevelExp ? Mgr.Unit.unitExpList : unitExpList;
+        private IReadOnlyList<double> expList => Mgr.Unit.isUseGlobalLevelExp ? Mgr.Unit.unitExpList : unitExpList;
 
         private int maxLv;
         public int maxLevel => Mgr.Unit.isUseGlobalLevelExp ? Mgr.Unit.unitMaxLevel : maxLv;
@@ -31,12 +31,24 @@ namespace UnknownCreator.Modules
 
         public void UpdateMaxLevelAndFormula(IUnitExpBuilder expBuilder, int value)
         {
-            maxLv = value;
+            if (Mgr.Unit.isUseGlobalLevelExp)
+                return;
+
+            if (expBuilder == null)
+                return;
+
+            maxLv = Math.Max(0, value);
             unitExpList = expBuilder.ExpBuilder(maxLv, self);
         }
 
         public void SetFormula(IUnitExpBuilder expBuilder)
         {
+            if (expBuilder == null)
+                return;
+
+            if (maxLv <= 0)
+                return;
+
             unitExpList = expBuilder.ExpBuilder(maxLv, self);
         }
 
@@ -48,8 +60,7 @@ namespace UnknownCreator.Modules
             double oldExp = currentExp;
             currentExp += value;
 
-            Mgr.Event.Send(new EvtUnitExpAdded(self, oldExp, currentExp), UCMGE.OnUnitExpAdded);
-
+            GameEvtBus.Send<EvtUnitExpAdded>(new(self, oldExp, currentExp));
 
             while (currentLevel < maxLevel)
             {
@@ -63,7 +74,7 @@ namespace UnknownCreator.Modules
                     int oldLevel = currentLevel;
                     currentExp -= requiredExp;
                     currentLevel++;
-                    Mgr.Event.Send(new EvtUnitUpgraded(self, oldLevel, currentLevel, currentExp,false), UCMGE.OnUnitUpgraded);
+                    GameEvtBus.Send<EvtUnitUpgraded>(new(self, oldLevel, currentLevel, currentExp, false));
                 }
                 else
                 {
@@ -86,7 +97,7 @@ namespace UnknownCreator.Modules
             currentLevel = targetLevel;
             currentExp = 0;
 
-            Mgr.Event.Send(new EvtUnitUpgraded(self, oldLevel, currentLevel, currentExp,true), UCMGE.OnUnitUpgraded);
+            GameEvtBus.Send<EvtUnitUpgraded>(new(self, oldLevel, currentLevel, currentExp, true));
         }
 
         public void AddLevel(int value)
@@ -98,12 +109,42 @@ namespace UnknownCreator.Modules
             Upgrade(targetLevel);
         }
 
-        public double GetExpToLevel(int targetLevel)
+        public double GetExpToNextLevel()
         {
-            if (targetLevel > maxLevel || targetLevel <= currentLevel)
+            if (isMaxLv)
                 return 0;
 
-            return expList[targetLevel - 1] - currentExp;
+            if (expList == null || expList.Count == 0)
+                return 0;
+
+            if (currentLevel < 0 || currentLevel >= expList.Count)
+                return 0;
+
+            return Math.Max(0, expList[currentLevel] - currentExp);
+        }
+
+        public double GetTotalExpToLevel(int targetLevel)
+        {
+            if (targetLevel <= currentLevel || targetLevel > maxLevel)
+                return 0;
+
+            if (expList == null || expList.Count == 0)
+                return 0;
+
+            if (targetLevel > expList.Count)
+            {
+                UCMDebug.LogWarning("超出了最大等级默认返回0");
+                return 0;
+            }
+
+            double total = 0;
+
+            for (int level = currentLevel; level < targetLevel; level++)
+            {
+                total += expList[level];
+            }
+
+            return Math.Max(0, total - currentExp);
         }
 
         public void ResetLevelExp()

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -14,10 +14,40 @@ namespace UnknownCreator.Modules
         public bool interrupt { get; set; } = false;
 
         /// <summary>
-        /// 当前正在发送事件的嵌套深度。
-        /// 大于 0 时，禁止 Add / Remove / Clear，防止修改正在遍历的 List。
+        /// 当前事件发送嵌套深度。
+        /// Send 里又触发 Send 时会递增。
+        /// 只有回到 0，才真正释放和压缩列表。
         /// </summary>
-        private int sendingDepth;
+        private int sendingDepth = 0;
+
+        /// <summary>
+        /// Send 期间被移除的事件，先放这里，等所有 Send 结束后再 Release。
+        /// </summary>
+        private readonly List<IEvent> pendingRelease = new();
+
+        /// <summary>
+        /// 防止同一个事件对象重复进入 pendingRelease。
+        /// </summary>
+        private readonly HashSet<IEvent> pendingReleaseSet = new();
+
+        /// <summary>
+        /// Send 期间产生了 null 占位符的 key。
+        /// Flush 时只压缩这些列表。
+        /// </summary>
+        private readonly HashSet<(EntityId, string)> dirtyKeys = new();
+
+        /// <summary>
+        /// Send 期间新增的事件，延迟到 Send 结束后再插入。
+        /// 这样不会影响当前 Send 的遍历顺序。
+        /// </summary>
+        private readonly List<PendingAdd> pendingAdds = new();
+
+        private struct PendingAdd
+        {
+            public string key;
+            public EntityId id;
+            public IEvent evt;
+        }
 
         void IDearMgr.WorkWork()
         {
@@ -31,38 +61,49 @@ namespace UnknownCreator.Modules
         }
 
         //==========================================================================================================================//
-        // 安全检查
+        // 工具方法
         //==========================================================================================================================//
 
-        private bool CanModifyWhileSending(string operation)
-        {
-            if (sendingDepth <= 0)
-                return true;
-
-            string message =
-                $"EventsMgr 正在 Send / SendR / SendAllR 期间执行了 {operation}。" +
-                "当前事件系统不允许在事件回调中 Add / Remove / Clear。" +
-                "如果是 Destroy / SetActive(false) 间接触发 OnDisable 退订，请改成延迟销毁或延迟退订。";
-
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            throw new InvalidOperationException(message);
-#else
-            UCMDebug.LogError(message);
-            return false;
-#endif
-        }
-
-        private void EnterSending()
+        private void BeginSend()
         {
             sendingDepth++;
         }
 
-        private void ExitSending()
+        private void EndSend()
         {
             sendingDepth--;
 
-            if (sendingDepth < 0)
+            if (sendingDepth <= 0)
+            {
                 sendingDepth = 0;
+                FlushPendingChanges();
+            }
+        }
+
+        private void AddPendingRelease(IEvent evt)
+        {
+            if (evt == null)
+                return;
+
+            if (pendingReleaseSet.Add(evt))
+            {
+                pendingRelease.Add(evt);
+            }
+        }
+
+        private void MarkRemoveLater((EntityId, string) compositeKey, List<IEvent> list, int index)
+        {
+            if (list == null || index < 0 || index >= list.Count)
+                return;
+
+            IEvent evt = list[index];
+
+            if (evt == null)
+                return;
+
+            list[index] = null;
+            dirtyKeys.Add(compositeKey);
+            AddPendingRelease(evt);
         }
 
         private void RemoveKeyIfEmpty((EntityId, string) compositeKey, List<IEvent> list)
@@ -78,6 +119,108 @@ namespace UnknownCreator.Modules
             }
         }
 
+        private void RemoveNullSlots((EntityId, string) compositeKey, List<IEvent> list)
+        {
+            if (list == null)
+                return;
+
+            for (int i = list.Count - 1; i >= 0; i--)
+            {
+                if (list[i] == null)
+                    list.RemoveAt(i);
+            }
+
+            RemoveKeyIfEmpty(compositeKey, list);
+        }
+
+        private bool HasAliveEvent(List<IEvent> list)
+        {
+            if (list == null)
+                return false;
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i] != null)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private bool IsSameKey(PendingAdd pendingAdd, string key, EntityId id)
+        {
+            return pendingAdd.id.Equals(id) && pendingAdd.key == key;
+        }
+
+        private void RemoveMatchingPendingAdds(Delegate del, string key, EntityId id)
+        {
+            if (del == null || pendingAdds.Count == 0)
+                return;
+
+            for (int i = pendingAdds.Count - 1; i >= 0; i--)
+            {
+                PendingAdd add = pendingAdds[i];
+
+                if (!IsSameKey(add, key, id))
+                    continue;
+
+                if (add.evt == null)
+                {
+                    pendingAdds.RemoveAt(i);
+                    continue;
+                }
+
+                if (add.evt.IsSameDelegate(del))
+                {
+                    AddPendingRelease(add.evt);
+                    pendingAdds.RemoveAt(i);
+                }
+            }
+        }
+
+        private void FlushPendingChanges()
+        {
+            // 1. 真正释放 Send 期间被标记删除的事件对象。
+            for (int i = 0; i < pendingRelease.Count; i++)
+            {
+                if (pendingRelease[i] != null)
+                    Mgr.RPool.Release(pendingRelease[i]);
+            }
+
+            pendingRelease.Clear();
+            pendingReleaseSet.Clear();
+
+            // 2. 压缩有 null 占位符的列表。
+            if (delegateDict != null && dirtyKeys.Count > 0)
+            {
+                foreach (var compositeKey in dirtyKeys)
+                {
+                    if (delegateDict.TryGetValue(compositeKey, out var list))
+                    {
+                        RemoveNullSlots(compositeKey, list);
+                    }
+                }
+            }
+
+            dirtyKeys.Clear();
+
+            // 3. 应用 Send 期间新增的事件。
+            if (pendingAdds.Count > 0)
+            {
+                for (int i = 0; i < pendingAdds.Count; i++)
+                {
+                    PendingAdd add = pendingAdds[i];
+
+                    if (add.evt != null)
+                    {
+                        AddInternalDirect(add.key, add.id, add.evt);
+                    }
+                }
+
+                pendingAdds.Clear();
+            }
+        }
+
         //==========================================================================================================================//
         // 清理事件
         //==========================================================================================================================//
@@ -87,8 +230,35 @@ namespace UnknownCreator.Modules
             if (delegateDict == null)
                 return;
 
-            if (!CanModifyWhileSending(nameof(ClearAllEvent)))
+            if (sendingDepth > 0)
+            {
+                foreach (var kv in delegateDict)
+                {
+                    var compositeKey = kv.Key;
+                    var list = kv.Value;
+
+                    if (list == null)
+                        continue;
+
+                    for (int i = 0; i < list.Count; i++)
+                    {
+                        if (list[i] != null)
+                            MarkRemoveLater(compositeKey, list, i);
+                    }
+                }
+
+                delegateDict.Clear();
+                dirtyKeys.Clear();
+
+                // ClearAllEvent 的语义是全部清掉，所以 Send 期间已经排队的 Add 也要清掉。
+                for (int i = 0; i < pendingAdds.Count; i++)
+                {
+                    AddPendingRelease(pendingAdds[i].evt);
+                }
+
+                pendingAdds.Clear();
                 return;
+            }
 
             foreach (var result1 in delegateDict.Values)
             {
@@ -100,9 +270,16 @@ namespace UnknownCreator.Modules
                     if (result1[i] != null)
                         Mgr.RPool.Release(result1[i]);
                 }
+
+                result1.Clear();
             }
 
             delegateDict.Clear();
+
+            pendingRelease.Clear();
+            pendingReleaseSet.Clear();
+            dirtyKeys.Clear();
+            pendingAdds.Clear();
         }
 
         public void ClearEvent(string key, EntityId id = default)
@@ -110,22 +287,48 @@ namespace UnknownCreator.Modules
             if (delegateDict == null)
                 return;
 
-            if (!CanModifyWhileSending(nameof(ClearEvent)))
-                return;
-
             var compositeKey = (id, key);
 
-            if (!delegateDict.Remove(compositeKey, out var list))
-                return;
-
-            if (list == null)
-                return;
-
-            for (int i = 0; i < list.Count; i++)
+            if (sendingDepth > 0)
             {
-                if (list[i] != null)
-                    Mgr.RPool.Release(list[i]);
+                if (delegateDict.TryGetValue(compositeKey, out var list) && list != null)
+                {
+                    for (int i = 0; i < list.Count; i++)
+                    {
+                        if (list[i] != null)
+                            MarkRemoveLater(compositeKey, list, i);
+                    }
+
+                    delegateDict.Remove(compositeKey);
+                    dirtyKeys.Remove(compositeKey);
+                }
+
+                // 如果 Send 期间已经 Add 了同 key 的事件，ClearEvent 也应该把它们清掉。
+                for (int i = pendingAdds.Count - 1; i >= 0; i--)
+                {
+                    if (IsSameKey(pendingAdds[i], key, id))
+                    {
+                        AddPendingRelease(pendingAdds[i].evt);
+                        pendingAdds.RemoveAt(i);
+                    }
+                }
+
+                return;
             }
+
+            if (!delegateDict.Remove(compositeKey, out var removeList))
+                return;
+
+            if (removeList == null)
+                return;
+
+            for (int i = 0; i < removeList.Count; i++)
+            {
+                if (removeList[i] != null)
+                    Mgr.RPool.Release(removeList[i]);
+            }
+
+            removeList.Clear();
         }
 
         //==========================================================================================================================//
@@ -135,39 +338,76 @@ namespace UnknownCreator.Modules
         public void Remove<T>(Delegate del, string key, EntityId id = default)
             where T : class, IEvent, new()
         {
-            if (del == null || delegateDict == null)
-                return;
-
-            if (!CanModifyWhileSending(nameof(Remove)))
+            if (del == null)
                 return;
 
             var compositeKey = (id, key);
 
-            if (!delegateDict.TryGetValue(compositeKey, out var list) || list == null)
-                return;
-
-            for (int i = list.Count - 1; i >= 0; i--)
+            if (delegateDict != null && delegateDict.TryGetValue(compositeKey, out var list) && list != null)
             {
-                IEvent evt = list[i];
-
-                if (evt == null)
+                for (int i = list.Count - 1; i >= 0; i--)
                 {
-                    list.RemoveAt(i);
-                    continue;
+                    IEvent evt = list[i];
+
+                    if (evt == null)
+                    {
+                        if (sendingDepth <= 0)
+                            list.RemoveAt(i);
+
+                        continue;
+                    }
+
+                    if (evt.IsSameDelegate(del))
+                    {
+                        if (sendingDepth > 0)
+                        {
+                            MarkRemoveLater(compositeKey, list, i);
+                        }
+                        else
+                        {
+                            Mgr.RPool.Release(evt);
+                            list.RemoveAt(i);
+                            RemoveKeyIfEmpty(compositeKey, list);
+                        }
+
+                        break;
+                    }
                 }
 
-                if (evt.IsSameDelegate(del))
-                {
-                    Mgr.RPool.Release(evt);
-                    list.RemoveAt(i);
-                    break;
-                }
+                if (sendingDepth <= 0)
+                    RemoveKeyIfEmpty(compositeKey, list);
             }
 
-            RemoveKeyIfEmpty(compositeKey, list);
+            // 关键补丁：Send 期间 Add 的事件还在 pendingAdds 里，Remove 也要能取消它们。
+            if (sendingDepth > 0)
+            {
+                RemoveMatchingPendingAdds(del, key, id);
+            }
         }
 
         private void AddInternal(string key, EntityId id, IEvent evt)
+        {
+            if (evt == null)
+                return;
+
+            delegateDict ??= new();
+
+            if (sendingDepth > 0)
+            {
+                pendingAdds.Add(new PendingAdd
+                {
+                    key = key,
+                    id = id,
+                    evt = evt
+                });
+
+                return;
+            }
+
+            AddInternalDirect(key, id, evt);
+        }
+
+        private void AddInternalDirect(string key, EntityId id, IEvent evt)
         {
             if (evt == null)
                 return;
@@ -185,8 +425,19 @@ namespace UnknownCreator.Modules
             // priority 高的排前面。
             int i = list.Count - 1;
 
-            while (i >= 0 && list[i].priority < evt.priority)
+            while (i >= 0)
             {
+                IEvent current = list[i];
+
+                if (current == null)
+                {
+                    i--;
+                    continue;
+                }
+
+                if (current.priority >= evt.priority)
+                    break;
+
                 i--;
             }
 
@@ -195,10 +446,13 @@ namespace UnknownCreator.Modules
 
         public bool HasEvent(string key, EntityId id = default)
         {
-            return delegateDict != null &&
-                   delegateDict.TryGetValue((id, key), out var list) &&
-                   list != null &&
-                   list.Count > 0;
+            if (delegateDict == null)
+                return false;
+
+            if (!delegateDict.TryGetValue((id, key), out var list))
+                return false;
+
+            return HasAliveEvent(list);
         }
 
         //==========================================================================================================================//
@@ -210,18 +464,12 @@ namespace UnknownCreator.Modules
             if (action is null)
                 return;
 
-            if (!CanModifyWhileSending(nameof(Add)))
-                return;
-
             AddInternal(s, id, Mgr.RPool.Load<CAction>().SetDelegate(action, priority));
         }
 
         public void Add<U>(Action<U> action, string s, EntityId id = default, int priority = 0)
         {
             if (action is null)
-                return;
-
-            if (!CanModifyWhileSending(nameof(Add)))
                 return;
 
             AddInternal(s, id, Mgr.RPool.Load<CAction<U>>().SetDelegate(action, priority));
@@ -232,18 +480,12 @@ namespace UnknownCreator.Modules
             if (action is null)
                 return;
 
-            if (!CanModifyWhileSending(nameof(AddOnce)))
-                return;
-
             AddInternal(s, id, Mgr.RPool.Load<CAction>().SetDelegate(action, priority, true));
         }
 
         public void AddOnce<T>(Action<T> action, string s, EntityId id = default, int priority = 0)
         {
             if (action is null)
-                return;
-
-            if (!CanModifyWhileSending(nameof(AddOnce)))
                 return;
 
             AddInternal(s, id, Mgr.RPool.Load<CAction<T>>().SetDelegate(action, priority, true));
@@ -280,55 +522,42 @@ namespace UnknownCreator.Modules
                 return;
             }
 
-            EnterSending();
+            BeginSend();
 
             try
             {
-                for (int i = 0; i < result.Count;)
+                for (int i = 0; i < result.Count; i++)
                 {
                     IEvent evt = result[i];
 
                     if (evt == null)
-                    {
-                        result.RemoveAt(i);
                         continue;
-                    }
 
                     if (evt is CAction action)
                     {
-                        if (action.target == null)
+                        Action target = action.target;
+
+                        if (target == null)
                         {
-                            Mgr.RPool.Release(evt);
-                            result.RemoveAt(i);
+                            MarkRemoveLater(compositeKey, result, i);
                             continue;
                         }
 
-                        try
-                        {
-                            action.target.Invoke();
-                        }
-                        catch (Exception e)
-                        {
-                            UCMDebug.LogException(e);
-                        }
-
+                        // Once 事件先标记删除，再执行。
+                        // 这样回调里再次 Send 同事件时，不会重复触发这个 Once。
                         if (action.once)
                         {
-                            Mgr.RPool.Release(evt);
-                            result.RemoveAt(i);
-                            continue;
+                            MarkRemoveLater(compositeKey, result, i);
                         }
-                    }
 
-                    i++;
+                        target.Invoke();
+                    }
                 }
             }
             finally
             {
-                ExitSending();
+                EndSend();
             }
-
-            RemoveKeyIfEmpty(compositeKey, result);
         }
 
         public void Send<U>(U info, string s, EntityId id = default)
@@ -344,55 +573,40 @@ namespace UnknownCreator.Modules
                 return;
             }
 
-            EnterSending();
+            BeginSend();
 
             try
             {
-                for (int i = 0; i < result.Count;)
+                for (int i = 0; i < result.Count; i++)
                 {
                     IEvent evt = result[i];
 
                     if (evt == null)
-                    {
-                        result.RemoveAt(i);
                         continue;
-                    }
 
                     if (evt is CAction<U> action)
                     {
-                        if (action.target == null)
-                        {
-                            Mgr.RPool.Release(evt);
-                            result.RemoveAt(i);
-                            continue;
-                        }
+                        Action<U> target = action.target;
 
-                        try
+                        if (target == null)
                         {
-                            action.target.Invoke(info);
-                        }
-                        catch (Exception e)
-                        {
-                            UCMDebug.LogException(e);
+                            MarkRemoveLater(compositeKey, result, i);
+                            continue;
                         }
 
                         if (action.once)
                         {
-                            Mgr.RPool.Release(evt);
-                            result.RemoveAt(i);
-                            continue;
+                            MarkRemoveLater(compositeKey, result, i);
                         }
-                    }
 
-                    i++;
+                        target.Invoke(info);
+                    }
                 }
             }
             finally
             {
-                ExitSending();
+                EndSend();
             }
-
-            RemoveKeyIfEmpty(compositeKey, result);
         }
 
         //==========================================================================================================================//
@@ -404,18 +618,12 @@ namespace UnknownCreator.Modules
             if (func is null)
                 return;
 
-            if (!CanModifyWhileSending(nameof(AddR)))
-                return;
-
             AddInternal(s, id, Mgr.RPool.Load<CFunc<X>>().SetDelegate(func, priority));
         }
 
         public void AddR<X, X1>(Func<X, X1> func, string s, EntityId id = default, int priority = 0)
         {
             if (func is null)
-                return;
-
-            if (!CanModifyWhileSending(nameof(AddR)))
                 return;
 
             AddInternal(s, id, Mgr.RPool.Load<CFunc<X, X1>>().SetDelegate(func, priority));
@@ -441,93 +649,105 @@ namespace UnknownCreator.Modules
 
         public X SendR<X>(string s, EntityId id = default)
         {
+            var compositeKey = (id, s);
+
             if (interrupt ||
                 delegateDict == null ||
-                !delegateDict.TryGetValue((id, s), out var result) ||
+                !delegateDict.TryGetValue(compositeKey, out var result) ||
                 result == null ||
                 result.Count == 0)
             {
                 return default;
             }
 
-            EnterSending();
+            BeginSend();
 
             try
             {
                 // priority 高的在前面，所以从 0 开始找。
                 for (int i = 0; i < result.Count; i++)
                 {
-                    if (result[i] is not CFunc<X> func)
+                    IEvent evt = result[i];
+
+                    if (evt == null)
                         continue;
 
-                    if (func.target == null)
+                    if (evt is not CFunc<X> func)
                         continue;
 
-                    try
+                    Func<X> target = func.target;
+
+                    if (target == null)
                     {
-                        return func.target.Invoke();
+                        MarkRemoveLater(compositeKey, result, i);
+                        continue;
                     }
-                    catch (Exception e)
-                    {
-                        UCMDebug.LogException(e);
-                    }
+
+                    return target.Invoke();
                 }
 
                 return default;
             }
             finally
             {
-                ExitSending();
+                EndSend();
             }
         }
 
         public X1 SendR<X, X1>(X info, string s, EntityId id = default)
         {
+            var compositeKey = (id, s);
+
             if (interrupt ||
                 delegateDict == null ||
-                !delegateDict.TryGetValue((id, s), out var result) ||
+                !delegateDict.TryGetValue(compositeKey, out var result) ||
                 result == null ||
                 result.Count == 0)
             {
                 return default;
             }
 
-            EnterSending();
+            BeginSend();
 
             try
             {
                 // priority 高的在前面，所以从 0 开始找。
                 for (int i = 0; i < result.Count; i++)
                 {
-                    if (result[i] is not CFunc<X, X1> func)
+                    IEvent evt = result[i];
+
+                    if (evt == null)
                         continue;
 
-                    if (func.target == null)
+                    if (evt is not CFunc<X, X1> func)
                         continue;
 
-                    try
+                    Func<X, X1> target = func.target;
+
+                    if (target == null)
                     {
-                        return func.target.Invoke(info);
+                        MarkRemoveLater(compositeKey, result, i);
+                        continue;
                     }
-                    catch (Exception e)
-                    {
-                        UCMDebug.LogException(e);
-                    }
+
+                    return target.Invoke(info);
                 }
 
                 return default;
             }
             finally
             {
-                ExitSending();
+                EndSend();
             }
         }
 
         public List<X> SendAllR<X>(string s, EntityId id = default)
         {
+            var compositeKey = (id, s);
+
             if (interrupt ||
                 delegateDict == null ||
-                !delegateDict.TryGetValue((id, s), out var result) ||
+                !delegateDict.TryGetValue(compositeKey, out var result) ||
                 result == null ||
                 result.Count == 0)
             {
@@ -536,42 +756,47 @@ namespace UnknownCreator.Modules
 
             List<X> list = new List<X>();
 
-            EnterSending();
+            BeginSend();
 
             try
             {
                 // priority 高的在前面，所以从 0 开始执行。
                 for (int i = 0; i < result.Count; i++)
                 {
-                    if (result[i] is not CFunc<X> funcEvt)
+                    IEvent evt = result[i];
+
+                    if (evt == null)
                         continue;
 
-                    if (funcEvt.target == null)
+                    if (evt is not CFunc<X> funcEvt)
                         continue;
 
-                    try
+                    Func<X> target = funcEvt.target;
+
+                    if (target == null)
                     {
-                        list.Add(funcEvt.target.Invoke());
+                        MarkRemoveLater(compositeKey, result, i);
+                        continue;
                     }
-                    catch (Exception e)
-                    {
-                        UCMDebug.LogException(e);
-                    }
+
+                    list.Add(target.Invoke());
                 }
 
                 return list;
             }
             finally
             {
-                ExitSending();
+                EndSend();
             }
         }
 
         public List<X1> SendAllR<X, X1>(X info, string s, EntityId id = default)
         {
+            var compositeKey = (id, s);
+
             if (interrupt ||
                 delegateDict == null ||
-                !delegateDict.TryGetValue((id, s), out var result) ||
+                !delegateDict.TryGetValue(compositeKey, out var result) ||
                 result == null ||
                 result.Count == 0)
             {
@@ -580,34 +805,37 @@ namespace UnknownCreator.Modules
 
             List<X1> list = new List<X1>();
 
-            EnterSending();
+            BeginSend();
 
             try
             {
                 // priority 高的在前面，所以从 0 开始执行。
                 for (int i = 0; i < result.Count; i++)
                 {
-                    if (result[i] is not CFunc<X, X1> funcEvt)
+                    IEvent evt = result[i];
+
+                    if (evt == null)
                         continue;
 
-                    if (funcEvt.target == null)
+                    if (evt is not CFunc<X, X1> funcEvt)
                         continue;
 
-                    try
+                    Func<X, X1> target = funcEvt.target;
+
+                    if (target == null)
                     {
-                        list.Add(funcEvt.target.Invoke(info));
+                        MarkRemoveLater(compositeKey, result, i);
+                        continue;
                     }
-                    catch (Exception e)
-                    {
-                        UCMDebug.LogException(e);
-                    }
+
+                    list.Add(target.Invoke(info));
                 }
 
                 return list;
             }
             finally
             {
-                ExitSending();
+                EndSend();
             }
         }
     }

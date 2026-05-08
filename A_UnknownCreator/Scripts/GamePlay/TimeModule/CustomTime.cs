@@ -4,9 +4,17 @@ namespace UnknownCreator.Modules
 
     public static class CustomTime
     {
-        public static Action OnPause { set => customTime.OnPause = value; get => customTime.OnPause; }
+        public static event Action OnPause
+        {
+            add => customTime.OnPause += value;
+            remove => customTime.OnPause -= value;
+        }
 
-        public static Action OnResume { set => customTime.OnResume = value; get => customTime.OnResume; }
+        public static event Action OnResume
+        {
+            add => customTime.OnResume += value;
+            remove => customTime.OnResume -= value;
+        }
 
         public static float LocalTimeScale { set => customTime.LocalTimeScale = value; get => customTime.LocalTimeScale; }
 
@@ -16,7 +24,7 @@ namespace UnknownCreator.Modules
 
         public static void SetCustomTime(ICustomTime value)
         {
-            customTime = value;
+            customTime = value ?? new DefaultCustomTime();
         }
 
         public static float DeltaTime(bool isApplyTimeScale = true)
@@ -35,6 +43,20 @@ namespace UnknownCreator.Modules
         public static void SetTimeScale(float value)
         {
             customTime.SetTimeScale(value);
+        }
+        public static void ClearPauseEvents()
+        {
+            customTime.ClearPauseEvents();
+        }
+
+        public static void ClearResumeEvents()
+        {
+            customTime.ClearResumeEvents();
+        }
+
+        public static void ClearAllEvents()
+        {
+            customTime.ClearAllEvents();
         }
     }
 }
