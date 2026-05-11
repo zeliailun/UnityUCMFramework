@@ -98,7 +98,7 @@ namespace UnknownCreator.Modules
 
             if (!statsDict.TryGetValue(statsName, out var data2) ||
                 !data2.IsValid() ||
-                Mgr.Unit.unitStatsFilter.Invoke(evt))
+                !Mgr.Unit.unitStatsFilter.Invoke(evt))
                 return;
 
             StatData sd;
