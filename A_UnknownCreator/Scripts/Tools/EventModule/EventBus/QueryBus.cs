@@ -801,7 +801,7 @@ namespace UnknownCreator.Modules
     /// - Add：进入 pendingAdds，本轮 Query 不生效，最外层 Query 结束后按 priority 插入。
     /// - Clear：当前已存在监听置 null，pendingAdds 中对应监听移除。
     /// </summary>
-    public static class QueryBus<TQuery, TResult>
+    public static class QueryBus<TQuery, TResult> where TQuery : IBusQuery
     {
         private sealed class Listener
         {

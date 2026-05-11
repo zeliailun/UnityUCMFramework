@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace UnknownCreator.Modules
@@ -13,14 +12,16 @@ namespace UnknownCreator.Modules
         void IDearMgr.WorkWork()
         {
             hurtDict ??= new();
+            damageFilter ??= new();
         }
 
         void IDearMgr.DoNothing()
         {
+            damageFilter.Clear();
             hurtDict.Clear();
         }
 
-        public Func<DamageData, bool> FilterDamageCalc { set; get; } = _ => true;
+        public FilterSlot<DamageData, bool> damageFilter { private set; get; }
 
         public void ApplyDamage<T>(T newData) where T : DamageData, new()
         {
@@ -34,7 +35,7 @@ namespace UnknownCreator.Modules
             {
                 data.Init(newData);
 
-                if (FilterDamageCalc(data))
+                if (damageFilter.Invoke(data))
                     target.OnHurt(data);
             }
             finally

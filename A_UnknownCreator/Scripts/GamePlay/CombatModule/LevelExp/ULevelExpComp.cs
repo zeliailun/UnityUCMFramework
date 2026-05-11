@@ -54,7 +54,7 @@ namespace UnknownCreator.Modules
 
         public void AddExp(double value)
         {
-            if (value <= 0 || isMaxLv || !Mgr.Unit.FilterExpAdd((self, value)))
+            if (value <= 0 || isMaxLv || !Mgr.Unit.unitExpFilter.Invoke((self, value)))
                 return;
 
             double oldExp = currentExp;

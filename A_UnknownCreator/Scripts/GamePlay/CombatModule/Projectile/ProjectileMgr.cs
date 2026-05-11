@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace UnknownCreator.Modules
@@ -12,16 +11,21 @@ namespace UnknownCreator.Modules
 
         private int maxAttempts = 3;
 
+        [JsonIgnore]
+        public FilterSlot<(Projectile, GameObject), (bool, Unit)> projFilter { private set; get; } = new();
+
         //private ProjectileMgr() { }
 
         void IDearMgr.WorkWork()
         {
             projDict ??= new();
             projList ??= new();
+            projFilter ??= new();
         }
 
         void IDearMgr.DoNothing()
         {
+            projFilter.Clear();
             ReleaseAllProjectile();
             projDict = null;
             projList = null;
@@ -39,7 +43,7 @@ namespace UnknownCreator.Modules
             }
         }
 
-        [JsonIgnore] public Func<Projectile, GameObject, (bool, Unit)> FilterProjectileHit { set; get; }
+
 
         public void ReleaseProjectile(long id)
         {

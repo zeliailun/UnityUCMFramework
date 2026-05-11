@@ -203,37 +203,37 @@ namespace UnknownCreator.Modules
         public static EventHandle AddQuery<TQuery, TResult>(
             Func<TQuery, TResult> func,
             int priority = 1000,
-            bool allowDuplicate = false)
+            bool allowDuplicate = false) where TQuery : IBusQuery
         {
             return QueryBus<TQuery, TResult>.Add(func, priority, allowDuplicate);
         }
 
         public static void RemoveQuery<TQuery, TResult>(
-            Func<TQuery, TResult> func)
+            Func<TQuery, TResult> func) where TQuery : IBusQuery
         {
             QueryBus<TQuery, TResult>.Remove(func);
         }
 
         public static TResult Query<TQuery, TResult>(
-            TQuery query)
+            TQuery query) where TQuery : IBusQuery
         {
             return QueryBus<TQuery, TResult>.Query(query);
         }
 
         public static bool TryQuery<TQuery, TResult>(
             TQuery query,
-            out TResult result)
+            out TResult result) where TQuery : IBusQuery
         {
             return QueryBus<TQuery, TResult>.TryQuery(query, out result);
         }
 
         public static List<TResult> QueryAll<TQuery, TResult>(
-            TQuery query)
+            TQuery query) where TQuery : IBusQuery
         {
             return QueryBus<TQuery, TResult>.QueryAll(query);
         }
 
-        public static void ClearQuery<TQuery, TResult>()
+        public static void ClearQuery<TQuery, TResult>() where TQuery : IBusQuery
         {
             QueryBus<TQuery, TResult>.Clear();
         }
@@ -246,21 +246,21 @@ namespace UnknownCreator.Modules
             EntityId id,
             Func<TQuery, TResult> func,
             int priority = 1000,
-            bool allowDuplicate = false)
+            bool allowDuplicate = false) where TQuery : IBusQuery
         {
             return QueryBus<TQuery, TResult>.AddEntity(id, func, priority, allowDuplicate);
         }
 
         public static void RemoveEntityQuery<TQuery, TResult>(
             EntityId id,
-            Func<TQuery, TResult> func)
+            Func<TQuery, TResult> func) where TQuery : IBusQuery
         {
             QueryBus<TQuery, TResult>.RemoveEntity(id, func);
         }
 
         public static TResult QueryEntity<TQuery, TResult>(
             EntityId id,
-            TQuery query)
+            TQuery query) where TQuery : IBusQuery
         {
             return QueryBus<TQuery, TResult>.QueryEntity(id, query);
         }
@@ -268,20 +268,20 @@ namespace UnknownCreator.Modules
         public static bool TryQueryEntity<TQuery, TResult>(
             EntityId id,
             TQuery query,
-            out TResult result)
+            out TResult result) where TQuery : IBusQuery
         {
             return QueryBus<TQuery, TResult>.TryQueryEntity(id, query, out result);
         }
 
         public static List<TResult> QueryAllEntity<TQuery, TResult>(
             EntityId id,
-            TQuery query)
+            TQuery query) where TQuery : IBusQuery
         {
             return QueryBus<TQuery, TResult>.QueryAllEntity(id, query);
         }
 
         public static void ClearEntityQuery<TQuery, TResult>(
-            EntityId id)
+            EntityId id) where TQuery : IBusQuery
         {
             QueryBus<TQuery, TResult>.ClearEntity(id);
         }

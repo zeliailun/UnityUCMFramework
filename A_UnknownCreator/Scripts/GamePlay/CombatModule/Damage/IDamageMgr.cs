@@ -1,10 +1,9 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 namespace UnknownCreator.Modules
 {
     public interface IDamageMgr : IDearMgr
     {
-        Func<DamageData, bool> FilterDamageCalc { set; get; }
+        FilterSlot<DamageData, bool> damageFilter { get; }
 
         void ApplyDamage<T>(T newData) where T : DamageData, new();
 

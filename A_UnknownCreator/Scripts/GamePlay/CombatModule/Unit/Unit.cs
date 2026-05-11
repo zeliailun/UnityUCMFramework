@@ -135,7 +135,7 @@ namespace UnknownCreator.Modules
         #region 私有
 
         private List<EntityId> hitBoxID = new();
-        private Dictionary<int, Transform> bodyPartsDict = new();
+        private Dictionary<int, Transform> BodyPartDict = new();
         private Func<bool> alive;
         private Type selfType;
         private string modelNewCfgName, modelOldCfgName;
@@ -374,23 +374,23 @@ namespace UnknownCreator.Modules
 
         public void AddBodyPart(int id, string path)
         {
-            if (!bodyPartsDict.TryGetValue(id, out _))
-                bodyPartsDict.Add(id, modelT.Find(path));
+            if (!BodyPartDict.TryGetValue(id, out _))
+                BodyPartDict.Add(id, modelT.Find(path));
         }
 
         public void RemoveBodyPart(int id)
         {
-            bodyPartsDict.Remove(id);
+            BodyPartDict.Remove(id);
         }
 
         public Transform GetBodyPart(int id)
         {
-            return bodyPartsDict.TryGetValue(id, out Transform result) ? result : null;
+            return BodyPartDict.TryGetValue(id, out Transform result) ? result : null;
         }
 
         public void ClearBodyPart()
         {
-            bodyPartsDict.Clear();
+            BodyPartDict.Clear();
         }
 
 

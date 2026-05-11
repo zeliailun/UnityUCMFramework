@@ -27,11 +27,21 @@ namespace UnknownCreator.Modules
         public static bool IsVaild(this Unit obj)
         => obj != null && !Mgr.RPool.HasObject(type, obj);
 
-        public static bool IsSame(this Unit obj, Unit target)
-        => obj?.entID == target?.entID;
+        public static bool IsSelf(this Unit obj, Unit target)
+        {
+            if (obj == null || target == null)
+                return false;
 
-        public static bool IsSame(this Unit obj, EntityId targetID)
-        => obj?.entID == targetID;
+            return obj.entID == target.entID;
+        }
+
+        public static bool IsSelf(this Unit obj, EntityId targetID)
+        {
+            if (obj == null)
+                return false;
+
+            return obj.entID == targetID;
+        }
 
         public static bool IsEnemy(this Unit obj, Unit target)
             => obj != null && target != null && obj.unitTeam != target.unitTeam;

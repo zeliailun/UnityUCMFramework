@@ -8,6 +8,8 @@ namespace UnknownCreator.Modules
     /// </summary>
     public interface IBusEvent { }
 
+    public interface IBusQuery { }
+
     internal interface IBusControl
     {
         void ClearAll();

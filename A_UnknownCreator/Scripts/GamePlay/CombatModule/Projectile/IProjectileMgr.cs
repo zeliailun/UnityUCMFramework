@@ -1,11 +1,10 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
     public interface IProjectileMgr : IDearMgr
     {
-        Func<Projectile, GameObject, (bool, Unit)> FilterProjectileHit { set; get; }
+        FilterSlot<(Projectile, GameObject), (bool, Unit)> projFilter { get; }
 
         Projectile LaunchProjectile<IMvt, ICheck, Data>(ProjectileInfo<IMvt, ICheck, Data> info)
         where IMvt : class, IProjMvt

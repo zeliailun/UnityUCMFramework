@@ -92,16 +92,22 @@ namespace UnknownCreator.Modules
                 !data.IsValid())
                 return;
 
-            GameEvtBus.Send<EvtStatWillUpdate>(new(self.As<Unit>(), buff, statsName, calcType, value, isStatsStacked));
+            var evt = new EvtStatWillUpdate(self.As<Unit>(), buff, statsName, calcType, value, isStatsStacked);
+
+            GameEvtBus.Send<EvtStatWillUpdate>(evt);
+
+            if (!statsDict.TryGetValue(statsName, out var data2) ||
+                !data2.IsValid() ||
+                Mgr.Unit.unitStatsFilter.Invoke(evt))
+                return;
 
             StatData sd;
-            for (int i = 0; i < data.Count; i++)
+            for (int i = data.Count - 1; i >= 0; i--)
             {
                 sd = data[i];
                 if (sd is null || !sd.canCalcValue) continue;
                 sd.AddOrUpdateBuff(buff, calcType, value, isStatsStacked);
             }
-          
         }
 
         public void ClearStatsCalc(BuffBase buff, CalcType calcType, string statsName, bool isStatsStacked)

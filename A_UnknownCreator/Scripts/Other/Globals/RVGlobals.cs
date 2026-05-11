@@ -3,202 +3,420 @@ using System.Collections.Generic;
 
 namespace UnknownCreator.Modules
 {
+    public enum RandomChannel
+    {
+        Global,
+        Combat,
+        Loot,
+        Level,
+        Visual,
+    }
+
     public static class RVGlobals
     {
         public static int GaussianMaxAttempts = 100;
 
         private const string CharContents = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-        private static Random _random;
+        private static int seed;
+
+        private static readonly Dictionary<RandomChannel, Random> randomDict = new();
 
         static RVGlobals()
         {
-            _random = new Random();
+            SetSeed(Environment.TickCount);
         }
 
-        // 重置随机数生成器
-        public static void SetSeed(int seed)
+        public static void SetSeed(int newSeed)
         {
-            _random = new Random(seed);
+            seed = newSeed;
+            randomDict.Clear();
+
+            randomDict[RandomChannel.Global] = new Random(seed);
+            randomDict[RandomChannel.Combat] = new Random(seed + 1001);
+            randomDict[RandomChannel.Loot] = new Random(seed + 2001);
+            randomDict[RandomChannel.Level] = new Random(seed + 3001);
+            randomDict[RandomChannel.Visual] = new Random(seed + 4001);
         }
 
-        // 基础随机数生成方法
-        public static int RandomInt(int min, int max, bool IncludeMax)
+        public static void SetSeed(int newSeed, RandomChannel channel)
         {
-            return _random.Next(min, IncludeMax ? max + 1 : max);
-        }
-        public static float RandomFloat(float min, float max, bool includeMax)
-        {
-            float adjustedMax = includeMax ? max + float.Epsilon : max;
-            return (float)(_random.NextDouble() * (adjustedMax - min) + min);
-        }
-        public static float RandomFloat()
-        {
-            return (float)_random.NextDouble();
+            randomDict[channel] = new Random(newSeed);
         }
 
-        // 随机布尔值
-        public static bool RandomBool()
+        private static Random GetRandom(RandomChannel channel)
         {
-            return _random.Next(0, 2) == 0;
+            if (randomDict.TryGetValue(channel, out Random random))
+                return random;
+
+            int channelSeed = seed + ((int)channel + 1) * 1001;
+            random = new Random(channelSeed);
+            randomDict.Add(channel, random);
+            return random;
         }
 
-        // 返回一定概率下的结果
-        public static bool RandomChance(float chance)
+        public static int RandomInt(
+            int min,
+            int max,
+            bool includeMax = false,
+            RandomChannel channel = RandomChannel.Global)
         {
-            return RandomFloat() <= chance;
+            if (includeMax)
+            {
+                if (max == int.MaxValue)
+                    return GetRandom(channel).Next(min, max);
+
+                max += 1;
+            }
+
+            if (max <= min)
+                return min;
+
+            return GetRandom(channel).Next(min, max);
         }
 
-        // 百分比概率
-        public static bool PercChance(float percentage)
+        public static float RandomFloat(
+            float min,
+            float max,
+            RandomChannel channel = RandomChannel.Global)
         {
-            return RandomFloat(0f, 100f, true) < Math.Clamp(percentage, 0f, 100f);
-        }
-        public static bool PercChance(double percentage)
-        {
-            return RandomFloat(0f, 100f, true) < Math.Clamp(percentage, 0f, 100f);
+            if (max <= min)
+                return min;
+
+            return (float)(GetRandom(channel).NextDouble() * (max - min) + min);
         }
 
-        // 从数组中随机获取一个元素
-        public static T RandomElement<T>(T[] array)
+        public static float RandomFloat(RandomChannel channel = RandomChannel.Global)
         {
-            return array[RandomInt(0, array.Length, false)];
+            return (float)GetRandom(channel).NextDouble();
         }
 
-        // 从列表中随机获取一个元素
-        public static T RandomElement<T>(List<T> list)
+        public static bool RandomBool(RandomChannel channel = RandomChannel.Global)
         {
-            return list[RandomInt(0, list.Count, false)];
+            return GetRandom(channel).Next(0, 2) == 0;
         }
 
-        // 从一个字典中随机获取一个键值对
-        public static KeyValuePair<TKey, TValue> RandomElement<TKey, TValue>(Dictionary<TKey, TValue> dict)
+        /// <summary>
+        /// chance 使用 0~1，比如 0.25f = 25%
+        /// </summary>
+        public static bool RandomChance(float chance, RandomChannel channel = RandomChannel.Global)
         {
-            List<TKey> keys = new List<TKey>(dict.Keys);
-            TKey randomKey = keys[RandomInt(0, keys.Count, false)];
-            return new KeyValuePair<TKey, TValue>(randomKey, dict[randomKey]);
+            if (chance <= 0f)
+                return false;
+
+            if (chance >= 1f)
+                return true;
+
+            return RandomFloat(channel) < chance;
         }
 
-        // 随机打乱数组元素
-        public static void ShuffleArray<T>(T[] array)
+        /// <summary>
+        /// percentage 使用 0~100，比如 25 = 25%
+        /// </summary>
+        public static bool PercChance(float percentage, RandomChannel channel = RandomChannel.Global)
         {
+            if (percentage <= 0f)
+                return false;
+
+            if (percentage >= 100f)
+                return true;
+
+            return RandomFloat(0f, 100f, channel) < percentage;
+        }
+
+        public static bool PercChance(double percentage, RandomChannel channel = RandomChannel.Global)
+        {
+            return PercChance((float)percentage, channel);
+        }
+
+        public static T RandomElement<T>(T[] array, RandomChannel channel = RandomChannel.Global)
+        {
+            if (array == null || array.Length == 0)
+                return default;
+
+            return array[RandomInt(0, array.Length, false, channel)];
+        }
+
+        public static T RandomElement<T>(IList<T> list, RandomChannel channel = RandomChannel.Global)
+        {
+            if (list == null || list.Count == 0)
+                return default;
+
+            return list[RandomInt(0, list.Count, false, channel)];
+        }
+
+        public static KeyValuePair<TKey, TValue> RandomElement<TKey, TValue>(
+            Dictionary<TKey, TValue> dict,
+            RandomChannel channel = RandomChannel.Global)
+        {
+            if (dict == null || dict.Count == 0)
+                return default;
+
+            int index = RandomInt(0, dict.Count, false, channel);
+            int currentIndex = 0;
+
+            foreach (var pair in dict)
+            {
+                if (currentIndex == index)
+                    return pair;
+
+                currentIndex++;
+            }
+
+            return default;
+        }
+
+        public static void ShuffleArray<T>(T[] array, RandomChannel channel = RandomChannel.Global)
+        {
+            if (array == null || array.Length <= 1)
+                return;
+
             for (int i = array.Length - 1; i > 0; i--)
             {
-                int j = RandomInt(0, i, true);
+                int j = RandomInt(0, i, true, channel);
                 (array[j], array[i]) = (array[i], array[j]);
             }
         }
 
-        // 随机打乱列表元素
-        public static void ShuffleList<T>(List<T> list)
+        public static void ShuffleList<T>(IList<T> list, RandomChannel channel = RandomChannel.Global)
         {
+            if (list == null || list.Count <= 1)
+                return;
+
             for (int i = list.Count - 1; i > 0; i--)
             {
-                int j = RandomInt(0, i, true);
-                T temp = list[i];
-                list[i] = list[j];
-                list[j] = temp;
+                int j = RandomInt(0, i, true, channel);
+                (list[j], list[i]) = (list[i], list[j]);
             }
         }
 
-        // 返回一定概率下的加权选择（例如：稀有物品掉落）
-        public static T GetRandomWeightedElement<T>(List<T> elements, List<float> weights)
+        public static T GetRandomWeightedElement<T>(
+            IList<T> elements,
+            IList<float> weights,
+            RandomChannel channel = RandomChannel.Global)
         {
+            if (elements == null || weights == null)
+                return default;
+
+            if (elements.Count == 0 || elements.Count != weights.Count)
+                return default;
+
             float totalWeight = 0f;
+
             for (int i = 0; i < weights.Count; i++)
             {
-                totalWeight += weights[i];
+                if (weights[i] > 0f)
+                    totalWeight += weights[i];
             }
 
-            float randomValue = RandomFloat(0f, totalWeight, true);
+            if (totalWeight <= 0f)
+                return default;
+
+            float randomValue = RandomFloat(0f, totalWeight, channel);
+
             for (int i = 0; i < elements.Count; i++)
             {
-                if (randomValue < weights[i])
-                {
+                float weight = weights[i];
+
+                if (weight <= 0f)
+                    continue;
+
+                if (randomValue < weight)
                     return elements[i];
-                }
-                randomValue -= weights[i];
+
+                randomValue -= weight;
             }
-            return default;
+
+            return elements[elements.Count - 1];
         }
 
-        // 根据权重随机选择多个元素
-        public static List<T> GetRandomWeightedMultiSelect<T>(List<T> elements, List<float> weights, int selectionCount)
+        public static T GetRandomWeightedElement<T>(
+            IList<T> elements,
+            Func<T, float> getWeight,
+            RandomChannel channel = RandomChannel.Global)
         {
-            List<T> selectedItems = new List<T>();
+            if (elements == null || elements.Count == 0 || getWeight == null)
+                return default;
+
+            float totalWeight = 0f;
+
+            for (int i = 0; i < elements.Count; i++)
+            {
+                float weight = getWeight.Invoke(elements[i]);
+
+                if (weight > 0f)
+                    totalWeight += weight;
+            }
+
+            if (totalWeight <= 0f)
+                return default;
+
+            float randomValue = RandomFloat(0f, totalWeight, channel);
+
+            for (int i = 0; i < elements.Count; i++)
+            {
+                float weight = getWeight.Invoke(elements[i]);
+
+                if (weight <= 0f)
+                    continue;
+
+                if (randomValue < weight)
+                    return elements[i];
+
+                randomValue -= weight;
+            }
+
+            return elements[elements.Count - 1];
+        }
+
+        public static List<T> GetRandomWeightedMultiSelect<T>(
+            IList<T> elements,
+            IList<float> weights,
+            int selectionCount,
+            RandomChannel channel = RandomChannel.Global)
+        {
+            List<T> selectedItems = new();
+
+            if (elements == null || weights == null)
+                return selectedItems;
+
+            if (elements.Count == 0 || elements.Count != weights.Count || selectionCount <= 0)
+                return selectedItems;
+
+            selectionCount = Math.Min(selectionCount, elements.Count);
+
+            List<float> tempWeights = new(weights);
+
             for (int i = 0; i < selectionCount; i++)
             {
-                float totalWeight = 0;
-                foreach (var weight in weights)
+                float totalWeight = 0f;
+
+                for (int j = 0; j < tempWeights.Count; j++)
                 {
-                    totalWeight += weight;
+                    if (tempWeights[j] > 0f)
+                        totalWeight += tempWeights[j];
                 }
 
-                float randomValue = RandomFloat(0, totalWeight, true);
+                if (totalWeight <= 0f)
+                    break;
+
+                float randomValue = RandomFloat(0f, totalWeight, channel);
+
                 for (int j = 0; j < elements.Count; j++)
                 {
-                    if (randomValue < weights[j])
+                    float weight = tempWeights[j];
+
+                    if (weight <= 0f)
+                        continue;
+
+                    if (randomValue < weight)
                     {
                         selectedItems.Add(elements[j]);
-                        weights[j] = 0; // 防止重复选择
+                        tempWeights[j] = 0f;
                         break;
                     }
-                    randomValue -= weights[j];
+
+                    randomValue -= weight;
                 }
             }
+
             return selectedItems;
         }
 
-
-        // 返回一定概率下的加权选择（例如：稀有物品掉落）
-        public static T GetRandomWeightedChance<T>(Dictionary<T, float> weightedOptions)
+        public static T GetRandomWeightedChance<T>(
+            Dictionary<T, float> weightedOptions,
+            RandomChannel channel = RandomChannel.Global)
         {
-            float totalWeight = 0;
-            foreach (var option in weightedOptions.Values)
+            if (weightedOptions == null || weightedOptions.Count == 0)
+                return default;
+
+            float totalWeight = 0f;
+
+            foreach (float weight in weightedOptions.Values)
             {
-                totalWeight += option;
+                if (weight > 0f)
+                    totalWeight += weight;
             }
 
-            float randomValue = RandomFloat(0, totalWeight, true);
+            if (totalWeight <= 0f)
+                return default;
+
+            float randomValue = RandomFloat(0f, totalWeight, channel);
 
             foreach (var option in weightedOptions)
             {
-                if (randomValue < option.Value)
+                float weight = option.Value;
+
+                if (weight <= 0f)
+                    continue;
+
+                if (randomValue < weight)
                     return option.Key;
-                randomValue -= option.Value;
+
+                randomValue -= weight;
             }
 
             return default;
         }
 
-        // 按一定几率返回多个结果，例如多重掉落
-        public static List<T> GetRandomMultiSelect<T>(List<T> elements, List<float> probabilities)
+        public static List<T> GetRandomMultiSelect<T>(
+            IList<T> elements,
+            IList<float> probabilities,
+            RandomChannel channel = RandomChannel.Global)
         {
-            List<T> selectedItems = new List<T>();
-            for (int i = 0; i < elements.Count; i++)
+            List<T> selectedItems = new();
+
+            if (elements == null || probabilities == null)
+                return selectedItems;
+
+            int count = Math.Min(elements.Count, probabilities.Count);
+
+            for (int i = 0; i < count; i++)
             {
-                if (RandomChance(probabilities[i]))
-                {
+                if (RandomChance(probabilities[i], channel))
                     selectedItems.Add(elements[i]);
-                }
             }
+
             return selectedItems;
         }
 
-        public static float[] GenerateRandomWeights(int count, float min, float max)
+        public static float[] GenerateRandomWeights(
+            int count,
+            float min,
+            float max,
+            RandomChannel channel = RandomChannel.Global)
         {
+            if (count <= 0)
+                return Array.Empty<float>();
+
+            if (max < min)
+                (min, max) = (max, min);
+
             float[] rawValues = new float[count];
             float sum = 0f;
 
-            // 生成随机数并计算总和
             for (int i = 0; i < count; i++)
             {
-                rawValues[i] = RandomFloat(min, max,true);
-                sum += rawValues[i];
+                rawValues[i] = RandomFloat(min, max, channel);
+
+                if (rawValues[i] > 0f)
+                    sum += rawValues[i];
             }
 
-            // 归一化处理
+            if (sum <= 0f)
+            {
+                float average = 1f / count;
+
+                for (int i = 0; i < count; i++)
+                {
+                    rawValues[i] = average;
+                }
+
+                return rawValues;
+            }
+
             float[] normalizedWeights = new float[count];
+
             for (int i = 0; i < count; i++)
             {
                 normalizedWeights[i] = rawValues[i] / sum;
@@ -207,60 +425,110 @@ namespace UnknownCreator.Modules
             return normalizedWeights;
         }
 
-
-        // 获取随机角度
-        public static float RandomAngle(float minAngle = 0, float maxAngle = 360)
+        public static float RandomAngle(float minAngle = 0f, float maxAngle = 360f, RandomChannel channel = RandomChannel.Global)
         {
-            return RandomFloat(minAngle, maxAngle, true);
+            return RandomFloat(minAngle, maxAngle, channel);
         }
 
-        // 获取一个单位圆内的随机点
-        public static (float x, float y) RandomPointInCircle(float radius)
+        public static (float x, float y) RandomPointInCircle(float radius, RandomChannel channel = RandomChannel.Global)
         {
-            double angle = RandomFloat(0, (float)Math.PI * 2, true);
-            double distance = Math.Sqrt(RandomFloat()) * radius;
-            return (x: (float)(Math.Cos(angle) * distance), y: (float)(Math.Sin(angle) * distance));
+            if (radius <= 0f)
+                return (0f, 0f);
+
+            double angle = RandomFloat(0f, (float)Math.PI * 2f, channel);
+            double distance = Math.Sqrt(RandomFloat(channel)) * radius;
+
+            return (
+                x: (float)(Math.Cos(angle) * distance),
+                y: (float)(Math.Sin(angle) * distance)
+            );
         }
 
-        // 获取一个单位球内的随机点
-        public static (float x, float y, float z) RandomPointInSphere(float radius)
+        public static (float x, float y, float z) RandomPointInSphere(float radius, RandomChannel channel = RandomChannel.Global)
         {
-            double theta = RandomFloat(0, (float)Math.PI * 2, true);
-            double phi = RandomFloat(0, (float)Math.PI, true);
-            double r = RandomFloat() * radius;
+            if (radius <= 0f)
+                return (0f, 0f, 0f);
 
-            float x = (float)(r * Math.Sin(phi) * Math.Cos(theta));
-            float y = (float)(r * Math.Sin(phi) * Math.Sin(theta));
-            float z = (float)(r * Math.Cos(phi));
+            double u = RandomFloat(channel);
+            double v = RandomFloat(channel);
+
+            double theta = 2.0 * Math.PI * u;
+            double cosPhi = 2.0 * v - 1.0;
+            double sinPhi = Math.Sqrt(1.0 - cosPhi * cosPhi);
+            double r = Math.Pow(RandomFloat(channel), 1.0 / 3.0) * radius;
+
+            float x = (float)(r * sinPhi * Math.Cos(theta));
+            float y = (float)(r * sinPhi * Math.Sin(theta));
+            float z = (float)(r * cosPhi);
 
             return (x, y, z);
         }
 
-        // 从一个范围内选择不重复的多个随机数
-        public static List<int> GetUniqueRandomNumbers(int count, int min, int max, bool includeMax)
+        public static List<int> GetUniqueRandomNumbers(
+            int count,
+            int min,
+            int max,
+            bool includeMax = false,
+            RandomChannel channel = RandomChannel.Global)
         {
-            HashSet<int> numbers = new HashSet<int>();
-            while (numbers.Count < count)
+            List<int> result = new();
+
+            int realMax = includeMax ? max + 1 : max;
+
+            if (realMax <= min || count <= 0)
+                return result;
+
+            int rangeCount = realMax - min;
+            count = Math.Min(count, rangeCount);
+
+            List<int> numbers = new(rangeCount);
+
+            for (int i = min; i < realMax; i++)
             {
-                numbers.Add(RandomInt(min, max, includeMax));
+                numbers.Add(i);
             }
-            return new List<int>(numbers);
+
+            for (int i = 0; i < count; i++)
+            {
+                int randomIndex = RandomInt(0, numbers.Count, false, channel);
+                int value = numbers[randomIndex];
+
+                result.Add(value);
+
+                int lastIndex = numbers.Count - 1;
+                numbers[randomIndex] = numbers[lastIndex];
+                numbers.RemoveAt(lastIndex);
+            }
+
+            return result;
         }
 
-        // 生成指定数量的随机字符
-        public static float GenerateGaussian(float mean, float variance, float min, float max)
+        /// <summary>
+        /// 注意：这里的 variance 实际上按标准差使用。
+        /// </summary>
+        public static float GenerateGaussian(
+            float mean,
+            float variance,
+            float min,
+            float max,
+            RandomChannel channel = RandomChannel.Global)
         {
+            if (max < min)
+                (min, max) = (max, min);
+
             float x;
             int attempts = 0;
+
             do
             {
-                float u1 = 1.0f - RandomFloat();
-                float u2 = 1.0f - RandomFloat();
+                float u1 = 1.0f - RandomFloat(channel);
+                float u2 = 1.0f - RandomFloat(channel);
+
                 float randStdNormal = (float)(Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Sin(2.0 * Math.PI * u2));
+
                 x = mean + variance * randStdNormal;
                 attempts++;
 
-                // 如果超过最大尝试次数，返回限制在范围内的值
                 if (attempts >= GaussianMaxAttempts)
                     return Math.Clamp(x, min, max);
 
@@ -269,60 +537,99 @@ namespace UnknownCreator.Modules
             return x;
         }
 
-
-        // 按默认字符，生成随机字符串
-        public static string RandomString(int length)
+        public static string RandomString(int length, RandomChannel channel = RandomChannel.Global)
         {
+            if (length <= 0)
+                return string.Empty;
 
             char[] stringChars = new char[length];
+            Random random = GetRandom(channel);
+
             for (int i = 0; i < length; i++)
             {
-                stringChars[i] = CharContents[_random.Next(CharContents.Length)];
+                stringChars[i] = CharContents[random.Next(CharContents.Length)];
             }
+
             return new string(stringChars);
         }
 
-
-        // 根据传递字符，获得指定数量的随机字符
-        public static List<char> RandomCharacters(int count, string chars = CharContents)
+        public static List<char> RandomCharacters(
+            int count,
+            string chars = CharContents,
+            RandomChannel channel = RandomChannel.Global)
         {
-            List<char> characterList = new List<char>();
+            List<char> characterList = new();
+
+            if (count <= 0 || string.IsNullOrEmpty(chars))
+                return characterList;
+
+            Random random = GetRandom(channel);
+
             for (int i = 0; i < count; i++)
             {
-                characterList.Add(chars[_random.Next(chars.Length)]);
+                characterList.Add(chars[random.Next(chars.Length)]);
             }
+
             return characterList;
         }
 
-        // 生成随机 RGB 颜色
-        public static (float r, float g, float b) RandomRGBColor()
+        public static (float r, float g, float b) RandomRGBColor(RandomChannel channel = RandomChannel.Global)
         {
-            return (RandomFloat(0f, 1f, true), RandomFloat(0f, 1f, true), RandomFloat(0f, 1f, true));
+            return (
+                RandomFloat(0f, 1f, channel),
+                RandomFloat(0f, 1f, channel),
+                RandomFloat(0f, 1f, channel)
+            );
         }
 
-        // 生成随机 RGBA 颜色
-        public static (float r, float g, float b, float a) RandomRGBAColor()
+        public static (float r, float g, float b, float a) RandomRGBAColor(RandomChannel channel = RandomChannel.Global)
         {
-            return (RandomFloat(0f, 1f, true), RandomFloat(0f, 1f, true), RandomFloat(0f, 1f, true), RandomFloat(0f, 1f, true));
+            return (
+                RandomFloat(0f, 1f, channel),
+                RandomFloat(0f, 1f, channel),
+                RandomFloat(0f, 1f, channel),
+                RandomFloat(0f, 1f, channel)
+            );
         }
 
-        // 生成随机的 Vector2 坐标
-        public static (float x, float y) RandomVector2(float minX, float maxX, float minY, float maxY)
+        public static (float x, float y) RandomVector2(
+            float minX,
+            float maxX,
+            float minY,
+            float maxY,
+            RandomChannel channel = RandomChannel.Global)
         {
-            return (RandomFloat(minX, maxX, true), RandomFloat(minY, maxY, true));
+            return (
+                RandomFloat(minX, maxX, channel),
+                RandomFloat(minY, maxY, channel)
+            );
         }
 
-        // 生成随机的 Vector3 坐标
-        public static (float x, float y, float z) RandomVector3(float minX, float maxX, float minY, float maxY, float minZ, float maxZ)
+        public static (float x, float y, float z) RandomVector3(
+            float minX,
+            float maxX,
+            float minY,
+            float maxY,
+            float minZ,
+            float maxZ,
+            RandomChannel channel = RandomChannel.Global)
         {
-            return (RandomFloat(minX, maxX, true), RandomFloat(minY, maxY, true), RandomFloat(minZ, maxZ, true));
+            return (
+                RandomFloat(minX, maxX, channel),
+                RandomFloat(minY, maxY, channel),
+                RandomFloat(minZ, maxZ, channel)
+            );
         }
 
-        // 生成0到360度范围内的随机方向
-        public static (float x, float y) GetRandomDirection2D()
+        public static (float x, float y) GetRandomDirection2D(RandomChannel channel = RandomChannel.Global)
         {
-            float angle = RandomAngle();
-            return ((float)Math.Cos(angle), (float)Math.Sin(angle));
+            float angle = RandomAngle(0f, 360f, channel);
+            float rad = angle * MathF.PI / 180f;
+
+            return (
+                (float)Math.Cos(rad),
+                (float)Math.Sin(rad)
+            );
         }
     }
 }

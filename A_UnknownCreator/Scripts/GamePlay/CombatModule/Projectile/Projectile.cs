@@ -103,6 +103,7 @@ namespace UnknownCreator.Modules
             check.OnProjCheck(this, ref hitResults);
             if (hitResults.IsValid())
             {
+
                 for (int i = 0; i < hitResults.Count; i++)
                 {
                     ProjCheckInfo result = hitResults[i];
@@ -110,7 +111,9 @@ namespace UnknownCreator.Modules
                     if (!result.isHit)
                         continue;
 
-                    (bool isOK, Unit target) = Mgr.Proj.FilterProjectileHit(this, result.target);
+                    (bool isOK, Unit target) = Mgr.Proj.projFilter.Invoke((this, result.target));
+
+                    UCMDebug.Log(target);
 
                     if (!isOK)
                         continue;
@@ -167,7 +170,7 @@ namespace UnknownCreator.Modules
             if (isRelease) return;
 
             isRelease = true;
-            data.ability?.OnProjectileDestroy(this); 
+            data.ability?.OnProjectileDestroy(this);
             GameEvtBus.Send<EvtProjectileDestroy>(new(this, data, kv, data.owner));
             hitResults.Clear();
             Mgr.RPool.Release(check);

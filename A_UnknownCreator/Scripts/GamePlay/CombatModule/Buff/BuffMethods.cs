@@ -312,7 +312,7 @@ namespace UnknownCreator.Modules
         protected void AddBusFuncEvent<TQuery, TResult>(
             Func<TQuery, TResult> func,
             int priority = 0,
-            bool allowDuplicate = false)
+            bool allowDuplicate = false) where TQuery : IBusQuery
         {
             var key = BusEventKey.QueryWithParam<TQuery, TResult>();
 
@@ -337,7 +337,7 @@ namespace UnknownCreator.Modules
             EntityId id,
             Func<TQuery, TResult> func,
             int priority = 0,
-            bool allowDuplicate = false)
+            bool allowDuplicate = false) where TQuery : IBusQuery
         {
             var key = BusEventKey.QueryWithParam<TQuery, TResult>(id);
 

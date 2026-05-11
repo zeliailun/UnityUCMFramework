@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -9,7 +8,10 @@ namespace UnknownCreator.Modules
     {
         // private UnitMgr() { }
 
-        public Func<(Unit, double), bool> FilterExpAdd { set; get; }
+        public FilterSlot<(Unit, double), bool> unitExpFilter { private set; get; }
+
+        public FilterSlot<EvtStatWillUpdate, bool> unitStatsFilter { private set; get; }
+
 
         [field: SerializeField]
         public int hitBoxLayer { get; private set; }
@@ -39,6 +41,7 @@ namespace UnknownCreator.Modules
         [JsonIgnore]
         public IReadOnlyList<double> unitExpList => unitExpListCache;
 
+
         private readonly List<double> unitExpListCache = new();
 
         private Dictionary<EntityId, Unit> rootDict = new();
@@ -46,12 +49,16 @@ namespace UnknownCreator.Modules
         void IDearMgr.WorkWork()
         {
             rootDict ??= new();
+            unitExpFilter ??= new();
+            unitStatsFilter ??= new();
             UpdateMaxLevelAndFormula(expBuilder, unitMaxLevel);
         }
 
         void IDearMgr.DoNothing()
         {
             rootDict.Clear();
+            unitExpFilter.Clear();
+            unitStatsFilter.Clear();
         }
 
         public void AddUnitRoot(EntityId selfID, Unit unit)

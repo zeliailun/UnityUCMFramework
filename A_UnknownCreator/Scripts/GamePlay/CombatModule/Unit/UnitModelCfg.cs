@@ -26,7 +26,7 @@ namespace UnknownCreator.Modules
     }
 
     [Serializable]
-    public class BodyPartInfo
+    public struct BodyPartInfo
     {
 #if UNITY_EDITOR
         public string desc;

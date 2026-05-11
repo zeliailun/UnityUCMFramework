@@ -55,8 +55,8 @@ namespace UnknownCreator.Modules
 
                 // 添加一些随机性但保持连贯
                 Vector2 offset = new(
-                    shake * RVGlobals.RandomFloat(-1f, 1f, true),
-                    shake * RVGlobals.RandomFloat(-1f, 1f, true)
+                    shake * RVGlobals.RandomFloat(-1f, 1f),
+                    shake * RVGlobals.RandomFloat(-1f, 1f)
                 );
 
                 element.style.translate = new StyleTranslate(new Translate(

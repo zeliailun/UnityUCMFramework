@@ -6,7 +6,11 @@ namespace UnknownCreator.Modules
 {
     public interface IUnitMgr : IDearMgr
     {
-        Func<(Unit, double), bool> FilterExpAdd { set; get; }
+
+        FilterSlot<(Unit, double), bool> unitExpFilter { get; }
+
+
+        FilterSlot<EvtStatWillUpdate, bool> unitStatsFilter { get; }
 
         int unitLayer { get; }
 
