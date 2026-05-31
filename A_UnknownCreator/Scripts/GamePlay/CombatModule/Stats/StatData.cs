@@ -296,7 +296,9 @@ namespace UnknownCreator.Modules
             double oldBonusValue = bonusValue;
 
             // ===== 记录联动目标状态 =====
+
             int linkCount = linkNames.Count;
+
             double[] oldLinkedValues = null;
             bool[] canChangeLinked = null;
             StatData[] linkedStats = null;
@@ -310,7 +312,9 @@ namespace UnknownCreator.Modules
                 for (int i = 0; i < linkCount; i++)
                 {
                     var target = cntlr.GetStats(linkNames[i]);
+
                     linkedStats[i] = target;
+
                     if (target != null)
                     {
                         oldLinkedValues[i] = target.baseValue;
@@ -319,24 +323,96 @@ namespace UnknownCreator.Modules
                 }
             }
 
-            // ===== 数值计算 =====
+            // =========================================================
+            // 开始计算
+            // =========================================================
+
             double value = baseValue;
+
             double linearAdd = 0;
             double percLinearSum = 0;
-            double percNonlinearSum = 0;
+
+            double percMulFactor = 1;
+
+            double hyperbolicRemain = 1;
+
+            double softCapSum = 0;
+
             double constantValue = double.NaN;
 
             foreach (var calc in calcList)
             {
                 switch (calc.calcType)
                 {
-                    case CalcType.Constant: constantValue = calc.value; break;
-                    case CalcType.LinearAdd: linearAdd += calc.value; break;
-                    case CalcType.PercLinearAdd: percLinearSum += calc.value; break;
-                    case CalcType.PercNonlinearAdd: percNonlinearSum += calc.value; break;
+                    // =================================================
+                    // 常量覆盖
+                    // =================================================
 
+                    case CalcType.Constant:
+                        {
+                            constantValue = calc.value;
+                            break;
+                        }
+
+                    // =================================================
+                    // 线性加法
+                    // =================================================
+
+                    case CalcType.LinearAdd:
+                        {
+                            linearAdd += calc.value;
+                            break;
+                        }
+
+                    // =================================================
+                    // 百分比线性加法
+                    // 10% + 10% = 20%
+                    // =================================================
+
+                    case CalcType.PercLinearAdd:
+                        {
+                            percLinearSum += calc.value;
+                            break;
+                        }
+
+                    // =================================================
+                    // 百分比乘算
+                    // 10% * 10% = 1.1 * 1.1
+                    // =================================================
+
+                    case CalcType.PercMul:
+                        {
+                            percMulFactor *= 1 + calc.value / 100d;
+                            break;
+                        }
+
+                    // =================================================
+                    // 双曲递减
+                    // 1 - (1-p)^n
+                    // =================================================
+
+                    case CalcType.PercHyperbolic:
+                        {
+                            hyperbolicRemain *= 1 - calc.value / 100d;
+                            break;
+                        }
+
+                    // =================================================
+                    // SoftCap
+                    // 越高收益越低
+                    // =================================================
+
+                    case CalcType.PercSoftCap:
+                        {
+                            softCapSum += calc.value;
+                            break;
+                        }
                 }
             }
+
+            // =========================================================
+            // Constant
+            // =========================================================
 
             if (!double.IsNaN(constantValue))
             {
@@ -344,26 +420,81 @@ namespace UnknownCreator.Modules
             }
             else
             {
+                // =====================================================
+                // 线性加法
+                // =====================================================
+
                 value += linearAdd;
-                value *= (100 + percLinearSum) / 100;
-                value += (100 - value) * percNonlinearSum / 100;
+
+                // =====================================================
+                // 百分比线性
+                // =====================================================
+
+                value *= (100d + percLinearSum) / 100d;
+
+                // =====================================================
+                // 百分比乘算
+                // =====================================================
+
+                value *= percMulFactor;
+
+                // =====================================================
+                // 双曲递减
+                // =====================================================
+
+                if (hyperbolicRemain < 1)
+                {
+                    double hyperbolicPercent = 1 - hyperbolicRemain;
+
+                    value *= 1 + hyperbolicPercent;
+                }
+
+                // =====================================================
+                // SoftCap
+                // =====================================================
+
+                if (Math.Abs(softCapSum) > 0.0001)
+                {
+                    // 你可以调这个
+                    const double softCapStrength = 0.015;
+
+                    double effective =
+                        softCapSum /
+                        (1 + Math.Abs(softCapSum) * softCapStrength);
+
+                    value *= (100d + effective) / 100d;
+                }
             }
 
-            double clamped = Math.Clamp(value, minValue, maxValue);
-            double newFinalValue = isRoundToInt
-                ? Math.Round(clamped, 0, MidpointRounding.AwayFromZero)
-                : Math.Round(clamped, 2, MidpointRounding.AwayFromZero);
+            // =========================================================
+            // Clamp
+            // =========================================================
 
-            // ===== 更新自身 =====
+            double clamped = Math.Clamp(value, minValue, maxValue);
+
+            double newFinalValue =
+                isRoundToInt
+                    ? Math.Round(clamped, 0, MidpointRounding.AwayFromZero)
+                    : Math.Round(clamped, 2, MidpointRounding.AwayFromZero);
+
+            // =========================================================
+            // 更新自身
+            // =========================================================
+
             finalValue = newFinalValue;
             bonusValue = finalValue - baseValue;
 
-            GameEvtBus.Send<EvtStatChanged>(new(self, oldFinalValue, oldBonusValue, this));
+            GameEvtBus.Send<EvtStatChanged>(
+                new(self, oldFinalValue, oldBonusValue, this));
 
-            // ===== 联动修改统计 =====
+            // =========================================================
+            // 联动修改
+            // =========================================================
+
             if (linkCount > 0 && !isLinking)
             {
                 double delta = newFinalValue - oldFinalValue;
+
                 if (Math.Abs(delta) > 0.0001)
                 {
                     isLinking = true;
@@ -371,15 +502,21 @@ namespace UnknownCreator.Modules
                     for (int i = 0; i < linkCount; i++)
                     {
                         var target = linkedStats[i];
-                        if (target == null) continue;
+
+                        if (target == null)
+                            continue;
+
                         if (target == this)
                         {
                             UCMDebug.LogWarning($"{idName} 不能联动自己");
                             continue;
                         }
+
                         if (!canChangeLinked[i])
                         {
-                            UCMDebug.LogWarning($"{idName} 联动目标 {target.idName} 不允许修改");
+                            UCMDebug.LogWarning(
+                                $"{idName} 联动目标 {target.idName} 不允许修改");
+
                             continue;
                         }
 

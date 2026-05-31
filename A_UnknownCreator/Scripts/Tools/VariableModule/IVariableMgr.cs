@@ -13,6 +13,7 @@ namespace UnknownCreator.Modules
         IVariable AddValue<T>(T t);
         T GetValue<T>(string key);
         T GetValue<T>();
+        IVariableMgr Copy();
         void ReplaceValue<T>(string key, T t);
         void ClearAll();
     }

@@ -24,7 +24,7 @@ namespace UnknownCreator.Modules
         public static Unit GetUnitByHitBox(this GameObject obj)
         => obj == null ? null : Mgr.Unit.GetUnitRoot(obj.GetEntityId());
 
-        public static bool IsVaild(this Unit obj)
+        public static bool IsValid(this Unit obj)
         => obj != null && !Mgr.RPool.HasObject(type, obj);
 
         public static bool IsSelf(this Unit obj, Unit target)

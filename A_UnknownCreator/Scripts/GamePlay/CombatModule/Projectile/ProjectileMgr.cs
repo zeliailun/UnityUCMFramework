@@ -117,25 +117,24 @@ namespace UnknownCreator.Modules
         where ICheck : class, IProjCheck
         where Data : ProjectileData, new()
         {
+            return LaunchProjectile(info.mvt, info.check, info.data, info.kv);
+        }
+
+
+        public Projectile LaunchProjectile(IProjMvt mvt, IProjCheck check, ProjectileData data, IVariableMgr kv)
+        {
             var proj = Mgr.RPool.Load<Projectile>();
-            proj.InitProjectile(info.data, info.mvt, info.check, info.kv);
+            proj.InitProjectile(data, mvt, check, kv);
             projDict.Add(proj.id, proj);
             projList.Add(proj);
             proj.UpdateProjectile(CustomTime.DeltaTime());
             return proj;
         }
 
-        /* public ProjectileInfo<IMvt, ICheck, Data> CreateProjectileData<IMvt, ICheck, Data>()
-         where IMvt : class, IProjMvt
-         where ICheck : class, IProjCheck
-         where Data : ProjectileData, new()
-         {
-             var mvt = Mgr.RPool.Load<IMvt>();
-             var check = Mgr.RPool.Load<ICheck>();
-             var vb = Mgr.RPool.Load<VariableMgr>();
-             var data = Mgr.RPool.Load<Data>();
-             return new(mvt, check, vb, data);
-         }*/
+        public Projectile LaunchProjectile(ProjectileSnapshot snapshot)
+        {
 
+            return LaunchProjectile(snapshot.mvt, snapshot.check, snapshot.data, snapshot.kv);
+        }
     }
 }

@@ -1,19 +1,24 @@
 ﻿using System.Collections.Generic;
-using UnityEngine;
 
 
 namespace UnknownCreator.Modules
 {
 
-    public interface IProjMvt
+    public interface IProjMvt : ICopyable<IProjMvt>
     {
-        float sp {  get; set; }
+        float sp { get; set; }
+
         void OnProjMvt(Projectile proj);
     }
 
-    public interface IProjCheck
+    public interface IProjCheck : ICopyable<IProjCheck>
     {
-        void OnProjCheck(Projectile proj,ref List<ProjCheckInfo> results);
+        void OnProjCheck(Projectile proj, ref List<ProjCheckInfo> results);
+    }
+
+    public interface IProjHitCache
+    {
+        void ClearTargets();
     }
 
 }

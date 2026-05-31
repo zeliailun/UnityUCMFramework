@@ -76,7 +76,7 @@ namespace UnknownCreator.Modules
             if (!varDict.TryGetValue(key, out _))
             {
                 var obj = Mgr.RPool.Load<Variable<T>>();
-                obj.Init(t);
+                obj.Init(key,t);
                 varDict.Add(key, obj);
                 varList.Add(obj);
                 return obj;
@@ -101,6 +101,20 @@ namespace UnknownCreator.Modules
                 ((Variable<T>)result).ReplaceValue(t);
             else
                 AddValue<T>(key, t);
+        }
+
+        public IVariableMgr Copy()
+        {
+            var copy = Mgr.RPool.Load<VariableMgr>();
+            for (int i = 0; i < varList.Count; i++)
+            {
+                IVariable v = varList[i];
+                var newVar = v.Copy();
+                copy.varDict.Add(v.key, newVar);
+                copy.varList.Add(newVar);
+            }
+
+            return copy;
         }
 
         public void ClearAll()

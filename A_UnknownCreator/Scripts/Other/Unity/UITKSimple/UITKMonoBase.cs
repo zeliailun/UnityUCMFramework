@@ -44,7 +44,7 @@ namespace UnknownCreator.Modules
            
         }
 
-        protected virtual void OnUIReload(PanelRenderer renderer, VisualElement root)
+        protected virtual void OnUIReload(PanelRenderer panelRenderer, VisualElement rootElement, int version)
         {
   
         }

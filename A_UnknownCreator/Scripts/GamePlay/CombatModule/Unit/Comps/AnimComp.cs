@@ -90,9 +90,9 @@ namespace UnknownCreator.Modules
             groupCfgDict.Remove(name);
         }
 
-        internal void SetAnimComp(AnimancerComponent anim)
+        internal void SetAnimComp(AnimancerComponent animC)
         {
-            this.anim = anim;
+            this.anim = animC;
             if (anim != null &&
                 anim.Layers != null &&
                 anim.Layers.Count > 0)

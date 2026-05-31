@@ -977,7 +977,7 @@ public class {abilityName} : AbilityBase
         {
             if (isAll)
             {
-                if (GetAllCurrentAssets().All(IsHiddenItem))
+                if (!GetAllCurrentAssets().Any(so => so != null))
                 {
                     EditorUtility.DisplayDialog("错误", "没有可导出的配置！", "确定");
                     return;
@@ -986,7 +986,7 @@ public class {abilityName} : AbilityBase
             else
             {
                 var items = itemList.selectedItems;
-                if (items == null || !items.OfType<CustomScriptableObject>().Any(so => so != null && !IsHiddenItem(so)))
+                if (items == null || !items.OfType<CustomScriptableObject>().Any(so => so != null))
                 {
                     EditorUtility.DisplayDialog("错误", "没有选择配置！", "确定");
                     return;
@@ -1070,8 +1070,8 @@ public class {abilityName} : AbilityBase
             where T2 : class
         {
             var items = isAll
-                ? GetAllCurrentAssets().OfType<T>().Where(so => !IsHiddenItem(so)).ToList()
-                : itemList.selectedItems.OfType<T>().Where(so => !IsHiddenItem(so)).ToList();
+                ? GetAllCurrentAssets().OfType<T>().ToList()
+                : itemList.selectedItems.OfType<T>().ToList();
 
             if (items.Count == 0)
             {
@@ -1129,7 +1129,7 @@ public class {abilityName} : AbilityBase
                 File.WriteAllText(savePath, JsonMapper.ToJson(dict));
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
-                ShowNotification(new GUIContent("✓ JSON 文件已保存"),1);
+                ShowNotification(new GUIContent("✓ JSON 文件已保存"), 1);
             }
             catch (Exception e)
             {

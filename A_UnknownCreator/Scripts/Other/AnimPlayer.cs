@@ -134,12 +134,19 @@ namespace UnknownCreator.Modules
 
         public void FadeOutLayer()
         {
+            FadeOutLayer(endFade);
+        }
+
+
+        public void FadeOutLayer(float endFadeV)
+        {
             if (!animLayer.IsValid() || isFadeOutLayer) return;
             if (state.IsValid()) state = null;
-            animLayer.StartFade(endWeight, endFade);
-            if (endFade <= 0) animLayer.Stop();
+            animLayer.StartFade(endWeight, endFadeV);
+            if (endFadeV <= 0) animLayer.Stop();
             isFadeOutLayer = true;
         }
+
 
         public void ClearCurrentAnimAssets()
         {

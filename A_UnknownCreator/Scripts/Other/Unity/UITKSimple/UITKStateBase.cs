@@ -5,23 +5,27 @@ namespace UnknownCreator.Modules
     public abstract class UITKStateBase : StateBase
     {
         protected UITKBuilder builder => _builder ??= kv.GetValue<UITKBuilder>(nameof(UITKBuilder));
-        protected VisualElement root => _root ??= kv.GetValue<VisualElement>(nameof(VisualElement));
-        protected VisualElement currentP => _current ??= FindElementByPath(GetCurrentPanelPath());
+        protected VisualElement root => _root;
+        protected VisualElement currentP => _current;
         protected PanelRenderer pr => builder.pr;
-        protected Button backBtn => _back ??= currentP?.Q<Button>(GetBackName());
+        protected Button backBtn => _back;
 
         private Button _back;
         private VisualElement _root;
         private VisualElement _current;
         private UITKBuilder _builder;
 
+
+        public override void Init()
+        {
+            RebuildCache();
+            OnInit();
+        }
+
         public override void Refresh()
         {
-            _root = kv.GetValue<VisualElement>(nameof(VisualElement));
-            _current = FindElementByPath(GetCurrentPanelPath());
-            BindBack();
+            RebuildCache();
             OnRefreshUI();
-           
         }
 
         public override void Enter()
@@ -48,7 +52,8 @@ namespace UnknownCreator.Modules
 
         protected virtual void BindBack()
         {
-            backBtn?.RegisterCallback<ClickEvent>(OnBackClick);
+            _back ??= currentP?.Q<Button>(GetBackName());
+            _back?.RegisterCallback<ClickEvent>(OnBackClick);
         }
 
         protected virtual void OnBackClick(ClickEvent evt)
@@ -56,6 +61,11 @@ namespace UnknownCreator.Modules
             if (!backBtn.TryClickCooldown()) return;
             parent?.BackBeforeSeqState();
             OnBack();
+        }
+
+        protected virtual void OnInit()
+        {
+
         }
 
         protected virtual void OnBack()
@@ -94,7 +104,16 @@ namespace UnknownCreator.Modules
         protected virtual string GetBackName()
         => "Back";
 
-        public VisualElement FindElementByPath(string path)
+
+        private void RebuildCache()
+        {
+            _root = kv.GetValue<VisualElement>(nameof(VisualElement));
+            _current = FindElementByPath(GetCurrentPanelPath());
+            BindBack();
+        }
+
+
+        private VisualElement FindElementByPath(string path)
         {
             if (string.IsNullOrEmpty(path))
                 return null;

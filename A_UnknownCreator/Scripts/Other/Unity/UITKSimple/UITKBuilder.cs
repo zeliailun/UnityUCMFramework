@@ -35,13 +35,13 @@ namespace UnknownCreator.Modules
             root = null;
         }
 
-        protected override void OnUIReload(PanelRenderer renderer, VisualElement root)
+        protected override void OnUIReload(PanelRenderer panelRenderer, VisualElement rootElement, int version)
         {
-            this.root = root;
+            this.root = rootElement;
 
             if (hbsm is null)
             {
-                UCMDebug.Log(idName + "第一次加载，但没啥卵用");
+                UCMDebug.Log(idName + "UI加载完毕");
                 hbsm = new();
                 hbsm.kv.AddValue(nameof(UITKBuilder), this);
                 hbsm.kv.AddValue(nameof(VisualElement), root);
@@ -49,16 +49,19 @@ namespace UnknownCreator.Modules
                     if (item != null) hbsm.Create(item);
                 UITKMgr.AddBuilder(this);
                 hbsm.EnableAllHBSM();
-            }
-            else
+
+                UITKMgr.OnUIReload?.Invoke(this);
+            }else
             {
-                UCMDebug.Log(idName + "第二次加载，刷新UI,真触发！");
+
+                
+                UCMDebug.Log(idName + "刷新UI");
 
                 hbsm.kv.ReplaceValue(nameof(UITKBuilder), this);
                 hbsm.kv.ReplaceValue(nameof(VisualElement), root);
                 hbsm.RefreshAllHBSM();
 
-                UITKMgr.OnUIReload?.Invoke(this);
+            
             }
 
 

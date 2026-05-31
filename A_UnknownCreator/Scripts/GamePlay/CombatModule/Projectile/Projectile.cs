@@ -53,7 +53,7 @@ namespace UnknownCreator.Modules
             this.kv = kv;
             id = GlobalID.GetUniqueID();
             objT = obj.GetComponent<Transform>();
-            objT.localScale = Vector3.one;
+            objT.localScale = data.vfxScale;
             objT.SetPositionAndRotation(this.data.spawnPos, this.data.spawnRot);
             timeCount = 0;
             hitResults.Clear();
@@ -77,9 +77,9 @@ namespace UnknownCreator.Modules
             }
 
             timeCount += deltaTime;
-            if (data.distanceMax <= 0 ||
-                timeCount >= data.durationMax ||
-                UnityGlobals.DistanceH(data.spawnPos, objT.position) >= data.distanceMax)
+            if ((!data.isIgnoreDurationMax && timeCount >= data.durationMax) ||
+                !data.isIgnoreDistanceMax && (data.distanceMax <= 0 ||
+                UnityGlobals.DistanceH(data.spawnPos, objT.position) >= data.distanceMax))
             {
                 Mgr.Proj.ReleaseProjectile(id);
                 return;
@@ -112,8 +112,6 @@ namespace UnknownCreator.Modules
                         continue;
 
                     (bool isOK, Unit target) = Mgr.Proj.projFilter.Invoke((this, result.target));
-
-                    UCMDebug.Log(target);
 
                     if (!isOK)
                         continue;
@@ -163,6 +161,25 @@ namespace UnknownCreator.Modules
                 check = null;
             }
             check = newCheck;
+        }
+
+
+        public void ClearTargets()
+        {
+            if (check is IProjHitCache cache)
+                cache.ClearTargets();
+            hitResults.Clear();
+        }
+
+        public ProjectileSnapshot Copy()
+        {
+            return new ProjectileSnapshot
+            {
+                mvt = mvt?.Copy(),
+                check = check?.Copy(),
+                data = data?.Copy(),
+                kv = kv?.Copy()
+            };
         }
 
         void IReference.ObjRelease()

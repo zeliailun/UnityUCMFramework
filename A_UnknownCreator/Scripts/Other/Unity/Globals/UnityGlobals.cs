@@ -235,6 +235,15 @@ namespace UnknownCreator.Modules
             return new Vector3(randomCircle.x, 0f, randomCircle.y);
         }
 
+        /// <summary>
+        /// 基于指定位置获取随机方向（XZ 平面）
+        /// </summary>
+        public static Vector3 RandomDirectionXZ()
+        {
+            Vector2 dir = Random.insideUnitCircle.normalized;
+            return new Vector3(dir.x, 0f, dir.y);
+        }
+
         public static Vector3 GetBezierPoint(Vector3 start, Vector3 center, Vector3 end, float t)
         {
             return (1 - t) * (1 - t) * start + 2 * t * (1 - t) * center + t * t * end;

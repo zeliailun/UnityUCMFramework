@@ -17,6 +17,11 @@ namespace UnknownCreator.Modules
             timer = 0;
         }
 
+        public void ChangeThink(double t)
+        {
+            delay = t;
+        }
+
         public void IncreaseStack()
         => ++stackCount;
 

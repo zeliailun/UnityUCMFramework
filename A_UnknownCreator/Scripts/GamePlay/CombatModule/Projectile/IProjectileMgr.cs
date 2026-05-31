@@ -6,6 +6,10 @@ namespace UnknownCreator.Modules
     {
         FilterSlot<(Projectile, GameObject), (bool, Unit)> projFilter { get; }
 
+        Projectile LaunchProjectile(ProjectileSnapshot snapshot);
+
+        Projectile LaunchProjectile(IProjMvt mvt, IProjCheck check, ProjectileData data, IVariableMgr kv);
+
         Projectile LaunchProjectile<IMvt, ICheck, Data>(ProjectileInfo<IMvt, ICheck, Data> info)
         where IMvt : class, IProjMvt
         where ICheck : class, IProjCheck
