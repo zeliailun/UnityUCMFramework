@@ -65,8 +65,8 @@ namespace UnknownCreator.Modules
             }
         }
 
-        public double minValue => customMinStats ? cntlr.GetStats(minName).finalValue : minV;
-        public double maxValue => customMaxStats ? cntlr.GetStats(maxName).finalValue : maxV;
+        public double minValue => customMinStats ? cntlr.GetStat(minName).finalValue : minV;
+        public double maxValue => customMaxStats ? cntlr.GetStat(maxName).finalValue : maxV;
 
         private double baseV, bonusV, finalV, minV, maxV;
         private string minName, maxName;
@@ -311,7 +311,7 @@ namespace UnknownCreator.Modules
 
                 for (int i = 0; i < linkCount; i++)
                 {
-                    var target = cntlr.GetStats(linkNames[i]);
+                    var target = cntlr.GetStat(linkNames[i]);
 
                     linkedStats[i] = target;
 

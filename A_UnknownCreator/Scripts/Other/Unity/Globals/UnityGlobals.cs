@@ -172,12 +172,37 @@ namespace UnknownCreator.Modules
         }
 
         /// <summary>
-        /// 判断目标位置能否被自身看到
+        /// 判断目标位置能否被自身看到，中间没有障碍物就算可见
         /// </summary>
-        public static bool IsAlwaysVisible(Transform viewer, Vector3 targetPosition, LayerMask obstacleMask)
+        public static bool IsAlwaysVisible(
+            Transform viewer,
+            Vector3 targetPosition,
+            LayerMask obstacleMask,
+            float heightOffset = 0.5f
+        )
         {
-            Vector3 dirToTarget = targetPosition - viewer.position;
-            return Physics.Raycast(viewer.position, dirToTarget.normalized, dirToTarget.magnitude, obstacleMask);
+            Vector3 origin = viewer.position + Vector3.up * heightOffset;
+            Vector3 target = targetPosition + Vector3.up * heightOffset;
+
+            Vector3 dirToTarget = target - origin;
+            float distance = dirToTarget.magnitude;
+
+            if (distance <= 0.001f)
+                return true;
+
+            bool blocked = Physics.Raycast(
+                origin,
+                dirToTarget.normalized,
+                distance,
+                obstacleMask,
+                QueryTriggerInteraction.Ignore
+            );
+/*
+#if UNITY_EDITOR
+            Debug.DrawLine(origin, target, blocked ? Color.red : Color.green, 0.1f);
+#endif
+            */
+            return !blocked;
         }
 
 

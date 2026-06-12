@@ -1,7 +1,6 @@
 ﻿using System;
 using Animancer;
 using UnityEngine;
-using static StylizedWater3.Extension;
 
 namespace UnknownCreator.Modules
 {

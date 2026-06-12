@@ -15,7 +15,6 @@ namespace UnknownCreator.Modules
         public virtual bool isPlaying => !isRelease && rootObj != null && rootObj.activeSelf;
 
         private ITimer timer;
-        private Type ownerType;
         private bool isFollowing;
         private Transform followTarget;
         private Vector3 followOffset;
@@ -28,8 +27,8 @@ namespace UnknownCreator.Modules
 
             this.owner = owner;
             this.vfxName = vfxName;
-            ownerType = owner?.GetType();
 
+            isFollowing = false;
             rootObj = obj;
             rootT = rootObj != null ? rootObj.transform : null;
             id = rootObj != null ? rootObj.GetEntityId() : default;
@@ -54,12 +53,9 @@ namespace UnknownCreator.Modules
 
         public virtual void UpdateVfx()
         {
-            if (isRelease || rootT == null) return;
+            if (isRelease || rootT == null || owner == null) return;
 
-            if (owner == null) return;
-
-            // owner 已经被对象池回收时，特效也应该自动销毁，避免挂在无效目标上。
-            if (ownerType != null && Mgr.RPool.HasObject(ownerType, owner))
+            if (!owner.IsValid())
             {
                 DestroyVfx(0f);
                 return;
@@ -134,7 +130,6 @@ namespace UnknownCreator.Modules
             rootObj = null;
             rootT = null;
             vfxName = null;
-            ownerType = null;
             id = default;
         }
 

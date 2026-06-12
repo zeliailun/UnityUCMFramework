@@ -9,7 +9,7 @@ namespace UnknownCreator.Modules
         PercLinearAdd,     // 线性百分比     +10%
 
         PercMul,           // 乘算           x1.1 x1.1
-        PercHyperbolic,    // 双曲递减       1-(1-p)^n
-        PercSoftCap        // SoftCap 软上限
+        PercHyperbolic,    // 双曲递减       1-(1-p)^n      递减叠加
+        PercSoftCap        // SoftCap 软上限                衰减叠加
     }
 }

@@ -173,7 +173,7 @@ namespace UnknownCreator.Modules
             }
 
             var charge = GetCharge();
-            if (IsEnableCharge() && currentCharge < charge)
+            if (IsEnableCharge())//&& currentCharge < charge
                 currentCharge = (int)charge;
 
         }
@@ -184,6 +184,9 @@ namespace UnknownCreator.Modules
                 return;
 
             var chargeLimit = GetCharge(level);
+            if (currentCharge > chargeLimit)
+                currentCharge = chargeLimit;
+
             var enableCharge = IsEnableCharge();
             var hasChargeLogic = enableCharge && currentCharge < chargeLimit;
 

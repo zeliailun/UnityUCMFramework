@@ -37,11 +37,11 @@ namespace UnknownCreator.Modules
             return null;
         }
 
-        public StatData GetStats(string name)
+        public StatData GetStat(string name)
         => statsDict.TryGetValue(name, out var data) ? data[0] : null;
 
         public double GetStatsValue(string name)
-        => GetStats(name)?.finalValue ?? 0;
+        => GetStat(name)?.finalValue ?? 0;
 
         public List<StatData> GetStatsListByName(string name)
         => statsDict.TryGetValue(name, out var data) ? data : null;

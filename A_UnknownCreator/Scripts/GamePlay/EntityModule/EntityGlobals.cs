@@ -2,7 +2,7 @@ namespace UnknownCreator.Modules
 {
     public static class EntityGlobals
     {
-        public static bool IsVaild(this IEntity entity)
+        public static bool IsValid(this IEntity entity)
         => entity != null && !Mgr.RPool.HasObject(entity);
 
     }

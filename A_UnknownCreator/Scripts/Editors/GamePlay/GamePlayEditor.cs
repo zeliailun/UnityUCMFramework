@@ -209,7 +209,7 @@ namespace UnknownCreator.Modules
         {
             if (string.IsNullOrEmpty(typeName)) return null;
 
-            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+            foreach (Assembly assembly in UnityEngine.Assemblies.CurrentAssemblies.GetLoadedAssemblies())
             {
                 Type direct = assembly.GetType(typeName);
                 if (direct != null) return direct;
