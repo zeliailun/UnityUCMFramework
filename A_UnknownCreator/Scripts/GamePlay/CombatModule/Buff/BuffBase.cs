@@ -115,7 +115,7 @@ namespace UnknownCreator.Modules
             duration -= dt;
             timer += dt;
 
-            UpdateStats();
+            UpdateStats(false);
 
             UpdateState();
 
@@ -156,25 +156,42 @@ namespace UnknownCreator.Modules
             origDuration = duration = dur;
         }
 
-        private void UpdateStats()
+
+
+
+        internal void ForceUpdateStats()
         {
-            if (isRelease || statsList is null || statsList.Count == 0) return;
+            UpdateStats(true);
+        }
+
+        private void UpdateStats(bool force)
+        {
+            if (isRelease || statsList is null || statsList.Count == 0)
+                return;
 
             string name;
             CalcType type;
             double value;
             (string name, int type) key;
+
+            bool isStacked = IsStacked() && IsStatsStacked();
+
             for (int i = 0; i < statsList.Count; i++)
             {
                 name = statsList[i].name;
                 type = statsList[i].type;
                 value = statsList[i].callback();
                 key = (name, (int)type);
-                if (!statsDict.TryGetValue(key, out var oldValue) || oldValue != value)
+
+                if (!force &&
+                    statsDict.TryGetValue(key, out var oldValue) &&
+                    Math.Abs(oldValue - value) < 0.0001)
                 {
-                    statsDict[key] = value;
-                    owner.statsC.UpdateStats(this, name, type, value, IsStacked() && IsStatsStacked());
+                    continue;
                 }
+
+                statsDict[key] = value;
+                owner.statsC.UpdateStats(this, name, type, value, isStacked);
             }
         }
 

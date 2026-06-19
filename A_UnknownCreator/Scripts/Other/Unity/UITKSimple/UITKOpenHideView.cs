@@ -127,7 +127,7 @@ namespace UnknownCreator.Modules
             }
             SetOpacity(0);
             view.style.display = DisplayStyle.None;
-            UITKMgr.OnUIHide?.Invoke(hideInfo.uidName, hideInfo.uiName);
+            UITKMgr.OnUIHide?.Invoke(hideInfo.prName, hideInfo.uiName);
             showInfo = default;
             hideInfo = default;
         }

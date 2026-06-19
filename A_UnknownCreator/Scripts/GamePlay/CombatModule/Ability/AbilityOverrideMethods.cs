@@ -31,6 +31,8 @@ namespace UnknownCreator.Modules
         /// </summary>
         protected virtual void OnRelease() { }
 
+        protected virtual void OnPoolObjDestroy() { }
+
         /// <summary>
         /// 施法开始前调用，在自定义过滤器之后
         /// </summary>

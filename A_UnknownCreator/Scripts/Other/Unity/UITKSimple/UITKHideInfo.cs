@@ -5,7 +5,7 @@ namespace UnknownCreator.Modules
     [Serializable]
     public struct UITKHideInfo
     {
-        public string uidName;
+        public string prName;
         public string uiName;
         public float hideDuration;
         public bool isTimeScale;
@@ -18,7 +18,7 @@ namespace UnknownCreator.Modules
         bool isTimeScale = false,
         Action<VisualElement> onHide = null)
         {
-            this.uidName = uidName;
+            this.prName = uidName;
             this.uiName = uiName;
             this.hideDuration = hideDuration;
             this.isTimeScale = isTimeScale;

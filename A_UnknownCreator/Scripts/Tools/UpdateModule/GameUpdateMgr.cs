@@ -58,20 +58,20 @@ namespace UnknownCreator.Modules
 
         public void AddUpdata<T>(T eup) where T : IOnUpdate
         {
-            if (eup is not null && !updataList.Contains(eup))
+            if (eup is not null && updataList != null && !updataList.Contains(eup))
                 updataList?.Add(eup);
         }
 
         public void AddFixedUpdata<T>(T eup) where T : IOnFixedUpdate
         {
-            if (eup is not null && !fixedUpdataList.Contains(eup))
-                fixedUpdataList?.Add( eup);
+            if (eup is not null && fixedUpdataList != null && !fixedUpdataList.Contains(eup))
+                fixedUpdataList?.Add(eup);
         }
 
         public void AddLateUpdata<T>(T eup) where T : IOnLateUpdate
         {
-            if (eup is not null && !lateUpdateList.Contains(eup))
-                lateUpdateList?.Add( eup);
+            if (eup is not null && lateUpdateList != null && !lateUpdateList.Contains(eup))
+                lateUpdateList?.Add(eup);
         }
 
         public void RemoveUpdata<T>(T eup) where T : IOnUpdate

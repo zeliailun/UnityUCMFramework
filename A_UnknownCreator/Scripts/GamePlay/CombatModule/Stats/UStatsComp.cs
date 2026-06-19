@@ -50,13 +50,20 @@ namespace UnknownCreator.Modules
         public StatData AddStats(StatsCfg cfg, double newV, object holder)
         {
 
+            var unit = self.As<Unit>();
             StatData sd = Mgr.RPool.Load<StatData>();
-            sd.Init(cfg, newV, this, self.As<Unit>(), holder);
+            sd.Init(cfg, newV, this, unit, holder);
+
             if (statsDict.TryGetValue(cfg.idName, out var data))
                 data.Add(sd);
             else
                 statsDict.Add(sd.idName, new List<StatData>() { sd });
+
             statsList.Add(sd);
+
+            // 新属性加入人物后，让已有 Buff 重新应用一次。
+            unit?.buffC?.RefreshAllBuffStats();
+
             return sd;
         }
 
@@ -112,14 +119,21 @@ namespace UnknownCreator.Modules
 
         public void ClearStatsCalc(BuffBase buff, CalcType calcType, string statsName, bool isStatsStacked)
         {
-            if (!statsDict.TryGetValue(statsName, out var data) ||
+            if (buff == null ||
+                statsDict == null ||
+                !statsDict.TryGetValue(statsName, out var data) ||
                 !data.IsValid())
                 return;
 
             for (int i = data.Count - 1; i >= 0; i--)
-                data[i]?.Remove(buff, calcType, isStatsStacked);
-        }
+            {
+                var sd = data[i];
+                if (sd == null)
+                    continue;
 
+                sd.Remove(buff, calcType, isStatsStacked);
+            }
+        }
         public bool HasStats(string statsName)
         => statsDict.TryGetValue(statsName, out var data) && data.Count > 0;
     }

@@ -8,6 +8,8 @@ namespace UnknownCreator.Modules
     public class GameCfg
     {
         public bool enableDebug = true;
+
+        [SerializeField]
         public List<CustomMgrCreateInfo> customMgr = new();
 
         [SerializeReference, ShowSerializeReference]
@@ -66,6 +68,9 @@ namespace UnknownCreator.Modules
 
         [SerializeReference, ShowSerializeReference]
         public IProjectileMgr projMgr = new ProjectileMgr();
+
+        [SerializeReference, ShowSerializeReference]
+        public IMaterialOverrideMgr matMgr = new MaterialOverrideMgr();
 
         [SerializeReference, ShowSerializeReference]
         public IJsonDataMgr jsonMgr = new JsonDataMgr();

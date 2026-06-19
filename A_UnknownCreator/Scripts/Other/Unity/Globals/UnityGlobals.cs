@@ -5,7 +5,7 @@ namespace UnknownCreator.Modules
     public static partial class UnityGlobals
     {
 
-        public static float GetGroundY(Vector3 pos, RaycastHit[] hits,int groundLayer, float checkDistance = 0.5f)
+        public static float GetGroundY(Vector3 pos, RaycastHit[] hits, int groundLayer, float checkDistance = 0.5f)
         {
             if (Physics.RaycastNonAlloc(
                     pos,
@@ -18,7 +18,7 @@ namespace UnknownCreator.Modules
                 return hits[0].point.y;
             }
 
-            return pos.y; 
+            return pos.y;
         }
 
 
@@ -197,11 +197,11 @@ namespace UnknownCreator.Modules
                 obstacleMask,
                 QueryTriggerInteraction.Ignore
             );
-/*
-#if UNITY_EDITOR
-            Debug.DrawLine(origin, target, blocked ? Color.red : Color.green, 0.1f);
-#endif
-            */
+            /*
+            #if UNITY_EDITOR
+                        Debug.DrawLine(origin, target, blocked ? Color.red : Color.green, 0.1f);
+            #endif
+                        */
             return !blocked;
         }
 

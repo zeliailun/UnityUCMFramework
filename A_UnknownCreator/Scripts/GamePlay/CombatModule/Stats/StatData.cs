@@ -65,8 +65,29 @@ namespace UnknownCreator.Modules
             }
         }
 
-        public double minValue => customMinStats ? cntlr.GetStat(minName).finalValue : minV;
-        public double maxValue => customMaxStats ? cntlr.GetStat(maxName).finalValue : maxV;
+        public double minValue
+        {
+            get
+            {
+                if (!customMinStats || cntlr == null)
+                    return minV;
+
+                var stat = cntlr.GetStat(minName);
+                return stat != null ? stat.finalValue : minV;
+            }
+        }
+
+        public double maxValue
+        {
+            get
+            {
+                if (!customMaxStats || cntlr == null)
+                    return maxV;
+
+                var stat = cntlr.GetStat(maxName);
+                return stat != null ? stat.finalValue : maxV;
+            }
+        }
 
         private double baseV, bonusV, finalV, minV, maxV;
         private string minName, maxName;

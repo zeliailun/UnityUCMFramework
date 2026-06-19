@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace UnknownCreator.Modules
@@ -93,7 +94,6 @@ namespace UnknownCreator.Modules
         [JsonMark]
         [field: SerializeField]
         public SerializableDictionaryRef<string, object> dataKV { internal set; get; } = new();
-
 
     }
 }

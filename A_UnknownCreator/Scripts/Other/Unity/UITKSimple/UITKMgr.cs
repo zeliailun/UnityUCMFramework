@@ -99,7 +99,7 @@ namespace UnknownCreator.Modules
 
         public static void HideUI(UITKHideInfo info)
         {
-            if (!prDict.TryGetValue(info.uidName, out var builder)) return;
+            if (!prDict.TryGetValue(info.prName, out var builder)) return;
 
             var visualElement = builder.root.Q<VisualElement>(info.uiName);
             if (visualElement == null)
@@ -119,10 +119,10 @@ namespace UnknownCreator.Modules
                 uiView.Hide(info);
                 uiDict[info.uiName] = uiView;
 
-                if (!uiNameDict.TryGetValue(info.uidName, out _))
-                    uiNameDict[info.uidName] = new List<string>();
+                if (!uiNameDict.TryGetValue(info.prName, out _))
+                    uiNameDict[info.prName] = new List<string>();
 
-                uiNameDict[info.uidName].Add(info.uiName);
+                uiNameDict[info.prName].Add(info.uiName);
             }
         }
 

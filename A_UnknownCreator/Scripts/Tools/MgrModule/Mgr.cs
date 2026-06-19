@@ -39,6 +39,8 @@
 
         public static ILoadSceneMgr Scene => cfg.sceneMgr;
 
+        public static IMaterialOverrideMgr mat => cfg.matMgr;
+
         public static IJsonDataMgr JD => cfg.jsonMgr;
 
         #endregion
@@ -62,6 +64,7 @@
             God.AddMgr(cfg.hfsmMgr, true);
             God.AddMgr(cfg.cameraMgr, true);
             God.AddMgr(cfg.inputMgr, true);
+            God.AddMgr(cfg.matMgr, true);
             God.AddMgr(cfg.entityMgr, true);
             God.AddMgr(cfg.unitMgr, true);
             //God.AddMgr(cfg.itemMgr, true);

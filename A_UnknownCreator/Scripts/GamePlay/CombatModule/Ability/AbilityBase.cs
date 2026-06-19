@@ -306,5 +306,7 @@ namespace UnknownCreator.Modules
             owner = null;
             abilityCfg = null;
         }
+
+        void IReference.ObjDestroy() { OnPoolObjDestroy(); }
     }
 }

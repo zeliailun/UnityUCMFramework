@@ -15,6 +15,24 @@ MonoBehaviour:
   <CachedSoName>k__BackingField: AbilityNull
   description: 
   cfgScript: {fileID: 0}
+  icon:
+    m_AssetGUID: 
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_SubObjectGUID: 
+    m_EditorAssetChanged: 0
+  animClip:
+    m_AssetGUID: 
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_SubObjectGUID: 
+    m_EditorAssetChanged: 0
+  mask:
+    m_AssetGUID: 
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_SubObjectGUID: 
+    m_EditorAssetChanged: 0
   <cfg>k__BackingField:
     <icon>k__BackingField: 
     <abilityType>k__BackingField: 0
@@ -23,8 +41,8 @@ MonoBehaviour:
     <abilityFlags>k__BackingField: 1
     <useMode>k__BackingField: 0
     <stateID>k__BackingField: 
-    <castAnimAsset>k__BackingField: {fileID: 0}
-    <mask>k__BackingField: {fileID: 0}
+    <animKey>k__BackingField: 
+    <maskKey>k__BackingField: 
     <animLayers>k__BackingField: 1
     <animEndWeight>k__BackingField: 0
     <animStartFadeDuration>k__BackingField: 0.25
@@ -46,27 +64,27 @@ MonoBehaviour:
       dictionaryList:
       - Key: StatCooldown
         Value:
-          rid: 3639409291768365263
+          rid: 3653613745131750223
         Index: 0
         IsKeyDuplicated: 0
       - Key: StatCastRange
         Value:
-          rid: 3639409291768365264
+          rid: 3653613745131750224
         Index: 1
         IsKeyDuplicated: 0
       - Key: StatCastRangeBuffer
         Value:
-          rid: 3639409291768365265
+          rid: 3653613745131750225
         Index: 2
         IsKeyDuplicated: 0
       - Key: StatCastPoint
         Value:
-          rid: 3639409291768365266
+          rid: 3653613745131750226
         Index: 3
         IsKeyDuplicated: 0
       - Key: StatCharge
         Value:
-          rid: 3639409291768365267
+          rid: 3653613745131750227
         Index: 4
         IsKeyDuplicated: 0
     <dataKV>k__BackingField:
@@ -74,7 +92,7 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 3639409291768365263
+    - rid: 3653613745131750223
       type: {class: AbilityKV, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
       data:
         <baseValue>k__BackingField: []
@@ -84,7 +102,7 @@ MonoBehaviour:
         <talentValues>k__BackingField: []
         <isBaseOrStat>k__BackingField: 0
         <talentValueName>k__BackingField: 
-    - rid: 3639409291768365264
+    - rid: 3653613745131750224
       type: {class: AbilityKV, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
       data:
         <baseValue>k__BackingField: []
@@ -94,7 +112,7 @@ MonoBehaviour:
         <talentValues>k__BackingField: []
         <isBaseOrStat>k__BackingField: 0
         <talentValueName>k__BackingField: 
-    - rid: 3639409291768365265
+    - rid: 3653613745131750225
       type: {class: AbilityKV, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
       data:
         <baseValue>k__BackingField: []
@@ -104,7 +122,7 @@ MonoBehaviour:
         <talentValues>k__BackingField: []
         <isBaseOrStat>k__BackingField: 0
         <talentValueName>k__BackingField: 
-    - rid: 3639409291768365266
+    - rid: 3653613745131750226
       type: {class: AbilityKV, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
       data:
         <baseValue>k__BackingField: []
@@ -114,7 +132,7 @@ MonoBehaviour:
         <talentValues>k__BackingField: []
         <isBaseOrStat>k__BackingField: 0
         <talentValueName>k__BackingField: 
-    - rid: 3639409291768365267
+    - rid: 3653613745131750227
       type: {class: AbilityKV, ns: UnknownCreator.Modules, asm: Assembly-CSharp}
       data:
         <baseValue>k__BackingField: []
