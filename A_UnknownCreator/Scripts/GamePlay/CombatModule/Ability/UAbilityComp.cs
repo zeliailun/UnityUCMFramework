@@ -11,6 +11,8 @@ namespace UnknownCreator.Modules
 
         private Dictionary<long, AbilityBase> abilityById = new();
 
+        public IReadOnlyList<AbilityBase> allAbility => abilityList;
+
         public int abilityCount => abilityList.Count;
 
         public bool hasAbility
