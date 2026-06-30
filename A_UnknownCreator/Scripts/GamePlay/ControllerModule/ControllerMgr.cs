@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 
 namespace UnknownCreator.Modules
 {
+    [Serializable]
     public sealed class ControllerMgr : IControllerMgr
     {
         private IStateMachine sm;
@@ -58,31 +59,12 @@ namespace UnknownCreator.Modules
         }
 
 
-        public void SetInput(IInputActionCollection2 actionInput)
-        {
-            bool wasActivated = isActivated;
 
-            if (wasActivated)
-                DisableController();
-
-            DestroyController();
-            inputClass = actionInput;
-
-            if (wasActivated)
-                EnableController();
-        }
-
-        public void SetInput<T>() where T : IInputActionCollection2, new()
-        {
-            SetInput(new T());
-        }
 
         public T GetInput<T>() where T : IInputActionCollection2
         {
             return (T)inputClass;
         }
-
-
 
         public void AddControllerTarget(GameObject target)
         {
@@ -90,7 +72,7 @@ namespace UnknownCreator.Modules
 
             var id = target.GetEntityId();
             if (targetDict.TryGetValue(id, out _)) return;
-
+             
             targetDict[id] = target;
             targets.Add(target);
 
@@ -197,6 +179,27 @@ namespace UnknownCreator.Modules
                 disposable.Dispose();
 
             inputClass = null;
+
+            if (inputAsset != null)
+            {
+                UnityGlobals.Release(inputAsset);
+                inputAsset = null;
+            }
+        }
+
+
+        private void SetInput(IInputActionCollection2 actionInput)
+        {
+            bool wasActivated = isActivated;
+
+            if (wasActivated)
+                DisableController();
+
+            DestroyController();
+            inputClass = actionInput;
+
+            if (wasActivated)
+                EnableController();
         }
     }
 }

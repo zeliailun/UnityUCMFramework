@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace UnknownCreator.Modules
 {
+    [Serializable]
     public sealed class ReferencePoolMgr : IReferencePoolMgr
     {
         internal Dictionary<Type, IPool> referencePool = new();

@@ -36,7 +36,7 @@ namespace UnknownCreator.Modules
         private readonly List<long> ids = new();
         private readonly Dictionary<long, float> oneShotVolumeDict = new();
         private EvtSoundPlayEnd soundEvt;
-        private ITimer soundEndTimer;
+        private TimerHandle<TimerCountCycle> soundEndTimer;
 
         public void Init(string name, GameObject go)
         {
@@ -65,7 +65,7 @@ namespace UnknownCreator.Modules
             fadeDuration = 0;
             ids.Clear();
             oneShotVolumeDict.Clear();
-            soundEndTimer = null;
+            soundEndTimer.Destroy();
         }
 
         public void PlaySound(bool isOneShot)
@@ -106,9 +106,9 @@ namespace UnknownCreator.Modules
             if (isOneShot)
             {
                 source.PlayOneShot(clip, 1);
-                var timer = Mgr.Timer.CycleCount(1, clip.length, false, SoundEndEvt, SoundCompleted, soundCfg.isApplyTimeScale);
-                ids.Add(timer.id);
-                oneShotVolumeDict[timer.id] = playVolume;
+                var timer = Mgr.Timer.CycleCountHandle(1, clip.length, false, SoundEndEvt, SoundCompleted, soundCfg.isApplyTimeScale);
+                ids.Add(timer.idValue);
+                oneShotVolumeDict[timer.idValue] = playVolume;
             }
             else
             {
@@ -329,22 +329,22 @@ namespace UnknownCreator.Modules
 
         private void ResetMainEndTimer(float delay)
         {
-            if (soundEndTimer == null)
+            if (!soundEndTimer.isValid)
             {
-                soundEndTimer = Mgr.Timer.CycleCount(1, delay, false, SoundEndEvt, null, soundCfg.isApplyTimeScale);
+                soundEndTimer = Mgr.Timer.CycleCountHandle(1, delay, false, SoundEndEvt, null, soundCfg.isApplyTimeScale);
                 return;
             }
 
-            if (soundEndTimer is TimerCountCycle timer)
+            if (soundEndTimer.TryGet(out var timer))
+            {
                 timer.delay = delay;
-
-            soundEndTimer.Reset();
+                timer.Reset();
+            }
         }
 
         private void ClearMainEndTimer()
         {
-            soundEndTimer?.DestroySelf();
-            soundEndTimer = null;
+            soundEndTimer.Destroy();
         }
 
         private void ClearOneShotTimers(bool decreasePlayCount)

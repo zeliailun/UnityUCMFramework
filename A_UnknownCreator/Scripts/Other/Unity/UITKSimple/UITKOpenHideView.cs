@@ -46,6 +46,7 @@ namespace UnknownCreator.Modules
             changeOpacity = null;
             changeOpacity2 = null;
             view = null;
+            builder = null;
         }
 
         private void Refresh(UITKBuilder ub)

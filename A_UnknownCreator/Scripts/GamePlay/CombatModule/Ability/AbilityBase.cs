@@ -81,7 +81,7 @@ namespace UnknownCreator.Modules
         private string castAnimName, newCastAnimName, passiveName;
         private BuffBase passiveBuff;
         private Action<TimerCountCycle> castPointAct, castBackswingAct;
-        private ITimer timerCastPoint, timerCastBackswing;
+        private TimerHandle<TimerCountCycle> timerCastPoint, timerCastBackswing;
         private int frozenCooldown, lv, maxlv, currCharge;
         private bool lastOwnerAliveState;
         private bool hasCheckedOwnerAliveState;

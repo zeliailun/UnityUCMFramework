@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
+    [Serializable]
     public sealed class EventsMgr : IEventsMgr
     {
         internal Dictionary<(EntityId, string), List<IEvent>> delegateDict = new();

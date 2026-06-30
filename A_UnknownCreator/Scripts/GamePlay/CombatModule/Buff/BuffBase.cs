@@ -16,12 +16,12 @@ namespace UnknownCreator.Modules
         public double origDuration { get; private set; }
         public double duration
         {
-            get => dur;
+            get => _dur;
             set
             {
-                var old = dur;
-                dur = math.clamp(value, 0, math.INFINITY);
-                OnDurationChanged(dur, old);
+                var old = _dur;
+                _dur = _dur = math.max(0d, value);
+                OnDurationChanged(_dur, old);
             }
         }
 
@@ -70,7 +70,7 @@ namespace UnknownCreator.Modules
 
         private readonly Dictionary<BusEventKey, EventHandle> busEvtDict = new();
 
-        private double dur;
+        private double _dur;
         private int stack;
         private bool passiveBuff;
         private Type inflicterType;
@@ -80,7 +80,7 @@ namespace UnknownCreator.Modules
         //==============================================================================================================
 
 
-        internal void InitBuff(string buffName, AbilityBase ability, Unit owner, Unit inflicter, double dur, IVariableMgr kv, bool isKVRecyclePool)
+        internal void InitBuff(string buffName, AbilityBase ability, Unit owner, Unit inflicter, double newDuration, IVariableMgr kv, bool isKVRecyclePool)
         {
             this.buffName = buffName;
             this.ability = ability;
@@ -89,7 +89,7 @@ namespace UnknownCreator.Modules
             this.kv = kv;
             this.isKVRecyclePool = isKVRecyclePool;
             inflicterType = typeof(Unit);
-            origDuration = duration = dur;
+            origDuration = duration = newDuration;
             timer = 0;
             stack = 0;
             isEnableTimer = false;
@@ -98,12 +98,14 @@ namespace UnknownCreator.Modules
             OnInitialized();
         }
 
-        internal void RefreshBuff(IVariableMgr kv, bool isKVRecyclePool, double duration)
+        internal void RefreshBuff(IVariableMgr kv, bool isKVRecyclePool, double newDuration)
         {
             if (this.isKVRecyclePool) Mgr.RPool.Release(this.kv);
             this.kv = kv;
             this.isKVRecyclePool = isKVRecyclePool;
-            UpdateDuration(duration);
+            origDuration = newDuration;
+            this.duration = newDuration;
+            timer = 0;
             OnRefresh();
         }
 
@@ -112,7 +114,10 @@ namespace UnknownCreator.Modules
             if (isRelease) return;
 
             float dt = CustomTime.DeltaTime();
-            duration -= dt;
+
+            if (!isPassive && duration > 0)
+                duration -= dt;
+
             timer += dt;
 
             UpdateStats(false);
@@ -150,13 +155,6 @@ namespace UnknownCreator.Modules
                 owner.buffC.RemoveBuff(this);
             }
         }
-
-        internal void UpdateDuration(double dur)
-        {
-            origDuration = duration = dur;
-        }
-
-
 
 
         internal void ForceUpdateStats()

@@ -11,14 +11,12 @@ namespace UnknownCreator.Modules
             GameEvtBus.Send<EvtAbilityInterrupt>(new(this, owner, isPointOrBackswing));
             if (isPointOrBackswing)
             {
-                timerCastPoint.DestroySelf();
-                timerCastPoint = null;
+                timerCastPoint.Destroy();
                 owner.abilityC.SetCastPoint(false);
             }
             else
             {
-                timerCastBackswing.DestroySelf();
-                timerCastBackswing = null;
+                timerCastBackswing.Destroy();
                 owner.abilityC.SetCastBackswing(false);
                 GameEvtBus.Send<EvtAbilityFullyCast>(new(this,owner));
             }
@@ -60,9 +58,8 @@ namespace UnknownCreator.Modules
         {
             if (HasOnlyBehavior(AbBehavior.None)) return;
 
-            InevitableCastPressed();
-
             modeCache = GetTriggerMode();
+            InevitableCastPressed();
             if (modeCache == AbTriggerMode.Pressed)
                 Executing();
         }
@@ -129,8 +126,8 @@ namespace UnknownCreator.Modules
                 ApplyState(1);
                 owner.abilityC.SetCastAbility(this);
                 owner.abilityC.SetCastPoint(true);
-                timerCastPoint.DestroySelf();
-                timerCastPoint = Mgr.Timer.CycleCount(1, (float)castPointDuration, false, null, castPointAct);
+                timerCastPoint.Destroy();
+                timerCastPoint = Mgr.Timer.CycleCountHandle(1, (float)castPointDuration, false, null, castPointAct);
             }
         }
 
@@ -145,8 +142,8 @@ namespace UnknownCreator.Modules
             else
             {
                 owner.abilityC.SetCastBackswing(true);
-                timerCastBackswing.DestroySelf();
-                timerCastBackswing = Mgr.Timer.CycleCount(1, castAnimState.RemainingDuration, false, null, castBackswingAct);
+                timerCastBackswing.Destroy();
+                timerCastBackswing = Mgr.Timer.CycleCountHandle(1, castAnimState.RemainingDuration, false, null, castBackswingAct);
             }
         }
 

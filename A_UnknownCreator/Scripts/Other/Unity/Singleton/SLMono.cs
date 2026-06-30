@@ -1,13 +1,14 @@
-﻿using UnityEngine;
+﻿using Unity.Scripting.LifecycleManagement;
+using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
 
-    public abstract class SLMono1Lazy<T> : MonoBehaviour where T : Component
+    public  abstract partial class SLMono1Lazy<T> : MonoBehaviour where T : Component
     {
-
+        [AutoStaticsCleanup]
         private static bool quit = false;
-
+        [AutoStaticsCleanup]
         private static T instance;
 
         public static T i
@@ -44,8 +45,9 @@ namespace UnknownCreator.Modules
 
 
 
-    public abstract class SLMonoNormal<T> : MonoBehaviour where T : MonoBehaviour
+    public abstract partial  class SLMonoNormal<T> : MonoBehaviour where T : MonoBehaviour
     {
+        [AutoStaticsCleanup]
         public static T i { get; private set; }
 
         private void Awake()
@@ -72,5 +74,7 @@ namespace UnknownCreator.Modules
         }
 
         protected virtual void OnAwake() { }
+
+
     }
 }

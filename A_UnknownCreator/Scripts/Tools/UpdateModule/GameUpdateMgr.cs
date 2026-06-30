@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 namespace UnknownCreator.Modules
 {
+    [Serializable]
     public sealed class GameUpdateMgr : IUpdateMgr
     {
         private List<IOnUpdate> updataList = new();

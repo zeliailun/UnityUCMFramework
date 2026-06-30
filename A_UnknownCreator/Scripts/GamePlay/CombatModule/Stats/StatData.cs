@@ -6,7 +6,6 @@ using UnityEngine.UIElements;
 
 namespace UnknownCreator.Modules
 {
-
     public sealed class StatData : IReference, INotifyBindablePropertyChanged
     {
         public object holder { private set; get; }
@@ -29,7 +28,8 @@ namespace UnknownCreator.Modules
 
                 var v = Math.Round(Math.Clamp(value, minValue, maxValue), 2, MidpointRounding.AwayFromZero);
 
-                if (Math.Abs(baseV - v) < 0.0001) return;
+                if (Math.Abs(baseV - v) < 0.0001)
+                    return;
 
                 baseV = v;
                 CalcStatsValue();
@@ -93,6 +93,28 @@ namespace UnknownCreator.Modules
         private string minName, maxName;
         private bool customMinStats, customMaxStats, isLinking, isRoundToInt;
 
+        // ========================= SoftCap 默认参数 =========================
+
+        // PercSoftCap：百分比软上限。
+        // 100 表示原始百分比加成 100% 以内不压缩，超过后开始递减收益。
+        private const double PercSoftCapStart = 100d;
+
+        // PercSoftCap 递减力度。
+        // 0.35 = 压得轻
+        // 0.45 = 中等，推荐
+        // 0.65 = 压得重
+        private const double PercSoftCapPower = 0.45d;
+
+        // SoftCapAdd：数值软上限。
+        // 50 表示原始数值加成 50 点以内不压缩，超过后开始递减收益。
+        private const double SoftCapAddStart = 50d;
+
+        // SoftCapAdd 递减力度。
+        // 0.35 = 压得轻
+        // 0.45 = 中等，推荐
+        // 0.65 = 压得重
+        private const double SoftCapAddPower = 0.45d;
+
         private UStatsComp cntlr;
         private Unit self;
 
@@ -102,7 +124,6 @@ namespace UnknownCreator.Modules
 
         private readonly Dictionary<StatsKeyByBuff, StatsCalc> buffKeys = new();
         private readonly Dictionary<StatsKeyByName, StatsCalc> nameKeys = new();
-
 
         public event EventHandler<BindablePropertyChangedEventArgs> propertyChanged;
 
@@ -116,7 +137,6 @@ namespace UnknownCreator.Modules
             this.cntlr = cntlr;
             this.self = self;
             this.holder = holder;
-
 
             idName = cfg.idName;
             canCalcValue = cfg.canCalcValue;
@@ -163,7 +183,6 @@ namespace UnknownCreator.Modules
             CalcStatsValue();
         }
 
-
         public void AddOrUpdateBuff(BuffBase buff, CalcType calcType, double value, bool isStatsStacked)
         {
             if (buff == null)
@@ -177,16 +196,13 @@ namespace UnknownCreator.Modules
 
             // =========================================================
             // 不可堆叠：
-            // 同名 + 同计算类型，只保留一条 StatsCalc
-            // 重复添加时只更新数值，并把归属 buff 切换成最新 buff
+            // 同名 + 同计算类型，只保留一条 StatsCalc。
+            // 重复添加时只更新数值，并把归属 buff 切换成最新 buff。
             // =========================================================
             if (!isStatsStacked && nameKeys.TryGetValue(nameKey, out var existByName))
             {
                 bool changed = false;
 
-                // 如果这次传进来的 buff 不是旧 buff，
-                // 说明是同名 buff 重新刷新 / 替换了来源。
-                // 这时要把 buffKeys 从旧 buff 改绑到新 buff。
                 if (!ReferenceEquals(existByName.buff, buff))
                 {
                     if (existByName.buff != null)
@@ -284,7 +300,6 @@ namespace UnknownCreator.Modules
             return true;
         }
 
-
         public void Clear()
         {
             buffKeys.Clear();
@@ -295,7 +310,9 @@ namespace UnknownCreator.Modules
             {
                 var sc = calcList[i];
                 calcList.RemoveAt(i);
-                if (sc != null) Mgr.RPool.Release(sc);
+
+                if (sc != null)
+                    Mgr.RPool.Release(sc);
             }
 
             bonusValue = 0;
@@ -303,6 +320,32 @@ namespace UnknownCreator.Modules
         }
 
         // ========================= 核心计算 =========================
+
+        /// <summary>
+        /// 无限递减收益。
+        ///
+        /// softStart 以内不压缩。
+        /// 超过 softStart 后开始递减。
+        /// 不会有固定上限，可以无限叠加，只是越叠收益越低。
+        /// </summary>
+        private static double ApplyInfiniteDiminishing(double raw, double softStart, double power)
+        {
+            if (Math.Abs(raw) < 0.0001)
+                return 0;
+
+            double sign = Math.Sign(raw);
+            double abs = Math.Abs(raw);
+
+            if (abs <= softStart)
+                return raw;
+
+            double excess = abs - softStart;
+
+            double effectiveExcess =
+                excess / Math.Pow(1d + excess / softStart, power);
+
+            return sign * (softStart + effectiveExcess);
+        }
 
         private void CalcStatsValue()
         {
@@ -345,19 +388,24 @@ namespace UnknownCreator.Modules
             }
 
             // =========================================================
-            // 开始计算
+            // 收集所有属性修改
             // =========================================================
 
             double value = baseValue;
 
             double linearAdd = 0;
-            double percLinearSum = 0;
+            double softCapAddSum = 0;
 
+            double hyperbolicAddPositiveRemain = 1;
+            double hyperbolicAddNegativeRemain = 1;
+
+            double percLinearSum = 0;
             double percMulFactor = 1;
 
-            double hyperbolicRemain = 1;
+            double hyperbolicPositiveRemain = 1;
+            double hyperbolicNegativeRemain = 1;
 
-            double softCapSum = 0;
+            double percSoftCapSum = 0;
 
             double constantValue = double.NaN;
 
@@ -386,6 +434,36 @@ namespace UnknownCreator.Modules
                         }
 
                     // =================================================
+                    // 数值 SoftCap 加法
+                    // 默认 0 的属性也能生效
+                    // 可以无限叠加，但越叠收益越低
+                    // =================================================
+
+                    case CalcType.SoftCapAdd:
+                        {
+                            softCapAddSum += calc.value;
+                            break;
+                        }
+
+                    // =================================================
+                    // 双曲递减加法
+                    // 默认 0 的属性也能生效
+                    // 有效值趋近 100
+                    // =================================================
+
+                    case CalcType.HyperbolicAdd:
+                        {
+                            double p = Math.Clamp(calc.value / 100d, -0.9999d, 0.9999d);
+
+                            if (p >= 0)
+                                hyperbolicAddPositiveRemain *= 1 - p;
+                            else
+                                hyperbolicAddNegativeRemain *= 1 - Math.Abs(p);
+
+                            break;
+                        }
+
+                    // =================================================
                     // 百分比线性加法
                     // 10% + 10% = 20%
                     // =================================================
@@ -408,24 +486,33 @@ namespace UnknownCreator.Modules
                         }
 
                     // =================================================
-                    // 双曲递减
-                    // 1 - (1-p)^n
+                    // 百分比双曲递减
+                    // 正数趋近 +100%
+                    // 负数趋近 -100%
+                    // 最后作为倍率乘到 value 上
                     // =================================================
 
                     case CalcType.PercHyperbolic:
                         {
-                            hyperbolicRemain *= 1 - calc.value / 100d;
+                            double p = Math.Clamp(calc.value / 100d, -0.9999d, 0.9999d);
+
+                            if (p >= 0)
+                                hyperbolicPositiveRemain *= 1 - p;
+                            else
+                                hyperbolicNegativeRemain *= 1 - Math.Abs(p);
+
                             break;
                         }
 
                     // =================================================
-                    // SoftCap
-                    // 越高收益越低
+                    // 百分比 SoftCap
+                    // 作为百分比倍率乘到 value 上
+                    // 可以无限叠加，但越叠收益越低
                     // =================================================
 
                     case CalcType.PercSoftCap:
                         {
-                            softCapSum += calc.value;
+                            percSoftCapSum += calc.value;
                             break;
                         }
                 }
@@ -437,58 +524,115 @@ namespace UnknownCreator.Modules
 
             if (!double.IsNaN(constantValue))
             {
+                // Constant 是绝对覆盖，不再吃其他加成。
                 value = constantValue;
             }
             else
             {
                 // =====================================================
-                // 线性加法
+                // 1. 线性加法
+                // Base + LinearAdd
                 // =====================================================
 
                 value += linearAdd;
 
                 // =====================================================
-                // 百分比线性
+                // 2. 数值 SoftCap 加法
+                //
+                // 适合默认值为 0 的属性：
+                // 暴击率、闪避率、吸血、冷却缩减等。
+                //
+                // 可以无限叠加，但越叠收益越低。
                 // =====================================================
 
-                value *= (100d + percLinearSum) / 100d;
-
-                // =====================================================
-                // 百分比乘算
-                // =====================================================
-
-                value *= percMulFactor;
-
-                // =====================================================
-                // 双曲递减
-                // =====================================================
-
-                if (hyperbolicRemain < 1)
+                if (Math.Abs(softCapAddSum) > 0.0001)
                 {
-                    double hyperbolicPercent = 1 - hyperbolicRemain;
+                    double effective = ApplyInfiniteDiminishing(
+                        softCapAddSum,
+                        SoftCapAddStart,
+                        SoftCapAddPower);
+
+                    value += effective;
+                }
+
+                // =====================================================
+                // 3. 双曲递减加法
+                //
+                // 适合默认值为 0，并且最终希望趋近 100 的属性：
+                // 暴击率、闪避率、减伤率、冷却缩减、抗性等。
+                //
+                // 例如：
+                // +10 和 +10 不是 +20，而是 +19。
+                // =====================================================
+
+                if (hyperbolicAddPositiveRemain < 1 || hyperbolicAddNegativeRemain < 1)
+                {
+                    double positivePercent = 1 - hyperbolicAddPositiveRemain;
+                    double negativePercent = 1 - hyperbolicAddNegativeRemain;
+
+                    double hyperbolicAddValue =
+                        (positivePercent - negativePercent) * 100d;
+
+                    value += hyperbolicAddValue;
+                }
+
+                // =====================================================
+                // 4. 百分比线性加法
+                // 多个百分比先相加，再统一乘算。
+                // =====================================================
+
+                if (Math.Abs(percLinearSum) > 0.0001)
+                    value *= (100d + percLinearSum) / 100d;
+
+                // =====================================================
+                // 5. 百分比乘算
+                // 每条百分比独立乘算。
+                // =====================================================
+
+                if (Math.Abs(percMulFactor - 1) > 0.0001)
+                    value *= percMulFactor;
+
+                // =====================================================
+                // 6. 百分比双曲递减
+                //
+                // 正数有效收益趋近 +100%。
+                // 负数有效收益趋近 -100%。
+                //
+                // 最后作为倍率乘到 value 上。
+                // =====================================================
+
+                if (hyperbolicPositiveRemain < 1 || hyperbolicNegativeRemain < 1)
+                {
+                    double positivePercent = 1 - hyperbolicPositiveRemain;
+                    double negativePercent = 1 - hyperbolicNegativeRemain;
+
+                    double hyperbolicPercent = positivePercent - negativePercent;
 
                     value *= 1 + hyperbolicPercent;
                 }
 
                 // =====================================================
-                // SoftCap
+                // 7. 百分比 SoftCap
+                //
+                // 适合攻击力%、移速%、范围%、射速% 等有基础值的属性。
+                // 可以无限叠加，但越叠收益越低。
+                //
+                // 最后作为倍率乘到 value 上。
                 // =====================================================
 
-                if (Math.Abs(softCapSum) > 0.0001)
+                if (Math.Abs(percSoftCapSum) > 0.0001)
                 {
-                    // 你可以调这个
-                    const double softCapStrength = 0.015;
-
-                    double effective =
-                        softCapSum /
-                        (1 + Math.Abs(softCapSum) * softCapStrength);
+                    double effective = ApplyInfiniteDiminishing(
+                        percSoftCapSum,
+                        PercSoftCapStart,
+                        PercSoftCapPower);
 
                     value *= (100d + effective) / 100d;
                 }
             }
 
             // =========================================================
-            // Clamp
+            // Clamp + Round
             // =========================================================
 
             double clamped = Math.Clamp(value, minValue, maxValue);
@@ -561,8 +705,28 @@ namespace UnknownCreator.Modules
         void IReference.ObjRelease()
         {
             Clear();
-            baseV = bonusV = 0;
+
+            baseV = 0;
+            bonusV = 0;
+            finalV = 0;
+            minV = 0;
+            maxV = 0;
+
+            minName = string.Empty;
+            maxName = string.Empty;
             idName = string.Empty;
+
+            customMinStats = false;
+            customMaxStats = false;
+            isLinking = false;
+            isRoundToInt = false;
+
+            canCalcValue = false;
+            canChangeValue = false;
+            defaultValue = 0;
+
+            linkNames.Clear();
+
             propertyChanged = null;
             holder = null;
             cntlr = null;

@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
+    [Serializable]
     public sealed class JsonDataMgr : IJsonDataMgr
     {
         private readonly Dictionary<string, object> _dataDict = new();

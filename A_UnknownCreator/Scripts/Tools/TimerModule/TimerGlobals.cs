@@ -6,15 +6,9 @@ namespace UnknownCreator.Modules
     {
         public const long InvalidTimerID = -1;
 
-        public static bool IsValid(this ITimer timer)
-        {
-            return timer != null && Mgr.Timer.HasTimer(timer);
-        }
-
-        public static bool IsAlive(this ITimer timer)
-        {
-            return timer != null && Mgr.Timer.HasTimer(timer);
-        }
+        // =========================================================
+        // ID 扩展
+        // =========================================================
 
         public static bool IsValid(this long timerID)
         {
@@ -26,43 +20,39 @@ namespace UnknownCreator.Modules
             return timerID != InvalidTimerID && Mgr.Timer.HasTimer(timerID);
         }
 
-        public static long GetTimerID(this ITimer timer)
-        {
-            return timer?.id ?? InvalidTimerID;
-        }
-
-        public static void DestroySelf(this ITimer timer)
-        {
-            Mgr.Timer.RemoveTimer(timer);
-        }
-
         public static void DestroySelf(this ref long timerID)
         {
-            Mgr.Timer.RemoveTimer(timerID);
+            if (timerID != InvalidTimerID)
+                Mgr.Timer.RemoveTimer(timerID);
+
             timerID = InvalidTimerID;
         }
 
-        private static long ToTimerID(ITimer timer)
-        {
-            return timer?.id ?? InvalidTimerID;
-        }
-
-        private static void LogAutoRemoveWarning(bool isRemove)
-        {
-            if (isRemove)
-                UCMDebug.LogWarning("注意自动销毁时，外部引用要赋为NULL,否则会引发对象池错误");
-        }
+        // =========================================================
+        // Handle 扩展
+        // =========================================================
 
         public static TimerHandle<T> ToHandle<T>(this ITimer timer) where T : class, ITimer
         {
             return new TimerHandle<T>(timer as T);
         }
 
+
         // =========================================================
-        // 帧计时器 - 返回 ITimer
+        // 内部工具
         // =========================================================
 
-        public static ITimer CycleFrame(
+        private static long ToTimerID<T>(TimerHandle<T> handle) where T : class, ITimer
+        {
+            return handle.idValue;
+        }
+
+
+        // =========================================================
+        // 帧计时器 - 返回 Handle
+        // =========================================================
+
+        public static TimerHandle<TimerFrameCycle> CycleFrameHandle(
             this ITimerMgr mgr,
             int frameCount,
             bool isRemove,
@@ -76,12 +66,10 @@ namespace UnknownCreator.Modules
             timer.isApplyTimeScale = isApplyTimeScale;
             timer.onCompleted = onCompleted;
 
-            LogAutoRemoveWarning(isRemove);
-
-            return mgr.CreateTimer(timer);
+            return mgr.CreateTimer(timer).ToHandle<TimerFrameCycle>();
         }
 
-        // 帧计时器 - 返回 long id
+        // 帧计时器 - 返回 ID
         public static long CycleFrameID(
             this ITimerMgr mgr,
             int frameCount,
@@ -89,20 +77,18 @@ namespace UnknownCreator.Modules
             Action<TimerFrameCycle> onCompleted = null,
             bool isApplyTimeScale = true)
         {
-            ITimer timer = mgr.CycleFrame(
+            return ToTimerID(mgr.CycleFrameHandle(
                 frameCount,
                 isRemove,
                 onCompleted,
-                isApplyTimeScale);
-
-            return ToTimerID(timer);
+                isApplyTimeScale));
         }
 
         // =========================================================
-        // 固定次数间隔循环 - 返回 ITimer
+        // 固定次数间隔循环 - 返回 Handle
         // =========================================================
 
-        public static ITimer CycleCount(
+        public static TimerHandle<TimerCountCycle> CycleCountHandle(
             this ITimerMgr mgr,
             int loopNum,
             float delay,
@@ -120,12 +106,10 @@ namespace UnknownCreator.Modules
             timer.onTrigger = onTrigger;
             timer.onCompleted = onCompleted;
 
-            LogAutoRemoveWarning(isRemove);
-
-            return mgr.CreateTimer(timer);
+            return mgr.CreateTimer(timer).ToHandle<TimerCountCycle>();
         }
 
-        // 固定次数间隔循环 - 返回 long id
+        // 固定次数间隔循环 - 返回 ID
         public static long CycleCountID(
             this ITimerMgr mgr,
             int loopNum,
@@ -135,22 +119,20 @@ namespace UnknownCreator.Modules
             Action<TimerCountCycle> onCompleted = null,
             bool isApplyTimeScale = true)
         {
-            ITimer timer = mgr.CycleCount(
+            return ToTimerID(mgr.CycleCountHandle(
                 loopNum,
                 delay,
                 isRemove,
                 onTrigger,
                 onCompleted,
-                isApplyTimeScale);
-
-            return ToTimerID(timer);
+                isApplyTimeScale));
         }
 
         // =========================================================
-        // 无限延迟循环 - 返回 ITimer
+        // 无限延迟循环 - 返回 Handle
         // =========================================================
 
-        public static ITimer CycleDelay(
+        public static TimerHandle<TimerDelayCycle> CycleDelayHandle(
             this ITimerMgr mgr,
             float delay,
             Action<TimerDelayCycle> onTrigger,
@@ -162,29 +144,27 @@ namespace UnknownCreator.Modules
             timer.isApplyTimeScale = isApplyTimeScale;
             timer.onTrigger = onTrigger;
 
-            return mgr.CreateTimer(timer);
+            return mgr.CreateTimer(timer).ToHandle<TimerDelayCycle>();
         }
 
-        // 无限延迟循环 - 返回 long id
+        // 无限延迟循环 - 返回 ID
         public static long CycleDelayID(
             this ITimerMgr mgr,
             float delay,
             Action<TimerDelayCycle> onTrigger,
             bool isApplyTimeScale = true)
         {
-            ITimer timer = mgr.CycleDelay(
+            return ToTimerID(mgr.CycleDelayHandle(
                 delay,
                 onTrigger,
-                isApplyTimeScale);
-
-            return ToTimerID(timer);
+                isApplyTimeScale));
         }
 
         // =========================================================
-        // 二段循环计时器 - 返回 ITimer
+        // 二段循环计时器 - 返回 Handle
         // =========================================================
 
-        public static ITimer CycleTwoStage(
+        public static TimerHandle<TimerTwoStageCycle> CycleTwoStageHandle(
             this ITimerMgr mgr,
             float delay1,
             float delay2,
@@ -198,10 +178,10 @@ namespace UnknownCreator.Modules
             timer.isApplyTimeScale = isApplyTimeScale;
             timer.onTrigger = onTrigger;
 
-            return mgr.CreateTimer(timer);
+            return mgr.CreateTimer(timer).ToHandle<TimerTwoStageCycle>();
         }
 
-        // 二段循环计时器 - 返回 long id
+        // 二段循环计时器 - 返回 ID
         public static long CycleTwoStageID(
             this ITimerMgr mgr,
             float delay1,
@@ -209,20 +189,18 @@ namespace UnknownCreator.Modules
             Action<TimerTwoStageCycle> onTrigger,
             bool isApplyTimeScale = true)
         {
-            ITimer timer = mgr.CycleTwoStage(
+            return ToTimerID(mgr.CycleTwoStageHandle(
                 delay1,
                 delay2,
                 onTrigger,
-                isApplyTimeScale);
-
-            return ToTimerID(timer);
+                isApplyTimeScale));
         }
 
         // =========================================================
-        // 补间计时器 - 返回 ITimer
+        // 补间计时器 - 返回 Handle
         // =========================================================
 
-        public static ITimer Custom(
+        public static TimerHandle<TimerTween> CustomHandle(
             this ITimerMgr mgr,
             float start,
             float end,
@@ -250,7 +228,7 @@ namespace UnknownCreator.Modules
                 isApplyTimeScale);
         }
 
-        // 补间计时器 - 返回 long id
+        // 补间计时器 - 返回 ID
         public static long CustomID(
             this ITimerMgr mgr,
             float start,
@@ -263,7 +241,7 @@ namespace UnknownCreator.Modules
             EaseTypes type = EaseTypes.Linear,
             bool isApplyTimeScale = true)
         {
-            ITimer timer = mgr.Custom(
+            return ToTimerID(mgr.CustomHandle(
                 start,
                 end,
                 duration,
@@ -272,16 +250,14 @@ namespace UnknownCreator.Modules
                 onValueChanged,
                 onCompleted,
                 type,
-                isApplyTimeScale);
-
-            return ToTimerID(timer);
+                isApplyTimeScale));
         }
 
         // =========================================================
-        // 带泛型数据的补间计时器 - 返回 ITimer
+        // 带泛型数据的补间计时器 - 返回 Handle
         // =========================================================
 
-        public static ITimer Custom<T>(
+        public static TimerHandle<TimerTween<T>> CustomHandle<T>(
             this ITimerMgr mgr,
             T t,
             float start,
@@ -311,7 +287,7 @@ namespace UnknownCreator.Modules
                 isApplyTimeScale);
         }
 
-        // 带泛型数据的补间计时器 - 返回 long id
+        // 带泛型数据的补间计时器 - 返回 ID
         public static long CustomID<T>(
             this ITimerMgr mgr,
             T t,
@@ -325,7 +301,7 @@ namespace UnknownCreator.Modules
             EaseTypes type = EaseTypes.Linear,
             bool isApplyTimeScale = true)
         {
-            ITimer timer = mgr.Custom(
+            return ToTimerID(mgr.CustomHandle(
                 t,
                 start,
                 end,
@@ -335,14 +311,16 @@ namespace UnknownCreator.Modules
                 onValueChanged,
                 onCompleted,
                 type,
-                isApplyTimeScale);
-
-            return ToTimerID(timer);
+                isApplyTimeScale));
         }
 
-        private static ITimer CreateCustomTimer(
+        // =========================================================
+        // Custom 公共创建逻辑
+        // =========================================================
+
+        private static TimerHandle<TTimer> CreateCustomTimer<TTimer>(
             ITimerMgr mgr,
-            TimerTween timer,
+            TTimer timer,
             float start,
             float end,
             float duration,
@@ -352,6 +330,7 @@ namespace UnknownCreator.Modules
             Delegate onCompleted,
             EaseTypes type,
             bool isApplyTimeScale)
+            where TTimer : TimerTween
         {
             timer.startValue = start;
             timer.endValue = end;
@@ -363,9 +342,7 @@ namespace UnknownCreator.Modules
             timer.onValueChanged = onValueChanged;
             timer.onCompleted = onCompleted;
 
-            LogAutoRemoveWarning(isRemove);
-
-            return mgr.CreateTimer(timer);
+            return mgr.CreateTimer(timer).ToHandle<TTimer>();
         }
     }
 }

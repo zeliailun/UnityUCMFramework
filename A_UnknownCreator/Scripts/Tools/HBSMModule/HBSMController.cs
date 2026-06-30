@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 namespace UnknownCreator.Modules
 {
+    [Serializable]
     public class HBSMController : IReference, IHBSMController
     {
         private Dictionary<string, IStateMachine> hfsmDict = new();

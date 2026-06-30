@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
+    [Serializable]
     public sealed class VfxMgr : IVfxMgr
     {
         private Dictionary<EntityId, IVfx> vfxDict = new();

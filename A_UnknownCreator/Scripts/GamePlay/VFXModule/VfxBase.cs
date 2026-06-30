@@ -14,7 +14,7 @@ namespace UnknownCreator.Modules
 
         public virtual bool isPlaying => !isRelease && rootObj != null && rootObj.activeSelf;
 
-        private ITimer timer;
+        private TimerHandle<TimerCountCycle> timer;
         private bool isFollowing;
         private Transform followTarget;
         private Vector3 followOffset;
@@ -41,7 +41,7 @@ namespace UnknownCreator.Modules
             ClearTimer();
 
             if (delay > 0f)
-                timer = Mgr.Timer.CycleCount(1, delay, false, Destroy);
+                timer = Mgr.Timer.CycleCountHandle(1, delay, false, Destroy);
             else
                 Destroy(null);
         }
@@ -142,10 +142,7 @@ namespace UnknownCreator.Modules
 
         private void ClearTimer()
         {
-            if (timer != null && timer.IsValid())
-                timer.DestroySelf();
-
-            timer = null;
+            timer.Destroy();
         }
 
         private void ClearFollowState()

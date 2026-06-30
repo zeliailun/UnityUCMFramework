@@ -190,8 +190,8 @@ namespace UnknownCreator.Modules
             data.ability?.OnProjectileDestroy(this);
             GameEvtBus.Send<EvtProjectileDestroy>(new(this, data, kv, data.owner));
             hitResults.Clear();
-            Mgr.RPool.Release(check);
             Mgr.RPool.Release(mvt);
+            Mgr.RPool.Release(check);
             Mgr.GPool.Release(data.projName, obj);
             Mgr.RPool.Release(data);
             Mgr.RPool.Release(kv);

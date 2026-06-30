@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace UnknownCreator.Modules
 {
+    [Serializable]
     public sealed class TimerMgr : ITimerMgr
     {
         internal List<ITimer> timerList = new();
@@ -79,13 +80,7 @@ namespace UnknownCreator.Modules
 
         public void RemoveTimer(long id)
         {
-            var value = GetTimer(id);
-            if (value != null)
-            {
-                dict.Remove(id);
-                timerList.Remove(value);
-                Mgr.RPool.Release(value);
-            }
+            RemoveTimer(GetTimer(id));
         }
 
         public void RemoveTimer(ITimer timer)
@@ -112,18 +107,52 @@ namespace UnknownCreator.Modules
 
         public void ClearAllTimer()
         {
-            dict.Clear();
+            if (dict != null)
+                dict.Clear();
 
-            for (int i = timerList.Count - 1; i >= 0; i--)
+            if (timerList == null)
+            {
+                pendingReleaseList.Clear();
+                needCompact = false;
+                return;
+            }
+
+            // 如果正在 Update 中，不能立刻 Remove / Release。
+            // 否则会破坏 timerList 的倒序遍历。
+            if (isUpdating)
+            {
+                for (int i = 0; i < timerList.Count; i++)
+                {
+                    ITimer timer = timerList[i];
+                    if (timer == null)
+                        continue;
+
+                    timerList[i] = null;
+
+                    if (!pendingReleaseList.Contains(timer))
+                        pendingReleaseList.Add(timer);
+                }
+
+                needCompact = true;
+                return;
+            }
+
+            // 非 Update 状态，可以直接释放。
+            for (int i = 0; i < timerList.Count; i++)
             {
                 ITimer timer = timerList[i];
-                if (timer == null) continue;
+                if (timer == null)
+                    continue;
 
-                timerList.RemoveAt(i);
                 Mgr.RPool.Release(timer);
             }
 
+            timerList.Clear();
+
+            // 理论上非 Update 状态 pendingReleaseList 应该是空的，
+            // 这里清一下是为了防御异常状态。
             pendingReleaseList.Clear();
+
             needCompact = false;
             isUpdating = false;
         }
@@ -169,32 +198,6 @@ namespace UnknownCreator.Modules
             timerList.Add(timer);
 
             return timer;
-        }
-
-        private void FlushPendingRelease()
-        {
-            for (int i = 0; i < pendingReleaseList.Count; i++)
-            {
-                ITimer timer = pendingReleaseList[i];
-                if (timer == null) continue;
-
-                try
-                {
-                    Mgr.RPool.Release(timer);
-                }
-                catch (Exception e)
-                {
-                    UCMDebug.LogError($"Timer Release 异常: {e}");
-                }
-            }
-
-            pendingReleaseList.Clear();
-
-            if (needCompact)
-            {
-                needCompact = false;
-                timerList.RemoveAll(t => t == null);
-            }
         }
     }
 

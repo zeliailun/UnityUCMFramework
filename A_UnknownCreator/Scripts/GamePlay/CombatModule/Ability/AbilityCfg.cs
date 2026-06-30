@@ -91,10 +91,12 @@ namespace UnknownCreator.Modules
         [JsonMark]
         [field: SerializeField]
         public SerializableDictionaryRef<string, IAbilityKV> statsKV { internal set; get; } = new();
+
         [JsonMark]
         [field: SerializeField]
+#pragma warning disable UAC1001
         public SerializableDictionaryRef<string, object> dataKV { internal set; get; } = new();
-
+#pragma warning restore UAC1001
     }
 }
 

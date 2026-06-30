@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 
 namespace UnknownCreator.Modules
 {
+    [Serializable]
     public sealed class UnitMgr : IUnitMgr
     {
         // private UnitMgr() { }
@@ -78,17 +80,11 @@ namespace UnknownCreator.Modules
             unitExpListCache.Clear();
 
             if (this.expBuilder == null)
-            {
-                UCMDebug.LogWarning("UnitExpBuilder 未配置，无法生成全局单位经验表");
                 return;
-            }
 
             var list = this.expBuilder.ExpBuilder(unitMaxLevel);
             if (list == null)
-            {
-                UCMDebug.LogWarning("UnitExpBuilder 生成的经验表为空");
                 return;
-            }
 
             unitExpListCache.AddRange(list);
         }

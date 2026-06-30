@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 
 namespace UnknownCreator.Modules
 {
+    [Serializable]
     public sealed class LoadSceneMgr : ILoadSceneMgr
     {
         private List<LoadingScene> loadSceneList = new();

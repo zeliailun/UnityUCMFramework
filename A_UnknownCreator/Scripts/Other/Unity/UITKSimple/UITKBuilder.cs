@@ -29,6 +29,7 @@ namespace UnknownCreator.Modules
 
         protected override void OnDestroy()
         {
+
             UITKMgr.RemoveBuilder(this);
             hbsm.ReleaseAllHBSM();
             hbsm = null;
@@ -41,7 +42,6 @@ namespace UnknownCreator.Modules
 
             if (hbsm is null)
             {
-                UCMDebug.Log(idName + "UI加载完毕");
                 hbsm = new();
                 hbsm.kv.AddValue(nameof(UITKBuilder), this);
                 hbsm.kv.AddValue(nameof(VisualElement), root);

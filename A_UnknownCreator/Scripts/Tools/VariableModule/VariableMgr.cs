@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 namespace UnknownCreator.Modules
 {
+    [Serializable]
     public class VariableMgr : IReference, IVariableMgr
     {
         internal Dictionary<string, IVariable> varDict = new();

@@ -1,8 +1,10 @@
-﻿using Unity.Cinemachine;
+﻿using System;
+using Unity.Cinemachine;
 using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
+    [Serializable]
     public sealed class CameraMgr : ICameraMgr
     {
         public IHBSMController hfsm { private set; get; }

@@ -32,8 +32,6 @@ namespace UnknownCreator.Modules
         void RemoveControllerTarget(GameObject target);
 
         void SetControllerTargets(GameObject target);
-        void SetInput(IInputActionCollection2 actionInput);
-        void SetInput<T>() where T : IInputActionCollection2, new();
         T GetInput<T>() where T : IInputActionCollection2;
         GameObject GetFirstTarget();
         GameObject GetTargetByIndex(int index);

@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
+    [Serializable]
     public sealed partial class EntityMgr : IEntityMgr
     {
         internal Dictionary<EntityId, IEntity> entityDict = new();

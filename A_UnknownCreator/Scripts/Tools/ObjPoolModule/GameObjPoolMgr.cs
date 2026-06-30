@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 namespace UnknownCreator.Modules
 {
+    [Serializable]
     public sealed class GameObjPoolMgr : IGameObjPoolMgr
     {
         internal GameObject root;
@@ -37,7 +39,7 @@ namespace UnknownCreator.Modules
             newObjPoolSet ??= new();
 
             root = new GameObject(nameof(GameObjPoolMgr));
-            Object.DontDestroyOnLoad(root);
+            UnityEngine.Object.DontDestroyOnLoad(root);
         }
 
         void IDearMgr.UpdateMGR()
@@ -51,7 +53,7 @@ namespace UnknownCreator.Modules
         void IDearMgr.DoNothing()
         {
             DestroyAll();
-            Object.Destroy(root);
+            UnityEngine.Object.Destroy(root);
             root = null;
             gameObjPool = null;
             poolList = null;
@@ -93,7 +95,7 @@ namespace UnknownCreator.Modules
             var pool = CreatePool(name, true, false, info);
             for (int i = 0; i < count; i++)
             {
-                pool.Preload(Object.Instantiate(go));
+                pool.Preload(UnityEngine.Object.Instantiate(go));
             }
         }
 
@@ -201,7 +203,7 @@ namespace UnknownCreator.Modules
             foreach (var pool in newObjPool.Values)
             {
                 while (pool.Count > 0)
-                    Object.Destroy(pool.Pop());
+                    UnityEngine.Object.Destroy(pool.Pop());
             }
             newObjPool.Clear();
             newObjPoolSet.Clear();

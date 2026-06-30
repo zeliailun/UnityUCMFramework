@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace UnknownCreator.Modules
 {
+    [Serializable]
     public sealed class DamageMgr : IDamageMgr
     {
         private Dictionary<EntityId, IHealth> hurtDict = new();

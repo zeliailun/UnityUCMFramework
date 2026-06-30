@@ -164,7 +164,7 @@ namespace UnknownCreator.Modules
     {
     }
 
-    // 引用字典
+    // 引用字典 用于多态 / 接口 / 抽象类
     [Serializable]
     public class SerializableDictionaryRef<TKey, TValue> : SerializableDictionaryBase<TKey, TValue, SerializedDictionaryKVPPropsRef<TKey, TValue>>
     {
