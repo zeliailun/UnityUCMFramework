@@ -9,10 +9,6 @@ namespace UnknownCreator.Modules
     public sealed class JsonDataMgr : IJsonDataMgr
     {
         private readonly Dictionary<string, object> _dataDict = new();
-
-        // 简化锁设计：
-        // 1. 移除 ReaderWriterLockSlim，避免过度设计和额外维护成本
-        // 2. 使用一个实例级锁统一保护内存字典和文件操作，逻辑更一致，也更不容易出并发问题
         private readonly object _lock = new();
 
         public string path { get; private set; }

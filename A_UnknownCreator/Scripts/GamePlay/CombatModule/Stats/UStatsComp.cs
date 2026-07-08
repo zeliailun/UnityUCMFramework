@@ -38,7 +38,7 @@ namespace UnknownCreator.Modules
         }
 
         public StatData GetStat(string name)
-        => statsDict.TryGetValue(name, out var data) ? data[0] : null;
+        => statsDict.TryGetValue(name, out var data) && data.Count > 0 ? data[0] : null;
 
         public double GetStatsValue(string name)
         => GetStat(name)?.finalValue ?? 0;
