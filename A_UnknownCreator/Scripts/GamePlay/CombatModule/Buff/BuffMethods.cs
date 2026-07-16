@@ -397,6 +397,7 @@ namespace UnknownCreator.Modules
             return false;
         }
 
+
         protected bool AddStats(string name, CalcType type, Func<double> callback)
         {
             var statKey = (name, type);

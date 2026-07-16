@@ -154,7 +154,7 @@ namespace UnknownCreator.Modules
             selfType = typeof(Unit);
 
             unitCfg = cfg;
-            ent = Mgr.GPool.Load(unitCfg.root, true, false);
+            ent = Mgr.GPool.Load(unitCfg.unitName, true, false);
             entName = ent.name;
             entID = ent.GetEntityId();
             entT = ent.GetComp<Transform>();
@@ -169,9 +169,9 @@ namespace UnknownCreator.Modules
         {
             animC = hbsm.AddComp<AnimComp>(true);
             statsC = hbsm.AddComp<UStatsComp>(true);
-            if (!string.IsNullOrWhiteSpace(unitCfg.statsGroup))
+            if (!string.IsNullOrWhiteSpace(unitCfg.statsGroupName))
             {
-                var list = Mgr.JD.GetData<Dictionary<string, List<OverrideStats>>>(JsonCfgKeyGlobals.StatsGroupJson)[unitCfg.statsGroup];
+                var list = Mgr.JD.GetData<Dictionary<string, List<OverrideStats>>>(JsonCfgKeyGlobals.StatsGroupJson)[unitCfg.statsGroupName];
                 StatsCfg st;
                 foreach (var item in list)
                 {
@@ -180,7 +180,7 @@ namespace UnknownCreator.Modules
                 }
             }
 
-            SetModel(unitCfg.model, true);
+            SetModel(unitCfg.modelName, true);
 
             stateC = hbsm.AddComp<UStateComp>(true);
             lvExpC = hbsm.AddComp<ULevelExpComp>(true);
@@ -227,7 +227,7 @@ namespace UnknownCreator.Modules
                 Mgr.GPool.Release(unitModelCfg.model, model);
 
             if (ent != null && unitCfg != null)
-                Mgr.GPool.Release(unitCfg.root, ent);
+                Mgr.GPool.Release(unitCfg.unitName, ent);
 
             if (hbsm != null)
                 Mgr.RPool.Release(hbsm);

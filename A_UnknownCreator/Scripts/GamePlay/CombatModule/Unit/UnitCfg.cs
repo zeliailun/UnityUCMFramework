@@ -10,17 +10,17 @@ namespace UnknownCreator.Modules
         public string cfgName { internal set; get; }
 
         [field: SerializeField]
-        public string root { internal set; get; }
+        public string unitName { internal set; get; }
 
         [field: SerializeField]
-        public string model { internal set; get; }
+        public string modelName { internal set; get; }
 
 
         [field: SerializeField]
-        public string statsGroup { internal set; get; }
+        public string statsGroupName { internal set; get; }
 
         [field: SerializeField]
-        public string defaultAnimGroup { internal set; get; }
+        public string defaultAnimGroupName { internal set; get; }
 
         [JsonMark]
         [SerializeField]

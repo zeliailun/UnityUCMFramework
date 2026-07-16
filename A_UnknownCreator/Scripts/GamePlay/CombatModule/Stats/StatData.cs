@@ -72,8 +72,9 @@ namespace UnknownCreator.Modules
                 if (!customMinStats || cntlr == null)
                     return minV;
 
-                var stat = cntlr.GetStat(minName);
-                return stat != null ? stat.finalValue : minV;
+                StatData stat = cntlr.GetHolderStats(minName, holder);
+
+                return stat?.finalValue ?? minV;
             }
         }
 
@@ -84,8 +85,9 @@ namespace UnknownCreator.Modules
                 if (!customMaxStats || cntlr == null)
                     return maxV;
 
-                var stat = cntlr.GetStat(maxName);
-                return stat != null ? stat.finalValue : maxV;
+                StatData stat = cntlr.GetHolderStats(maxName, holder);
+
+                return stat?.finalValue ?? maxV;
             }
         }
 
@@ -347,7 +349,7 @@ namespace UnknownCreator.Modules
             return sign * (softStart + effectiveExcess);
         }
 
-        private void CalcStatsValue()
+        internal void CalcStatsValue()
         {
             if (!canCalcValue)
             {
@@ -409,8 +411,9 @@ namespace UnknownCreator.Modules
 
             double constantValue = double.NaN;
 
-            foreach (var calc in calcList)
+            for (int i = calcList.Count - 1; i >= 0; i--)
             {
+                StatsCalc calc = calcList[i];
                 switch (calc.calcType)
                 {
                     // =================================================
@@ -637,10 +640,13 @@ namespace UnknownCreator.Modules
 
             double clamped = Math.Clamp(value, minValue, maxValue);
 
-            double newFinalValue =
-                isRoundToInt
+            double newFinalValue =isRoundToInt
                     ? Math.Round(clamped, 0, MidpointRounding.AwayFromZero)
                     : Math.Round(clamped, 2, MidpointRounding.AwayFromZero);
+
+
+            if (idName == KeyGlobals.Stats.FiringInterval)
+                UCMDebug.Log(cntlr.GetStat(minName));
 
             // =========================================================
             // 更新自身
@@ -649,8 +655,7 @@ namespace UnknownCreator.Modules
             finalValue = newFinalValue;
             bonusValue = finalValue - baseValue;
 
-            GameEvtBus.Send<EvtStatChanged>(
-                new(self, oldFinalValue, oldBonusValue, this));
+            GameEvtBus.Send<EvtStatChanged>(new(self, oldFinalValue, oldBonusValue, this));
 
             // =========================================================
             // 联动修改

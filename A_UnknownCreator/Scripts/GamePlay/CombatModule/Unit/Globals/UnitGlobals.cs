@@ -27,6 +27,9 @@ namespace UnknownCreator.Modules
         public static bool IsValid(this Unit obj)
         => obj != null && !Mgr.RPool.HasObject(type, obj);
 
+        public static bool IsValidAlive(this Unit obj)
+        => obj.IsValid() && obj.isAlive;
+
         public static bool IsSelf(this Unit obj, Unit target)
         {
             if (obj == null || target == null)

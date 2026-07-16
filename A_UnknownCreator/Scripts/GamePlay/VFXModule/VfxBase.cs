@@ -94,9 +94,18 @@ namespace UnknownCreator.Modules
             ClearFollowState();
         }
 
+        public void SetPosition(Vector3 pos)
+        {
+            if (isRelease || rootT == null)
+                return;
+
+            rootT.SetPositionAndRotation(pos, Quaternion.identity);
+        }
+
         public void SetParent(bool worldPositionStays)
         {
-            if (isRelease || owner == null || rootT == null) return;
+            if (isRelease || owner == null || rootT == null)
+                return;
 
             rootT.SetParent(owner.entT, worldPositionStays);
         }
@@ -151,5 +160,7 @@ namespace UnknownCreator.Modules
             followTarget = null;
             followOffset = Vector3.zero;
         }
+
+
     }
 }

@@ -10,7 +10,7 @@ namespace UnknownCreator.Modules
         FilterSlot<(Unit, double), bool> unitExpFilter { get; }
 
 
-        FilterSlot<EvtStatWillUpdate, bool> unitStatsFilter { get; }
+        FilterSlot<EvtStatWillUpdate, (bool, EvtStatWillUpdate)> unitStatsFilter { get; }
 
         int unitLayer { get; }
 

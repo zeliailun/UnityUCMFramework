@@ -26,19 +26,49 @@ namespace UnknownCreator.Modules
 
         public StatData GetHolderStats(string name, object holder)
         {
-            if (statsDict.TryGetValue(name, out var data))
+            if (string.IsNullOrWhiteSpace(name))
+                return null;
+
+            if (!statsDict.TryGetValue(name, out var data) ||
+                data == null)
             {
-                for (int i = 0; i < data.Count; i++)
-                {
-                    if (holder.Equals(data[i].holder))
-                        return data[i];
-                }
+                return null;
             }
+
+            for (int i = 0; i < data.Count; i++)
+            {
+                StatData stat = data[i];
+
+                if (stat == null)
+                    continue;
+
+                if (Equals(holder, stat.holder))
+                    return stat;
+            }
+
             return null;
         }
 
         public StatData GetStat(string name)
-        => statsDict.TryGetValue(name, out var data) && data.Count > 0 ? data[0] : null;
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return null;
+
+            if (!statsDict.TryGetValue(name, out var data) ||
+                data == null ||
+                data.Count < 1)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < data.Count; i++)
+            {
+                if (data[i] != null)
+                    return data[i];
+            }
+
+            return null;
+        }
 
         public double GetStatsValue(string name)
         => GetStat(name)?.finalValue ?? 0;
@@ -61,8 +91,9 @@ namespace UnknownCreator.Modules
 
             statsList.Add(sd);
 
-            // 新属性加入人物后，让已有 Buff 重新应用一次。
-            unit?.buffC?.RefreshAllBuffStats();
+            sd.CalcStatsValue();
+
+            unit.buffC.RefreshAllBuffStats();
 
             return sd;
         }
@@ -93,8 +124,18 @@ namespace UnknownCreator.Modules
             statsDict.Clear();
         }
 
+        public void RefreshBuffStats(string statName)
+        {
+            if (string.IsNullOrWhiteSpace(statName))
+                return;
+
+            self.As<Unit>()?.buffC?.RefreshAllBuffStats(statName);
+        }
+
         public void UpdateStats(BuffBase buff, string statsName, CalcType calcType, double value, bool isStatsStacked)
         {
+
+
             if (!statsDict.TryGetValue(statsName, out var data) ||
                 !data.IsValid())
                 return;
@@ -103,17 +144,25 @@ namespace UnknownCreator.Modules
 
             GameEvtBus.Send<EvtStatWillUpdate>(evt);
 
-            if (!statsDict.TryGetValue(statsName, out var data2) ||
-                !data2.IsValid() ||
-                !Mgr.Unit.unitStatsFilter.Invoke(evt))
+            (bool isOK, EvtStatWillUpdate filteredEvt) =
+                Mgr.Unit.unitStatsFilter.Invoke(evt);
+
+            if (!isOK ||
+                !filteredEvt.target.IsSelf(self.As<Unit>()) ||
+                !statsDict.TryGetValue(filteredEvt.statName, out var filteredData) ||
+                !filteredData.IsValid())
                 return;
 
             StatData sd;
-            for (int i = data.Count - 1; i >= 0; i--)
+            for (int i = filteredData.Count - 1; i >= 0; i--)
             {
-                sd = data[i];
+                sd = filteredData[i];
                 if (sd is null || !sd.canCalcValue) continue;
-                sd.AddOrUpdateBuff(buff, calcType, value, isStatsStacked);
+                sd.AddOrUpdateBuff(
+                    filteredEvt.buff,
+                    filteredEvt.calcType,
+                    filteredEvt.value,
+                    filteredEvt.isStatsStacked);
             }
         }
 

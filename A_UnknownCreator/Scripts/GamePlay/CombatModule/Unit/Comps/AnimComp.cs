@@ -29,7 +29,7 @@ namespace UnknownCreator.Modules
                     groupCfgDict.TryAdd(item.Key, Mgr.JD.GetData<Dictionary<string, List<AnimCfgInfo>>>(JsonCfgKeyGlobals.AnimJson)[item.Value]);
                 }
             }
-            ChangeAnimGroup(self.unitCfg.defaultAnimGroup);
+            ChangeAnimGroup(self.unitCfg.defaultAnimGroupName);
         }
 
         public override void ReleaseComp()

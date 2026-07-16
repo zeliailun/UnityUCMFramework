@@ -12,7 +12,7 @@ namespace UnknownCreator.Modules
 
         public FilterSlot<(Unit, double), bool> unitExpFilter { private set; get; }
 
-        public FilterSlot<EvtStatWillUpdate, bool> unitStatsFilter { private set; get; }
+        public FilterSlot<EvtStatWillUpdate, (bool, EvtStatWillUpdate)> unitStatsFilter { private set; get; }
 
 
         [field: SerializeField]

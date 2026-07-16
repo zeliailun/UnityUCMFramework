@@ -116,37 +116,21 @@ namespace UnknownCreator.Modules
             else
                 avatarMask = null;
 
-            //添加统计到组件
+
+            var statsCfgDict =
+                Mgr.JD.GetData<Dictionary<string, StatsCfg>>(
+                    JsonCfgKeyGlobals.StatsJson);
+
+            var addedStatsNames = new HashSet<string>();
+            var addingStatsNames = new HashSet<string>();
+
             foreach (var kv in abilityCfg.statsKV)
             {
-                var stCfg = Mgr.JD.GetData<Dictionary<string, StatsCfg>>(JsonCfgKeyGlobals.StatsJson)[kv.Key];
-
-                if (!statsKVDict.TryGetValue(kv.Key, out var statsList))
-                {
-                    statsList = new List<StatData>();
-                    statsKVDict[kv.Key] = statsList;
-                }
-
-
-                if (kv.Value.baseValue == null || kv.Value.baseValue.Count < 1)
-                {
-                    var stat = owner.statsC.AddStats(stCfg, 0, this);
-
-
-                    statsList.Add(stat);
-                    statsKVList.Add(stat);
-                }
-                else
-                {
-                    for (int x = 0; x < kv.Value.baseValue.Count; x++)
-                    {
-                        double value = kv.Value.baseValue[x];
-                        var stat = owner.statsC.AddStats(stCfg, value, this);
-                        statsList.Add(stat);
-                        statsKVList.Add(stat);
-                    }
-
-                }
+                AddAbilityStatsByDependency(
+                    kv.Key,
+                    statsCfgDict,
+                    addedStatsNames,
+                    addingStatsNames);
             }
 
 
@@ -261,6 +245,133 @@ namespace UnknownCreator.Modules
             {
                 OnOwnerRespawn();
             }
+        }
+
+        /// <summary>
+        /// 根据 StatsCfg 的最小值、最大值依赖顺序添加统计。
+        /// </summary>
+        private void AddAbilityStatsByDependency(string statsName,Dictionary<string, StatsCfg> statsCfgDict,HashSet<string> addedStatsNames,HashSet<string> addingStatsNames)
+        {
+            if (string.IsNullOrWhiteSpace(statsName))
+                return;
+
+            // 当前能力已经完整添加过这个统计。
+            if (addedStatsNames.Contains(statsName))
+                return;
+
+            // 当前 AbilityCfg 没有配置该统计。
+            //
+            // 例如 StatsCfg 设置了 minStatsName，
+            // 但当前能力没有 MinFiringInterval 数据，
+            // 那么不创建动态最小统计，StatData 会使用固定 minValue。
+            if (!abilityCfg.statsKV.TryGetValue(
+                    statsName,
+                    out var abilityKV))
+            {
+                return;
+            }
+
+            if (!statsCfgDict.TryGetValue(
+                    statsName,
+                    out StatsCfg statsCfg))
+            {
+                UCMDebug.LogWarning(
+                    $"{abName} 添加统计失败，没有找到 StatsCfg：{statsName}");
+
+                return;
+            }
+
+            // 防止配置循环：
+            //
+            // A.minStatsName = B
+            // B.maxStatsName = A
+            if (!addingStatsNames.Add(statsName))
+            {
+                UCMDebug.LogWarning(
+                    $"{abName} 检测到统计循环依赖：{statsName}");
+
+                return;
+            }
+
+            // =========================================================
+            // 1. 优先添加最小值统计
+            // =========================================================
+
+            AddAbilityStatsByDependency(
+                statsCfg.minStatsName,
+                statsCfgDict,
+                addedStatsNames,
+                addingStatsNames);
+
+            // =========================================================
+            // 2. 优先添加最大值统计
+            // =========================================================
+
+            // 最小值和最大值统计名称相同时，不重复处理。
+            if (!string.Equals(
+                    statsCfg.maxStatsName,
+                    statsCfg.minStatsName,
+                    StringComparison.Ordinal))
+            {
+                AddAbilityStatsByDependency(
+                    statsCfg.maxStatsName,
+                    statsCfgDict,
+                    addedStatsNames,
+                    addingStatsNames);
+            }
+
+            // =========================================================
+            // 3. 最后添加当前统计
+            // =========================================================
+
+            if (!statsKVDict.TryGetValue(
+                    statsName,
+                    out var statsList))
+            {
+                statsList = new List<StatData>();
+                statsKVDict.Add(statsName, statsList);
+            }
+
+            if (abilityKV.baseValue == null ||
+                abilityKV.baseValue.Count < 1)
+            {
+                AddAbilityStat(
+                    statsCfg,
+                    0,
+                    statsList);
+            }
+            else
+            {
+                for (int i = 0;
+                     i < abilityKV.baseValue.Count;
+                     i++)
+                {
+                    AddAbilityStat(
+                        statsCfg,
+                        abilityKV.baseValue[i],
+                        statsList);
+                }
+            }
+
+            addingStatsNames.Remove(statsName);
+            addedStatsNames.Add(statsName);
+        }
+
+        /// <summary>
+        /// 添加一条能力统计，并记录到能力自身的统计集合中。
+        /// </summary>
+        private void AddAbilityStat(StatsCfg statsCfg,double baseValue,List<StatData> statsList)
+        {
+            StatData stat = owner.statsC.AddStats(
+                statsCfg,
+                baseValue,
+                this);
+
+            if (stat == null)
+                return;
+
+            statsList.Add(stat);
+            statsKVList.Add(stat);
         }
 
         void IReference.ObjRelease()

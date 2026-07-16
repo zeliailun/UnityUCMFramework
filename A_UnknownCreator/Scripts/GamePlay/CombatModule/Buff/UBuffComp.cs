@@ -160,6 +160,35 @@ namespace UnknownCreator.Modules
             }
         }
 
+        public void RefreshAllBuffStats()
+        {
+            for (int i = buffList.Count - 1; i >= 0; i--)
+            {
+                var buff = buffList[i];
+
+                if (buff == null || buff.isRelease)
+                    continue;
+
+                buff.ForceUpdateStats();
+            }
+        }
+
+        public void RefreshAllBuffStats(string statName)
+        {
+            if (string.IsNullOrWhiteSpace(statName))
+                return;
+
+            for (int i = buffList.Count - 1; i >= 0; i--)
+            {
+                var buff = buffList[i];
+
+                if (buff == null || buff.isRelease)
+                    continue;
+
+                buff.ForceUpdateStats(statName);
+            }
+        }
+
         public void PurgableDebuff()
         => RemoveBuffByCondition((buff) => buff.IsDebuff() && buff.IsPurgable());
 
@@ -248,18 +277,7 @@ namespace UnknownCreator.Modules
             buffDict.Clear();
         }
 
-        internal void RefreshAllBuffStats()
-        {
-            for (int i = buffList.Count - 1; i >= 0; i--)
-            {
-                var buff = buffList[i];
 
-                if (buff == null || buff.isRelease)
-                    continue;
-
-                buff.ForceUpdateStats();
-            }
-        }
 
     }
 }

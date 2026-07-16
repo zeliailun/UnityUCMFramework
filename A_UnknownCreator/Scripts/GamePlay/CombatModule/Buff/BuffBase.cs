@@ -162,7 +162,15 @@ namespace UnknownCreator.Modules
             UpdateStats(true);
         }
 
-        private void UpdateStats(bool force)
+        internal void ForceUpdateStats(string statName)
+        {
+            if (string.IsNullOrWhiteSpace(statName))
+                return;
+
+            UpdateStats(true, statName);
+        }
+
+        private void UpdateStats(bool force, string targetStatName = null)
         {
             if (isRelease || statsList is null || statsList.Count == 0)
                 return;
@@ -177,12 +185,16 @@ namespace UnknownCreator.Modules
             for (int i = 0; i < statsList.Count; i++)
             {
                 name = statsList[i].name;
+
+                if (targetStatName != null && name != targetStatName)
+                    continue;
+
                 type = statsList[i].type;
                 value = statsList[i].callback();
                 key = (name, (int)type);
 
                 if (!force &&
-                    statsDict.TryGetValue(key, out var oldValue) &&
+                   statsDict.TryGetValue(key, out var oldValue) &&
                     Math.Abs(oldValue - value) < 0.0001)
                 {
                     continue;

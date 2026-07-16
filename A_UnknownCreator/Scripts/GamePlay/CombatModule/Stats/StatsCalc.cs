@@ -8,7 +8,6 @@ namespace UnknownCreator.Modules
 
         public CalcType calcType { get; set; }
 
-
         public double value { get; set; }
 
         public void ObjRelease()

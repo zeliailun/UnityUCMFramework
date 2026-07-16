@@ -6,12 +6,12 @@ namespace UnknownCreator.Modules
     public readonly struct EvtBuffAdded : IBusEvent
     {
         public readonly BuffBase buff;
-        public readonly Unit owner;
+        public readonly Unit target;
 
-        public EvtBuffAdded(BuffBase buff, Unit owner)
+        public EvtBuffAdded(BuffBase buff, Unit target)
         {
             this.buff = buff;
-            this.owner = owner;
+            this.target = target;
         }
     }
 }
