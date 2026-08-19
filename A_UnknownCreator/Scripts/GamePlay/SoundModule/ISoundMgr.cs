@@ -20,6 +20,7 @@ namespace UnknownCreator.Modules
         void UnloadSound(EntityId id);
         ISound GetSound(EntityId id);
         void PlaySound(EntityId id, bool isUseOneShot);
+        void SetSoundPosition(EntityId id, Vector3 position);
         void PauseSound(EntityId id);
         void ResumeSound(EntityId id);
         void StopSound(EntityId id);

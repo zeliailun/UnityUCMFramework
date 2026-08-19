@@ -13,6 +13,9 @@ namespace UnknownCreator.Modules
     [CustomPropertyDrawer(typeof(SerializableDictionaryRef<,>), true)]
     public class SerializableDictionaryUIToolkitDrawer : PropertyDrawer
     {
+        private const string FoldoutStatePrefix = "UnknownCreator.Editor.Foldout.";
+        private const string PersistentFoldoutClass = "uc-persistent-foldout";
+
         private readonly Color color1 = new Color(0, 0, 0, 0.2f);
         private readonly Color color2 = new Color(0, 0, 0, .6f);
         private readonly Color duplicateColor = new Color(1f, 0f, 0f, 0.2f); // 重复时的红色背景
@@ -20,12 +23,23 @@ namespace UnknownCreator.Modules
 
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
+            string targetTypeName = property.serializedObject.targetObject?.GetType().FullName ?? "Unknown";
+            string stateKey = FoldoutStatePrefix + targetTypeName + "." + property.propertyPath;
+            bool isExpanded = SessionState.GetBool(stateKey, property.isExpanded);
+            property.isExpanded = isExpanded;
+
             var foldout = new Foldout
             {
                 text = property.displayName,
-                value = property.isExpanded,
+                value = isExpanded,
 
             };
+            foldout.AddToClassList(PersistentFoldoutClass);
+            foldout.RegisterValueChangedCallback(evt =>
+            {
+                property.isExpanded = evt.newValue;
+                SessionState.SetBool(stateKey, evt.newValue);
+            });
 
             // 绘制 useSerializeReference Toggle
             var useRefProp = property.FindPropertyRelative("useSerializeReference");
@@ -55,11 +69,13 @@ namespace UnknownCreator.Modules
 
             };
             foldout.Add(listContainer);
+            int renderedSize = dictionaryListProp.arraySize;
 
             void RefreshList()
             {
                 listContainer.Clear();
                 property.serializedObject.Update();
+                renderedSize = dictionaryListProp.arraySize;
 
                 // 保存每个 KeyField 以便检测时高亮
                 List<(SerializedProperty keyProp, VisualElement keyField)> keyFields = new();
@@ -265,14 +281,19 @@ namespace UnknownCreator.Modules
             }
 
             RefreshList();
-
-            Undo.undoRedoPerformed += () =>
+            SerializedProperty arraySizeProperty = dictionaryListProp.FindPropertyRelative("Array.size");
+            if (arraySizeProperty != null)
             {
+                // 只跟踪长度，撤销增删时刷新列表，避免编辑键值时反复重建 UI。
+                foldout.TrackPropertyValue(arraySizeProperty, changedProperty =>
+                {
+                    if (changedProperty.intValue == renderedSize)
+                        return;
 
-                property?.serializedObject?.Update();
-                RefreshList();
-            };
-
+                    selectedIndex = -1;
+                    RefreshList();
+                });
+            }
 
             return foldout;
         }

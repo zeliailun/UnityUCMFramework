@@ -210,6 +210,8 @@ namespace UnknownCreator.Modules
 
         private void UpdateDeathState()
         {
+            if (owner == null) return;
+
             bool currentAlive = owner.isAlive;
 
             // 第一次检查
@@ -250,7 +252,7 @@ namespace UnknownCreator.Modules
         /// <summary>
         /// 根据 StatsCfg 的最小值、最大值依赖顺序添加统计。
         /// </summary>
-        private void AddAbilityStatsByDependency(string statsName,Dictionary<string, StatsCfg> statsCfgDict,HashSet<string> addedStatsNames,HashSet<string> addingStatsNames)
+        private void AddAbilityStatsByDependency(string statsName, Dictionary<string, StatsCfg> statsCfgDict, HashSet<string> addedStatsNames, HashSet<string> addingStatsNames)
         {
             if (string.IsNullOrWhiteSpace(statsName))
                 return;
@@ -360,7 +362,7 @@ namespace UnknownCreator.Modules
         /// <summary>
         /// 添加一条能力统计，并记录到能力自身的统计集合中。
         /// </summary>
-        private void AddAbilityStat(StatsCfg statsCfg,double baseValue,List<StatData> statsList)
+        private void AddAbilityStat(StatsCfg statsCfg, double baseValue, List<StatData> statsList)
         {
             StatData stat = owner.statsC.AddStats(
                 statsCfg,

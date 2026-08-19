@@ -1,169 +1,285 @@
-﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.UIElements;
+
 namespace UnknownCreator.Modules
 {
     public static class UITKGlobals
     {
-
-        public const string OnRefreshUIComp=nameof(OnRefreshUIComp);
-
+        public const string OnRefreshUIComp = nameof(OnRefreshUIComp);
 
 
-
-
-        /// <summary>
-        /// 如果当前按钮可点击，则设置冷却并返回 true；否则返回 false。
-        /// </summary>
-        public static bool TryClickCooldown(this Button btn, int cooldownMs = 200)
+        private sealed class ShakeState
         {
-            if (btn == null || !btn.enabledSelf)
-                return false;
-
-            btn.SetEnabled(false);
-            btn.schedule.Execute(() => btn?.SetEnabled(true)).StartingIn(cooldownMs);
-            return true;
+            public StyleTranslate originalTranslate;
+            public Translate resolvedTranslate;
+            public IVisualElementScheduledItem task;
+            public EventCallback<DetachFromPanelEvent> detachCallback;
         }
 
+        private static readonly ConditionalWeakTable<VisualElement, ShakeState> ShakeStates = new();
 
-        /// <summary>
-        /// 抖动效果
-        /// </summary>
-        /// <param name="element">要抖动的UI元素</param>
-        /// <param name="duration">抖动持续时间(秒)</param>
-        /// <param name="intensity">抖动强度(像素)</param>
-        public static void Shake(this VisualElement element, float duration = .5f, float intensity = 10f)
+        public static void Shake(
+            this VisualElement element,
+            float duration = 0.5f,
+            float intensity = 10f)
         {
-            var originalPosition = Vector3.zero;
-            float startTime = Time.realtimeSinceStartup;
-            float frequency = 15f;
+            if (element == null)
+                return;
 
-            element.schedule.Execute(() =>
+            bool isRestart = ShakeStates.TryGetValue(
+                element,
+                out ShakeState previous);
+
+            StyleTranslate originalTranslate = isRestart
+                ? previous.originalTranslate
+                : default;
+
+            Translate resolvedTranslate = isRestart
+                ? previous.resolvedTranslate
+                : default;
+
+            if (isRestart)
+                StopShake(element, previous);
+
+            if (element.resourcesReleased ||
+                element.panel == null ||
+                duration <= 0f ||
+                intensity <= 0f)
+                return;
+
+            if (!isRestart)
             {
-                float elapsed = Time.realtimeSinceStartup - startTime;
-                float progress = elapsed / duration;
+                originalTranslate = element.style.translate;
+                resolvedTranslate = element.resolvedStyle.translate;
+            }
 
-                if (progress >= .9f)
+            var state = new ShakeState
+            {
+                originalTranslate = originalTranslate,
+                resolvedTranslate = resolvedTranslate
+            };
+
+            ShakeStates.Add(element, state);
+
+            double startTime = Time.realtimeSinceStartupAsDouble;
+
+            float seed =
+                (RuntimeHelpers.GetHashCode(element) & 0xFFFF) * 0.01f;
+
+            state.detachCallback = _ => StopShake(element, state);
+            element.RegisterCallback(state.detachCallback);
+
+            state.task = element.schedule.Execute(() =>
+            {
+                if (!ShakeStates.TryGetValue(element, out ShakeState current) ||
+                    !ReferenceEquals(current, state))
+                    return;
+
+                if (element.resourcesReleased || element.panel == null)
                 {
-                    element.style.translate = originalPosition;
+                    StopShake(element, state);
                     return;
                 }
 
-                // 使用衰减曲线使抖动逐渐减弱
-                float decay = Mathf.Clamp01(1 - progress);
-                float shake = Mathf.Sin(elapsed * frequency) * intensity * decay;
-
-                // 添加一些随机性但保持连贯
-                Vector2 offset = new(
-                    shake * RVGlobals.RandomFloat(-1f, 1f),
-                    shake * RVGlobals.RandomFloat(-1f, 1f)
-                );
-
-                element.style.translate = new StyleTranslate(new Translate(
-                    originalPosition.x + offset.x,
-                    originalPosition.y + offset.y,
-                    0
-                ));
-            }).Every(1).ForDuration((long)(duration * 1000));
-        }
-
-
-        /// <summary>
-        /// 缩放效果
-        /// </summary>
-        /// <param name="element"></param>
-        /// <param name="duration"></param>
-        /// <param name="from"></param>
-        /// <param name="to"></param>
-        public static void Scale(this VisualElement element, float duration = 0.3f, float from = 0f, float to = 1f)
-        {
-            float lastTime = Time.realtimeSinceStartup;
-            float elapsed = 0f;
-
-            element.style.scale = UnityGlobals.NewV3(from);
-
-            element.schedule.Execute(() =>
-            {
-                // 计算帧间隔
-                float now = Time.realtimeSinceStartup;
-                float delta = now - lastTime;
-                lastTime = now;
-
-                elapsed += delta;
+                float elapsed =
+                    (float)(Time.realtimeSinceStartupAsDouble - startTime);
 
                 float progress = Mathf.Clamp01(elapsed / duration);
-                float easedProgress = Mathf.SmoothStep(0f, 1f, progress);
-                float currentScale = Mathf.Lerp(from, to, easedProgress);
 
-                element.style.scale = UnityGlobals.NewV3(currentScale);
+                if (progress >= 1f)
+                {
+                    StopShake(element, state);
+                    return;
+                }
 
-            }).Every(1).ForDuration((long)(duration * 1000));
+                float strength = Mathf.SmoothStep(
+                    intensity,
+                    0f,
+                    progress);
+
+                float noiseTime = elapsed * 30f;
+
+                float offsetX =
+                    (Mathf.PerlinNoise(seed, noiseTime) * 2f - 1f) *
+                    strength;
+
+                float offsetY =
+                    (Mathf.PerlinNoise(seed + 100f, noiseTime) * 2f - 1f) *
+                    strength;
+
+                float baseX = ResolveTranslateLength(
+                    state.resolvedTranslate.x,
+                    element.layout.width);
+
+                float baseY = ResolveTranslateLength(
+                    state.resolvedTranslate.y,
+                    element.layout.height);
+
+                element.style.translate = new Translate(
+                    new Length(baseX + offsetX, LengthUnit.Pixel),
+                    new Length(baseY + offsetY, LengthUnit.Pixel),
+                    state.resolvedTranslate.z);
+            }).Every(16);
         }
 
-
-        /// <summary>
-        /// 透明度渐变效果
-        /// </summary>
-        /// <param name="element">要渐变的UI元素</param>
-        /// <param name="duration">持续时间（秒）</param>
-        /// <param name="from">起始透明度（0~1）</param>
-        /// <param name="to">目标透明度（0~1）</param>
-        public static IVisualElementScheduledItem Fade(this VisualElement element, float duration = 0.3f, float from = 0f, float to = 1f)
+        public static void StopShake(this VisualElement element)
         {
-            float startTime = Time.realtimeSinceStartup;
+            if (element == null ||
+                !ShakeStates.TryGetValue(element, out ShakeState state))
+                return;
 
-            element.style.opacity = from;
+            StopShake(element, state);
+        }
 
-            return element.schedule.Execute(() =>
+        private static void StopShake(VisualElement element, ShakeState state)
+        {
+            if (!ShakeStates.TryGetValue(element, out ShakeState current) ||
+                !ReferenceEquals(current, state))
+                return;
+
+            ShakeStates.Remove(element);
+            state.task?.Pause();
+
+            if (!element.resourcesReleased)
             {
-                float elapsed = Time.realtimeSinceStartup - startTime;
-                float progress = Mathf.Clamp01(elapsed / duration);
-                float currentOpacity = Mathf.Lerp(from, to, progress);
-                element.style.opacity = currentOpacity;
-            }).Every(1).ForDuration((long)(duration * 1000));
+                if (state.detachCallback != null)
+                    element.UnregisterCallback(state.detachCallback);
+
+                element.style.translate = state.originalTranslate;
+            }
+
+            state.task = null;
+            state.detachCallback = null;
         }
 
-
-
-        /// <summary>
-        /// 滑动效果（支持上下左右方向）
-        /// </summary>
-        public static void Slide(this VisualElement element, float duration, Vector2 from, Vector2 to)
+        private static float ResolveTranslateLength(Length length, float size)
         {
-            float startTime = Time.realtimeSinceStartup;
+            if (length.unit != LengthUnit.Percent)
+                return length.value;
 
-            element.style.translate = new Translate(from.x, from.y, 0);
+            if (float.IsNaN(size) || float.IsInfinity(size))
+                return 0f;
 
-            element.schedule.Execute(() =>
+            return size * length.value * 0.01f;
+        }
+
+        public static bool TryClickCooldown(this Button btn, int cooldownMs = 200)
+        {
+            if (btn == null)
+                return false;
+
+            // 按钮自身或父节点被禁用时，不允许触发。
+            if (!btn.enabledInHierarchy)
+                return false;
+
+            // 不需要冷却。
+            if (cooldownMs <= 0)
+                return true;
+
+            // 立即禁用，避免连续点击。
+            btn.SetEnabled(false);
+
+            // 冷却结束后重新启用。
+            btn.schedule
+                .Execute(() => btn.SetEnabled(true))
+                .StartingIn(cooldownMs);
+
+            return true;
+        }
+
+        public static void ToggleClass(this VisualElement element, string add, string remove)
+        {
+            if (element == null)
+                return;
+
+            if (!string.IsNullOrEmpty(remove))
+                element.RemoveFromClassList(remove);
+
+            if (!string.IsNullOrEmpty(add))
+                element.AddToClassList(add);
+        }
+
+        public static void SetTransition(this VisualElement element, string propertyName, float duration, EasingMode easingMode = EasingMode.EaseInOut, float delay = 0f)
+        {
+            if (element == null) return;
+
+            element.style.transitionProperty =
+                new StyleList<StylePropertyName>(
+                    new List<StylePropertyName>
+                    {
+                    new StylePropertyName(propertyName)
+                    });
+
+            element.style.transitionDuration =
+                new StyleList<TimeValue>(
+                    new List<TimeValue>
+                    {
+                    new TimeValue(duration, TimeUnit.Second)
+                    });
+
+            element.style.transitionTimingFunction =
+                new StyleList<EasingFunction>(
+                    new List<EasingFunction>
+                    {
+                    new EasingFunction(easingMode)
+                    });
+
+            element.style.transitionDelay =
+                new StyleList<TimeValue>(
+                    new List<TimeValue>
+                    {
+                    new TimeValue(delay, TimeUnit.Second)
+                    });
+        }
+
+        public static void SetScale(this VisualElement element, Vector3 scale, float duration = 0.25F, EasingMode easingMode = EasingMode.EaseInOut, float delay = 0f)
+        {
+            if (element == null) return;
+
+            element.SetTransition("scale", duration, easingMode, delay);
+            element.style.scale = scale;
+        }
+
+        public static void SetVerticalSlide(this VisualElement element, float y, float opacity, float duration = 0.25f, EasingMode easingMode = EasingMode.EaseInOut, float delay = 0f)
+        {
+            if (element == null || element.resourcesReleased) return;
+
+            duration = Mathf.Max(0f, duration);
+            delay = Mathf.Max(0f, delay);
+            element.style.transitionProperty = new StyleList<StylePropertyName>(new List<StylePropertyName>
             {
-                float elapsed = Time.realtimeSinceStartup - startTime;
-                float t = Mathf.Clamp01(elapsed / duration);
-                float smoothT = Mathf.SmoothStep(0f, 1f, t); // 平滑插值
+                new("translate"),
+                new("opacity")
+            });
+            element.style.transitionDuration = new StyleList<TimeValue>(new List<TimeValue>
+            {
+                new(duration, TimeUnit.Second),
+                new(duration, TimeUnit.Second)
+            });
+            element.style.transitionTimingFunction = new StyleList<EasingFunction>(new List<EasingFunction>
+            {
+                new(easingMode),
+                new(easingMode)
+            });
+            element.style.transitionDelay = new StyleList<TimeValue>(new List<TimeValue>
+            {
+                new(delay, TimeUnit.Second),
+                new(delay, TimeUnit.Second)
+            });
 
-                float x = Mathf.Lerp(from.x, to.x, smoothT);
-                float y = Mathf.Lerp(from.y, to.y, smoothT);
-
-                element.style.translate = new Translate(x, y, 0);
-
-            }).Every(1).ForDuration((long)(duration * 1000));
+            Translate current = element.resolvedStyle.translate;
+            element.style.translate = new Translate(current.x, new Length(y, LengthUnit.Pixel), current.z);
+            element.style.opacity = Mathf.Clamp01(opacity);
         }
 
-
-
-        public static void ToggleClass(this VisualElement ve, string add, string remove)
+        public static void SetOpacity(this VisualElement element, float opacity, float duration = 0.25F, EasingMode easingMode = EasingMode.EaseInOut, float delay = 0f)
         {
-            ve.RemoveFromClassList(remove);
-            ve.AddToClassList(add);
+            if (element == null) return;
+
+            element.SetTransition("opacity", duration, easingMode, delay);
+            element.style.opacity = opacity;
         }
-
-
-
-
-
-
-
-
-
-
     }
 }

@@ -21,6 +21,9 @@ namespace UnknownCreator.Modules
 
         public long id { private set; get; }
 
+        // 由 ProjectileMgr 维护，用于释放时直接定位活动列表槽位。
+        internal int activeIndex { get; set; } = -1;
+
         private bool pause;
         public bool isPause
         {
@@ -52,6 +55,7 @@ namespace UnknownCreator.Modules
             this.data = data;
             this.kv = kv;
             id = GlobalID.GetUniqueID();
+            activeIndex = -1;
             objT = obj.GetComponent<Transform>();
             objT.localScale = data.vfxScale;
             objT.SetPositionAndRotation(this.data.spawnPos, this.data.spawnRot);
@@ -201,6 +205,7 @@ namespace UnknownCreator.Modules
             kv = null;
             obj = null;
             objT = null;
+            activeIndex = -1;
         }
     }
 

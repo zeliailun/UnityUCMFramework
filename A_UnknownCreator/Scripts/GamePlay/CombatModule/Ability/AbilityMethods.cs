@@ -141,8 +141,6 @@ namespace UnknownCreator.Modules
 
         public void StartCooldown(double cooldown)
         {
-            if (isFrozenCooldown) return;
-
             if (IsEnableCharge())
             {
                 if (cooldown <= 0) return;
@@ -166,16 +164,38 @@ namespace UnknownCreator.Modules
         {
             if (isFrozenCooldown) return;
 
-            if (!isCooldownReady)
+            ResetCooldownAndChargesInternal();
+        }
+
+        /// <summary>
+        /// 强制结束当前冷却并补满充能，供运行时调试功能使用。
+        /// 冷却冻结只负责暂停计时，不应阻止控制台重置状态。
+        /// </summary>
+        public void ForceResetCooldownAndCharges()
+        {
+            ResetCooldownAndChargesInternal();
+        }
+
+        private void ResetCooldownAndChargesInternal()
+        {
+            bool cooldownChanged = !isCooldownReady;
+            currentCd = 0;
+
+            if (IsEnableCharge())
             {
-                currentCd = 0;
-                GameEvtBus.Send<EvtAbilityCooldownCalculate>(new(this, owner, currentCd));
+                // 先结束旧恢复队列，再同步充能；事件监听方读取到的始终是完整状态。
+                isFirstChargeCooldown = false;
+                int chargeLimit = Math.Max(0, GetCharge(level));
+                int oldCharge = currentCharge;
+                currentCharge = chargeLimit;
+
+                // 当前值未变化时也刷新一次 HUD，避免动态充能上限变化后显示旧值。
+                if (oldCharge == chargeLimit)
+                    GameEvtBus.Send<EvtAbilityChargeChanged>(new(this, owner, currentCharge));
             }
 
-            var charge = GetCharge();
-            if (IsEnableCharge())//&& currentCharge < charge
-                currentCharge = (int)charge;
-
+            if (cooldownChanged)
+                GameEvtBus.Send<EvtAbilityCooldownCalculate>(new(this, owner, currentCd));
         }
 
         public void ModifyCurrentCooldown(double value)

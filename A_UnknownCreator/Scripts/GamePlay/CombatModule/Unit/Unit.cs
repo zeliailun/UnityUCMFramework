@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Animancer;
 using UnityEngine;
+using static UnityEngine.EventSystems.EventTrigger;
 
 namespace UnknownCreator.Modules
 {
@@ -18,13 +19,28 @@ namespace UnknownCreator.Modules
 
         public IHBSMController hbsm { private set; get; }
 
-        public Unit master { get; set; }
+        private Unit unitMaster;
+        public Unit master
+        {
+            get => unitMaster;
+            set
+            {
+                if (ReferenceEquals(unitMaster, value))
+                    return;
+
+                Unit oldMaster = unitMaster;
+                unitMaster = value;
+                GameEvtBus.Send(new EvtUnitMasterChanged(this, oldMaster, unitMaster));
+            }
+        }
 
         public GameObject ent { private set; get; }
 
         public Transform entT { private set; get; }
 
         public string entName { private set; get; }
+
+        public string entIDKey { private set; get; }
 
         public EntityId entID { private set; get; }
 
@@ -157,6 +173,7 @@ namespace UnknownCreator.Modules
             ent = Mgr.GPool.Load(unitCfg.unitName, true, false);
             entName = ent.name;
             entID = ent.GetEntityId();
+            entIDKey = EntityId.ToULong(entID).ToString();
             entT = ent.GetComp<Transform>();
             modelLayerT = entT.Find(UnitGlobals.Model);
             hbsm = Mgr.RPool.Load<HBSMController>();
@@ -234,6 +251,7 @@ namespace UnknownCreator.Modules
 
             unitCfg = null;
             unitModelCfg = null;
+            entIDKey = null;
             master = null;
             brainC = null;
             lvExpC = null;

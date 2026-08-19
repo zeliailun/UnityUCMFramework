@@ -26,6 +26,20 @@ namespace UnknownCreator.Modules
     }
 
     [Serializable]
+    public struct HitVfxInfo
+    {
+        public string vfxName;
+        public string boneName;
+        public bool isApplyUnitPos;
+        public bool isApplyDmgDir;
+        public bool isApplyBone;
+        public bool isVegVfx;
+        public bool isFollow;
+        public float offsetZ;
+        public float destroyDelay;
+    }
+
+    [Serializable]
     public struct BodyPartInfo
     {
 #if UNITY_EDITOR

@@ -644,10 +644,6 @@ namespace UnknownCreator.Modules
                     ? Math.Round(clamped, 0, MidpointRounding.AwayFromZero)
                     : Math.Round(clamped, 2, MidpointRounding.AwayFromZero);
 
-
-            if (idName == KeyGlobals.Stats.FiringInterval)
-                UCMDebug.Log(cntlr.GetStat(minName));
-
             // =========================================================
             // 更新自身
             // =========================================================

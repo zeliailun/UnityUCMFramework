@@ -134,6 +134,11 @@ namespace UnknownCreator.Modules
             GetSound(id)?.PlaySound(isUseOneShot);
         }
 
+        public void SetSoundPosition(EntityId id, Vector3 position)
+        {
+            GetSound(id)?.SetPosition(position);
+        }
+
         public void PauseSound(EntityId id)
         {
             GetSound(id)?.PauseSound();

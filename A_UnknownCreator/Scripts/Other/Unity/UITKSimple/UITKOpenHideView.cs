@@ -99,7 +99,7 @@ namespace UnknownCreator.Modules
             hideInfo = info;
             view = builder.root.Q<VisualElement>(hideInfo.uiName);
 
-            float currentValue = view.style.opacity.value;
+            float currentValue = view.resolvedStyle.opacity;
             if (info.hideDuration <= 0)
                 HideView(false, null);
             else
@@ -116,24 +116,25 @@ namespace UnknownCreator.Modules
 
         private void HideView(bool isAuto, TimerTween tt)
         {
+            SetOpacity(0);
+            view.style.display = DisplayStyle.None;
+
             if (isAuto)
             {
                 showInfo.onAutoHide?.Invoke(view);
-                //  showInfo.onAutoHide = null;
+                UITKMgr.OnUIHide?.Invoke(showInfo.prName, showInfo.uiName);
             }
             else
             {
                 hideInfo.onHide?.Invoke(view);
-                //  hideInfo.onHide = null;
+                UITKMgr.OnUIHide?.Invoke(hideInfo.prName, hideInfo.uiName);
             }
-            SetOpacity(0);
-            view.style.display = DisplayStyle.None;
-            UITKMgr.OnUIHide?.Invoke(hideInfo.prName, hideInfo.uiName);
+
             showInfo = default;
             hideInfo = default;
         }
 
-        private void OnSceneChanged(Scene scene,LoadSceneMode mode)
+        private void OnSceneChanged(Scene scene, LoadSceneMode mode)
         {
             if (showInfo.isChangeSceneHide)
             {
@@ -154,7 +155,7 @@ namespace UnknownCreator.Modules
 
         private void SetOpacity(float value)
         {
-            
+
             if (view != null && view.panel != null)
                 view.style.opacity = value;
         }

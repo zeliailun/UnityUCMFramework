@@ -93,7 +93,7 @@ namespace UnknownCreator.Modules
 
             sd.CalcStatsValue();
 
-            unit.buffC.RefreshAllBuffStats();
+            unit.buffC?.RefreshAllBuffStats();
 
             return sd;
         }

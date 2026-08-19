@@ -27,6 +27,7 @@ namespace UnknownCreator.Modules
 
 
         public Action<IEntity> OnEntityRegistered { set; get; }
+        public Action<IEntity> OnEntityReleasing { set; get; }
 
         //private EntityMgr() { }
 
@@ -48,6 +49,7 @@ namespace UnknownCreator.Modules
             groupList = null;
             entityGroupDict = null;
             OnEntityRegistered = null;
+            OnEntityReleasing = null;
         }
 
         void IDearMgr.UpdateMGR()
@@ -109,6 +111,7 @@ namespace UnknownCreator.Modules
         {
             var entity = GetEntity(id);
             if (entity is null) return;
+            OnEntityReleasing?.Invoke(entity);
             RemoveEntityGroup(entity);
             entityList.Remove(entity);
             entityDict.Remove(entity.entID);
@@ -158,6 +161,9 @@ namespace UnknownCreator.Modules
 
         public void ReleaseAllEntity()
         {
+            for (int i = entityList.Count - 1; i >= 0; i--)
+                OnEntityReleasing?.Invoke(entityList[i]);
+
             entityGroupDict.Clear();
             entityDict.Clear();
             groupDict.Clear();

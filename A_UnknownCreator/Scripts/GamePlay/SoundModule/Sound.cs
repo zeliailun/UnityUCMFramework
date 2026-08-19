@@ -35,6 +35,7 @@ namespace UnknownCreator.Modules
         private AudioClip[] clips;
         private readonly List<long> ids = new();
         private readonly Dictionary<long, float> oneShotVolumeDict = new();
+        private readonly Dictionary<long, Vector3> oneShotPositionDict = new();
         private EvtSoundPlayEnd soundEvt;
         private TimerHandle<TimerCountCycle> soundEndTimer;
 
@@ -44,6 +45,7 @@ namespace UnknownCreator.Modules
             soundObj = go;
             id = soundObj.GetEntityId();
             soundT = soundObj.GetComponent<Transform>();
+            ResetTransform();
             source = soundObj.GetComponent<AudioSource>();
             source ??= soundObj.AddComponent<AudioSource>();
 
@@ -65,7 +67,14 @@ namespace UnknownCreator.Modules
             fadeDuration = 0;
             ids.Clear();
             oneShotVolumeDict.Clear();
+            oneShotPositionDict.Clear();
             soundEndTimer.Destroy();
+        }
+
+        public void SetPosition(Vector3 position)
+        {
+            if (isRelease || soundT == null) return;
+            soundT.position = position;
         }
 
         public void PlaySound(bool isOneShot)
@@ -109,6 +118,7 @@ namespace UnknownCreator.Modules
                 var timer = Mgr.Timer.CycleCountHandle(1, clip.length, false, SoundEndEvt, SoundCompleted, soundCfg.isApplyTimeScale);
                 ids.Add(timer.idValue);
                 oneShotVolumeDict[timer.idValue] = playVolume;
+                oneShotPositionDict[timer.idValue] = GetPosition();
             }
             else
             {
@@ -289,8 +299,11 @@ namespace UnknownCreator.Modules
             if (cycle != null && ids.Contains(cycle.id))
             {
                 float eventVolume = oneShotVolumeDict.TryGetValue(cycle.id, out var volume) ? volume : playVolume;
+                Vector3 eventPosition = oneShotPositionDict.TryGetValue(cycle.id, out var position)
+                    ? position
+                    : GetPosition();
                 Mgr.Sound.DecreaseSoundPlayCount(soundName);
-                SendSoundEndEvent(eventVolume);
+                SendSoundEndEvent(eventVolume, eventPosition);
 
                 if (isPlayEndUnload)
                     Mgr.Sound.UnloadSound(this);
@@ -315,16 +328,34 @@ namespace UnknownCreator.Modules
             if (ids.Remove(countCycle.id))
             {
                 oneShotVolumeDict.Remove(countCycle.id);
+                oneShotPositionDict.Remove(countCycle.id);
                 Mgr.Timer.RemoveTimer(countCycle.id);
             }
         }
 
         private void SendSoundEndEvent(float volume)
         {
+            SendSoundEndEvent(volume, GetPosition());
+        }
+
+        private void SendSoundEndEvent(float volume, Vector3 position)
+        {
             soundEvt.volume = volume;
             soundEvt.name = soundName;
-            soundEvt.position = soundT != null ? soundT.position : Vector3.zero;
+            soundEvt.position = position;
             Mgr.Event.Send(soundEvt, SoundGlobals.OnSoundPlayEnd);
+        }
+
+        private Vector3 GetPosition()
+        {
+            return soundT != null ? soundT.position : Vector3.zero;
+        }
+
+        private void ResetTransform()
+        {
+            if (soundT == null) return;
+            soundT.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+            soundT.localScale = Vector3.one;
         }
 
         private void ResetMainEndTimer(float delay)
@@ -359,6 +390,7 @@ namespace UnknownCreator.Modules
 
             ids.Clear();
             oneShotVolumeDict.Clear();
+            oneShotPositionDict.Clear();
         }
 
         void IReference.ObjRelease()
@@ -389,7 +421,10 @@ namespace UnknownCreator.Modules
             if (soundObj != null)
             {
                 if (soundT != null)
+                {
+                    ResetTransform();
                     Mgr.GPool.SetRoot(soundT, true);
+                }
 
                 Mgr.GPool.ReleaseNewGameObject(SoundGlobals.SoundObj, soundObj);
                 soundObj = null;

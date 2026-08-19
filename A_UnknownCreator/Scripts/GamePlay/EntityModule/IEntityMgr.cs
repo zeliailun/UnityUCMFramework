@@ -9,6 +9,7 @@ namespace UnknownCreator.Modules
         IReadOnlyList<IEntityGroup> allEntGroup { get; }
 
         Action <IEntity> OnEntityRegistered { set; get; }
+        Action<IEntity> OnEntityReleasing { set; get; }
         int entityCount { get; }
         int entityGroupDCount { get; }
         void RegisterEntity(IEntity entity, string groupName);

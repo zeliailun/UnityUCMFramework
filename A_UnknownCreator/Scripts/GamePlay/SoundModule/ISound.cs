@@ -18,6 +18,7 @@ namespace UnknownCreator.Modules
 
         void Init(string soundName, GameObject soundObj);
         bool HasGroup();
+        void SetPosition(Vector3 position);
         void PlaySound(bool isOneShot);
         void MuteSound(bool isMute);
         void StopSound();

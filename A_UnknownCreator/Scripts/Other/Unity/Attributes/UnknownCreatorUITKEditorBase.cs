@@ -1,10 +1,10 @@
+#if UNITY_EDITOR
 using System;
 using System.Collections;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEditor.UIElements;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace UnknownCreator.Modules
@@ -29,6 +29,8 @@ namespace UnknownCreator.Modules
         private const string RowPrefix = "uc-property-row-";
         private const string InfoPrefix = "uc-info-added-";
         private const string OpenButtonPrefix = "uc-open-button-added-";
+        private const string FoldoutStatePrefix = "UnknownCreator.Editor.Foldout.";
+        private const string PersistentFoldoutClass = "uc-persistent-foldout";
 
         public override VisualElement CreateInspectorGUI()
         {
@@ -191,8 +193,44 @@ namespace UnknownCreator.Modules
                     );
                 }
 
+                ApplyFoldoutStates(root);
                 RefreshAttributeStates(root);
             }).ExecuteLater(GeneratedFieldApplyDelay);
+        }
+
+        private void ApplyFoldoutStates(VisualElement root)
+        {
+            if (target == null)
+                return;
+
+            string targetTypeName = target.GetType().FullName;
+            foreach (PropertyField propertyField in root.Query<PropertyField>().ToList())
+            {
+                if (string.IsNullOrEmpty(propertyField.bindingPath))
+                    continue;
+
+                Foldout foldout = propertyField.Q<Foldout>();
+                if (foldout == null || foldout.ClassListContains(PersistentFoldoutClass))
+                    continue;
+
+                string bindingPath = propertyField.bindingPath;
+                string stateKey = FoldoutStatePrefix + targetTypeName + "." + bindingPath;
+                SerializedProperty property = serializedObject.FindProperty(bindingPath);
+                bool isExpanded = SessionState.GetBool(stateKey, property?.isExpanded ?? foldout.value);
+
+                foldout.SetValueWithoutNotify(isExpanded);
+                if (property != null)
+                    property.isExpanded = isExpanded;
+
+                foldout.AddToClassList(PersistentFoldoutClass);
+                foldout.RegisterValueChangedCallback(evt =>
+                {
+                    SessionState.SetBool(stateKey, evt.newValue);
+                    SerializedProperty currentProperty = serializedObject.FindProperty(bindingPath);
+                    if (currentProperty != null)
+                        currentProperty.isExpanded = evt.newValue;
+                });
+            }
         }
 
         private void RegisterAttributeRefresh(VisualElement root)
@@ -1009,3 +1047,4 @@ namespace UnknownCreator.Modules
         }
     }
 }
+#endif

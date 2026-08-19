@@ -97,8 +97,11 @@ namespace UnknownCreator.Modules
                 anim.Layers != null &&
                 anim.Layers.Count > 0)
             {
-                anim.Layers[0].ApplyAnimatorIK = true;
-                anim.Layers[0].ApplyFootIK = true;
+                AnimancerLayer layer = anim.Layers[0];
+                if (!layer.ApplyAnimatorIK)
+                    layer.ApplyAnimatorIK = true;
+                if (!layer.ApplyFootIK)
+                    layer.ApplyFootIK = true;
             }
 
         }

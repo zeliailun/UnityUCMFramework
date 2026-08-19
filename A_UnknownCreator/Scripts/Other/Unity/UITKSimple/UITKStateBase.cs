@@ -58,7 +58,8 @@ namespace UnknownCreator.Modules
 
         protected virtual void OnBackClick(ClickEvent evt)
         {
-            if (!backBtn.TryClickCooldown()) return;
+            evt.StopPropagation();
+
             parent?.BackBeforeSeqState();
             OnBack();
         }

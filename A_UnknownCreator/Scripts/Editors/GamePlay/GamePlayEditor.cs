@@ -82,7 +82,12 @@ namespace UnknownCreator.Modules
                 return;
             }
 
-            root.Add(m_VisualTreeAsset.CloneTree());
+            // CloneTree 会额外生成 TemplateContainer，必须让它填满窗口才能计算剩余高度。
+            TemplateContainer tree = m_VisualTreeAsset.CloneTree();
+            tree.style.flexGrow = 1;
+            tree.style.flexShrink = 1;
+            tree.style.minHeight = 0;
+            root.Add(tree);
 
             itemList = root.Q<ListView>("ItemList");
             groupList = root.Q<ListView>("GroupList");
@@ -1126,15 +1131,39 @@ public class {abilityName} : AbilityBase
 
             try
             {
-                File.WriteAllText(savePath, JsonMapper.ToJson(dict));
+                string json = JsonMapper.ToJson(dict);
+                string backupPath = isAll ? BackupFileBeforeOverwrite(savePath) : null;
+                File.WriteAllText(savePath, json);
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
-                ShowNotification(new GUIContent("✓ JSON 文件已保存"), 1);
+                string message = string.IsNullOrEmpty(backupPath)
+                    ? "✓ JSON 文件已保存"
+                    : $"✓ JSON 已保存，原文件已备份为 {Path.GetFileName(backupPath)}";
+                ShowNotification(new GUIContent(message), 2);
             }
             catch (Exception e)
             {
                 EditorUtility.DisplayDialog("错误", $"保存 JSON 失败：{e.Message}", "确定");
             }
+        }
+
+        private static string BackupFileBeforeOverwrite(string filePath)
+        {
+            if (!File.Exists(filePath))
+                return null;
+
+            string directory = Path.GetDirectoryName(filePath) ?? string.Empty;
+            string fileName = Path.GetFileNameWithoutExtension(filePath);
+            string extension = Path.GetExtension(filePath);
+            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss_fff");
+            string backupPath = Path.Combine(directory, $"{fileName}_backup_{timestamp}{extension}");
+            int suffix = 1;
+
+            while (File.Exists(backupPath))
+                backupPath = Path.Combine(directory, $"{fileName}_backup_{timestamp}_{suffix++}{extension}");
+
+            File.Copy(filePath, backupPath, false);
+            return backupPath;
         }
 
         private static object GetCfgObjectValue(UnityEngine.Object item, string name)
